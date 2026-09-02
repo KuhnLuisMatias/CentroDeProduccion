@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+    <!-- Assertion library: Shouldly (permissive licence), NOT FluentAssertions >= 8
+         (commercially licensed for non-open-source use). See design "Test Project" section. -->
+    <PackageReference Include="Shouldly" Version="4.2.1" />
+    <PackageReference Include="NSubstitute" Version="5.3.0" />
+    <!-- SQL Server only. The Sqlite provider was removed: it cannot implement rowversion (so it
+         could never cover the optimistic-concurrency path), it diverges from the production
+         engine, and it pulled in SQLitePCLRaw.lib.e_sqlite3 with a known high-severity
+         advisory (GHSA-2m69-gcr7-jv3q). LocalDB covers every database-backed test instead. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.10" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\CentroDeProduccion.Domain\CentroDeProduccion.Domain.csproj" />
+    <ProjectReference Include="..\..\src\CentroDeProduccion.Application\CentroDeProduccion.Application.csproj" />
+    <ProjectReference Include="..\..\src\CentroDeProduccion.Infrastructure\CentroDeProduccion.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\CentroDeProduccion.Api\CentroDeProduccion.Api.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

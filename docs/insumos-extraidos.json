@@ -1,0 +1,2140 @@
+{
+    "generado":  "2026-08-24",
+    "archivos_fuente":  [
+                            "Documentacion\\PLANTILLA COSTOS.xlsx",
+                            "Documentacion\\QUE_MILA_BOBO_SEM1_JULIO.xlsx"
+                        ],
+    "hojas_plantilla_costos":  [
+                                   "INDICE",
+                                   "MASA-LEUDADO",
+                                   "MOLIDA-MEDALLONES",
+                                   "MILANESAS 24st",
+                                   "LOMO (sang) 18.06 (2)",
+                                   "LOMO (sang) 18.06",
+                                   "LOMO (sang)",
+                                   "MILANESAS (sang)",
+                                   "POLLO NUEVO",
+                                   "POLLO NUEVO 23,03",
+                                   "POLLO FRITO",
+                                   "REBOZADOS",
+                                   "TARTAS",
+                                   "FRACCIONADOS",
+                                   "ENCURTIDOS-SALSAS",
+                                   "EVENTOS",
+                                   "PRECIOS INSUMOS"
+                               ],
+    "hojas_que_mila_bobo":  [
+                                "PRODUCTOS",
+                                "29-06",
+                                "30-06",
+                                "01-07",
+                                "02-07",
+                                "03-07",
+                                "04-07",
+                                "05-07",
+                                "ANO\"S RESUMEN SEMANAL"
+                            ],
+    "categorias_sugeridas":  [
+                                 "MASA-LEUDADO",
+                                 "MOLIDA-MEDALLONES",
+                                 "MILANESAS",
+                                 "LOMO-SANGUCHERIA",
+                                 "POLLO FRITO",
+                                 "REBOZADOS",
+                                 "TARTAS",
+                                 "FRACCIONADOS",
+                                 "ENCURTIDOS-SALSAS",
+                                 "EVENTOS",
+                                 "ALMACEN",
+                                 "CARNES",
+                                 "LACTEOS",
+                                 "CONDIMENTOS",
+                                 "LIQUIDOS",
+                                 "VERDURAS",
+                                 "DESCARTABLES",
+                                 "REVENTA"
+                             ],
+    "insumos":  [
+                    {
+                        "nombre":  "HARINA 0000",
+                        "unidad":  "KG",
+                        "precio":  740,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "ALMACEN"
+                    },
+                    {
+                        "nombre":  "NALGA SIN TAPA (PAISANITOS)",
+                        "unidad":  "KG",
+                        "precio":  18800,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CARNES"
+                    },
+                    {
+                        "nombre":  "MANTECA",
+                        "unidad":  "KG",
+                        "precio":  9850,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "LACTEOS"
+                    },
+                    {
+                        "nombre":  "MUZARELLA BARRA",
+                        "unidad":  "KG",
+                        "precio":  7515,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "LACTEOS TREMBLAY"
+                    },
+                    {
+                        "nombre":  "ACEITE",
+                        "unidad":  "LT",
+                        "precio":  2780,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "ALMACEN"
+                    },
+                    {
+                        "nombre":  "VB",
+                        "unidad":  "KG",
+                        "precio":  12400,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CARNES"
+                    },
+                    {
+                        "nombre":  "LECHE",
+                        "unidad":  "LT",
+                        "precio":  1260,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "LACTEOS"
+                    },
+                    {
+                        "nombre":  "MUZARELLA CILINDRO",
+                        "unidad":  "KG",
+                        "precio":  6095,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "LACTEOS TREMBLAY"
+                    },
+                    {
+                        "nombre":  "ACEITE OLIVA",
+                        "unidad":  "LT",
+                        "precio":  6778,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "ALMACEN"
+                    },
+                    {
+                        "nombre":  "TAPA ASADO (PAISANITOS)",
+                        "unidad":  "KG",
+                        "precio":  12600,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CARNES"
+                    },
+                    {
+                        "nombre":  "CREMA LECHE",
+                        "unidad":  "KG",
+                        "precio":  6750,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "LACTEOS"
+                    },
+                    {
+                        "nombre":  "QUESO CREMOSO",
+                        "unidad":  "KG",
+                        "precio":  5451,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "LACTEOS TREMBLAY"
+                    },
+                    {
+                        "nombre":  "LEVADURA",
+                        "unidad":  "KG",
+                        "precio":  9980,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "ALMACEN"
+                    },
+                    {
+                        "nombre":  "FILET CARNE (JRB)",
+                        "unidad":  "KG",
+                        "precio":  null,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CARNES"
+                    },
+                    {
+                        "nombre":  "QUESO CREMA",
+                        "unidad":  "KG",
+                        "precio":  4814,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "LACTEOS"
+                    },
+                    {
+                        "nombre":  "AZUCAR",
+                        "unidad":  "KG",
+                        "precio":  900,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "ALMACEN"
+                    },
+                    {
+                        "nombre":  "BIFE ANGOSTO (PAISANITOS)",
+                        "unidad":  "KG",
+                        "precio":  20500,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CARNES"
+                    },
+                    {
+                        "nombre":  "QUESO DANBO/TYBO",
+                        "unidad":  "KG",
+                        "precio":  7684,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "LACTEOS"
+                    },
+                    {
+                        "nombre":  "AZUCAR NEGRA",
+                        "unidad":  "KG",
+                        "precio":  2300,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "ALMACEN"
+                    },
+                    {
+                        "nombre":  "BIFE ANCHO (JRB)",
+                        "unidad":  "KG",
+                        "precio":  null,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CARNES"
+                    },
+                    {
+                        "nombre":  "SAL FINA",
+                        "unidad":  "KG",
+                        "precio":  1856.14,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "ALMACEN"
+                    },
+                    {
+                        "nombre":  "LOMO S/CORDON (RECREO)",
+                        "unidad":  "KG",
+                        "precio":  null,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CARNES"
+                    },
+                    {
+                        "nombre":  "PEPERONI",
+                        "unidad":  "KG",
+                        "precio":  14950,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "LACTEOS"
+                    },
+                    {
+                        "nombre":  "SAL GRUESA",
+                        "unidad":  "KG",
+                        "precio":  264,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "ALMACEN"
+                    },
+                    {
+                        "nombre":  "BIFE ANGOSTO (RECREO)",
+                        "unidad":  "KG",
+                        "precio":  null,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CARNES"
+                    },
+                    {
+                        "nombre":  "HUEVO",
+                        "unidad":  "UN",
+                        "precio":  170,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "ALMACEN"
+                    },
+                    {
+                        "nombre":  "PECHO (T. ASADO) (RECREO)",
+                        "unidad":  "KG",
+                        "precio":  null,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CARNES"
+                    },
+                    {
+                        "nombre":  "PAN RALLADO",
+                        "unidad":  "KG",
+                        "precio":  1129,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "ALMACEN"
+                    },
+                    {
+                        "nombre":  "T. ASADO+PRIMO+QUEPERI",
+                        "unidad":  "KG",
+                        "precio":  12200,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CARNES"
+                    },
+                    {
+                        "nombre":  "QUESO AZUL",
+                        "unidad":  "KG",
+                        "precio":  13117,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "LACTEOS"
+                    },
+                    {
+                        "nombre":  "REBOZADOR",
+                        "unidad":  "KG",
+                        "precio":  2258,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "ALMACEN"
+                    },
+                    {
+                        "nombre":  "AGUJA (PRIMO) (RECREO)",
+                        "unidad":  "KG",
+                        "precio":  null,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CARNES"
+                    },
+                    {
+                        "nombre":  "QUESO SARDO",
+                        "unidad":  "KG",
+                        "precio":  11890,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "LACTEOS"
+                    },
+                    {
+                        "nombre":  "BARBACOA",
+                        "unidad":  "KG",
+                        "precio":  3783,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "ALMACEN"
+                    },
+                    {
+                        "nombre":  "QUEPERI (JRB)",
+                        "unidad":  "KG",
+                        "precio":  11000,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CARNES"
+                    },
+                    {
+                        "nombre":  "QUESO CHEDDAR",
+                        "unidad":  "KG",
+                        "precio":  7224,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "LACTEOS"
+                    },
+                    {
+                        "nombre":  "MOSTAZA",
+                        "unidad":  "KG",
+                        "precio":  3300,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "ALMACEN"
+                    },
+                    {
+                        "nombre":  "KETCHUP",
+                        "unidad":  "KG",
+                        "precio":  3763.33,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "ALMACEN"
+                    },
+                    {
+                        "nombre":  "BONDIOLA (PAISANITOS)",
+                        "unidad":  "KG",
+                        "precio":  null,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CARNES"
+                    },
+                    {
+                        "nombre":  "MIEL",
+                        "unidad":  "KG",
+                        "precio":  8950,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "ALMACEN"
+                    },
+                    {
+                        "nombre":  "RIBS CERDO (RECREO)",
+                        "unidad":  "KG",
+                        "precio":  null,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CARNES"
+                    },
+                    {
+                        "nombre":  "CALDO VERDURA (CUBITO)",
+                        "unidad":  "UN",
+                        "precio":  115,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "ALMACEN"
+                    },
+                    {
+                        "nombre":  "FILET POLLO (PAISANITO)",
+                        "unidad":  "KG",
+                        "precio":  6266.67,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CARNES"
+                    },
+                    {
+                        "nombre":  "POLVO P/HORNEAR",
+                        "unidad":  "KG",
+                        "precio":  5900,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "PASTA DE MANI",
+                        "unidad":  "KG",
+                        "precio":  6000,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "ALMACEN"
+                    },
+                    {
+                        "nombre":  "ALITA POLLO (PAISANITO)",
+                        "unidad":  "KG",
+                        "precio":  2227,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CARNES"
+                    },
+                    {
+                        "nombre":  "AJO EN POLVO",
+                        "unidad":  "KG",
+                        "precio":  9000,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "HARINA 000",
+                        "unidad":  "KG",
+                        "precio":  640,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "ALMACEN"
+                    },
+                    {
+                        "nombre":  "PATAMUSLO (PAISANITO)",
+                        "unidad":  "KG",
+                        "precio":  3667,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CARNES"
+                    },
+                    {
+                        "nombre":  "PROVANZAL",
+                        "unidad":  "KG",
+                        "precio":  9900,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "POLENTA",
+                        "unidad":  "KG",
+                        "precio":  1000,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "ALMACEN"
+                    },
+                    {
+                        "nombre":  "TAPA ASADO+AGUJA",
+                        "unidad":  "KG",
+                        "precio":  12500,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CARNES"
+                    },
+                    {
+                        "nombre":  "MOSTAZA GRANO",
+                        "unidad":  "KG",
+                        "precio":  5550,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "MAYONESA",
+                        "unidad":  "KG",
+                        "precio":  3231.67,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "ALMACEN"
+                    },
+                    {
+                        "nombre":  "VAINILLIN",
+                        "unidad":  "LTS",
+                        "precio":  1400,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "CALDO VERDURA (GRAN.)",
+                        "unidad":  "KG",
+                        "precio":  17953,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "ALMACEN"
+                    },
+                    {
+                        "nombre":  "PIMENTON AHUMADO",
+                        "unidad":  "KG",
+                        "precio":  18500,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "ALBAHACA",
+                        "unidad":  "KG",
+                        "precio":  7350,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "CURCUMA",
+                        "unidad":  "KG",
+                        "precio":  8500,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "CURRY",
+                        "unidad":  "KG",
+                        "precio":  6300,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "VINAGRE BLANCO",
+                        "unidad":  "LT",
+                        "precio":  875,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "LIQUIDOS"
+                    },
+                    {
+                        "nombre":  "CHOCLO RALLADO",
+                        "unidad":  "KG",
+                        "precio":  300,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "VERDURAS"
+                    },
+                    {
+                        "nombre":  "COMINO",
+                        "unidad":  "KG",
+                        "precio":  5300,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "VINO TINTO TORO",
+                        "unidad":  "LT",
+                        "precio":  1908,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "LIQUIDOS"
+                    },
+                    {
+                        "nombre":  "CEBOLLA",
+                        "unidad":  "KG",
+                        "precio":  500,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "VERDURAS"
+                    },
+                    {
+                        "nombre":  "PIMIENTA BLANCA MOLIDA",
+                        "unidad":  "KG",
+                        "precio":  17000,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "SALSA INGLESA",
+                        "unidad":  "LT",
+                        "precio":  4290,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "LIQUIDOS"
+                    },
+                    {
+                        "nombre":  "PIMIENTO ROJO",
+                        "unidad":  "KG",
+                        "precio":  2000,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "VERDURAS"
+                    },
+                    {
+                        "nombre":  "AVENA ARROLLADA",
+                        "unidad":  "KG",
+                        "precio":  1890,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "SALSA SOJA",
+                        "unidad":  "LT",
+                        "precio":  4550,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "LIQUIDOS"
+                    },
+                    {
+                        "nombre":  "PIMIENTO VERDE",
+                        "unidad":  "KG",
+                        "precio":  2000,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "VERDURAS"
+                    },
+                    {
+                        "nombre":  "COPOS DE MAIZ",
+                        "unidad":  "KG",
+                        "precio":  3750,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "ACETO BALSAMICO",
+                        "unidad":  "LT",
+                        "precio":  2878,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "LIQUIDOS"
+                    },
+                    {
+                        "nombre":  "ESPINACA",
+                        "unidad":  "KG",
+                        "precio":  2500,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "VERDURAS"
+                    },
+                    {
+                        "nombre":  "NACHOS",
+                        "unidad":  "KG",
+                        "precio":  10500,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "CERVEZA NEGRA",
+                        "unidad":  "LT",
+                        "precio":  2203,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "LIQUIDOS"
+                    },
+                    {
+                        "nombre":  "PUERRO",
+                        "unidad":  "KG",
+                        "precio":  1500,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "VERDURAS"
+                    },
+                    {
+                        "nombre":  "CONITOS 3D",
+                        "unidad":  "KG",
+                        "precio":  10500,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "WHISKY",
+                        "unidad":  "LT",
+                        "precio":  3960,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "LIQUIDOS"
+                    },
+                    {
+                        "nombre":  "ZANAHORIA",
+                        "unidad":  "KG",
+                        "precio":  800,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "VERDURAS"
+                    },
+                    {
+                        "nombre":  "GARBANZO",
+                        "unidad":  "KG",
+                        "precio":  2000,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "TOMATE TRITURADO",
+                        "unidad":  "LT",
+                        "precio":  1290,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "LIQUIDOS"
+                    },
+                    {
+                        "nombre":  "CIRUELA",
+                        "unidad":  "KG",
+                        "precio":  1230,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "VERDURAS"
+                    },
+                    {
+                        "nombre":  "CACAO AMARGO",
+                        "unidad":  "KG",
+                        "precio":  14900,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "HIELO",
+                        "unidad":  "KG",
+                        "precio":  500,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "LIQUIDOS"
+                    },
+                    {
+                        "nombre":  "BANANA",
+                        "unidad":  "UN",
+                        "precio":  200,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "VERDURAS"
+                    },
+                    {
+                        "nombre":  "CANELA",
+                        "unidad":  "KG",
+                        "precio":  14900,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "JUGO DE LIMON",
+                        "unidad":  "LT",
+                        "precio":  745,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "LIQUIDOS"
+                    },
+                    {
+                        "nombre":  "LIMON",
+                        "unidad":  "UN",
+                        "precio":  300,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "VERDURAS"
+                    },
+                    {
+                        "nombre":  "BICARBONATO SODIO",
+                        "unidad":  "KG",
+                        "precio":  3801.65,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "MANZANA ROJA",
+                        "unidad":  "KG",
+                        "precio":  1300,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "VERDURAS"
+                    },
+                    {
+                        "nombre":  "PIMENTON",
+                        "unidad":  "KG",
+                        "precio":  7500,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "ZAPALLO PLOMO",
+                        "unidad":  "KG",
+                        "precio":  650,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "VERDURAS"
+                    },
+                    {
+                        "nombre":  "OREGANO",
+                        "unidad":  "KG",
+                        "precio":  7680,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "ZAPALLO COREANO",
+                        "unidad":  "KG",
+                        "precio":  930,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "VERDURAS"
+                    },
+                    {
+                        "nombre":  "PEREJIL DESHIDRATADO",
+                        "unidad":  "KG",
+                        "precio":  8900,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "AJO (DIENTES)",
+                        "unidad":  "UN",
+                        "precio":  40,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "VERDURAS"
+                    },
+                    {
+                        "nombre":  "ROMERO",
+                        "unidad":  "KG",
+                        "precio":  8900,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "FOLEX",
+                        "unidad":  "UN",
+                        "precio":  9,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "DESCARTABLES"
+                    },
+                    {
+                        "nombre":  "PERA",
+                        "unidad":  "KG",
+                        "precio":  1428,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "VERDURAS"
+                    },
+                    {
+                        "nombre":  "PIMIENTA NEGRA GRANO",
+                        "unidad":  "KG",
+                        "precio":  25500,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "FILM",
+                        "unidad":  "MT",
+                        "precio":  28,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "DESCARTABLES"
+                    },
+                    {
+                        "nombre":  "FRUTILLA",
+                        "unidad":  "KG",
+                        "precio":  1600,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "VERDURAS"
+                    },
+                    {
+                        "nombre":  "CEBOLLA EN POLVO",
+                        "unidad":  "KG",
+                        "precio":  8200,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "BANDEJA 107",
+                        "unidad":  "UN",
+                        "precio":  118,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "DESCARTABLES"
+                    },
+                    {
+                        "nombre":  "PEPINO",
+                        "unidad":  "KG",
+                        "precio":  667,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "VERDURAS"
+                    },
+                    {
+                        "nombre":  "SEMOLIN",
+                        "unidad":  "KG",
+                        "precio":  840,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "BANDEJA103",
+                        "unidad":  "UN",
+                        "precio":  55,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "DESCARTABLES"
+                    },
+                    {
+                        "nombre":  "DURAZNO",
+                        "unidad":  "KG",
+                        "precio":  897,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "VERDURAS"
+                    },
+                    {
+                        "nombre":  "HUMO LIQUIDO",
+                        "unidad":  "LT",
+                        "precio":  8560,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "OBLEA 20CM",
+                        "unidad":  "UN",
+                        "precio":  65,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "DESCARTABLES"
+                    },
+                    {
+                        "nombre":  "ZAPALLO BRASILERO",
+                        "unidad":  "KG",
+                        "precio":  1000,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "VERDURAS"
+                    },
+                    {
+                        "nombre":  "TOMILLO",
+                        "unidad":  "KG",
+                        "precio":  8300,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "BOLSA COSTE 15x25",
+                        "unidad":  "ROLLO",
+                        "precio":  1640,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "DESCARTABLES"
+                    },
+                    {
+                        "nombre":  "LAUREL",
+                        "unidad":  "KG",
+                        "precio":  20000,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "VERDURAS"
+                    },
+                    {
+                        "nombre":  "PIMIENTA NEGRA MOLIDA",
+                        "unidad":  "KG",
+                        "precio":  16950,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "BOLSA COSTE 20x25",
+                        "unidad":  "ROLLO",
+                        "precio":  2660,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "DESCARTABLES"
+                    },
+                    {
+                        "nombre":  "PEREJIL",
+                        "unidad":  "KG",
+                        "precio":  2500,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "VERDURAS"
+                    },
+                    {
+                        "nombre":  "NUEZ MARIPOSA BCA",
+                        "unidad":  "KG",
+                        "precio":  17000,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS",
+                        "categoria_sugerida":  "CONDIMENTOS"
+                    },
+                    {
+                        "nombre":  "ACEITE DE GIRASOL LEGITIMO x5Lts  [Bidon]",
+                        "unidad":  "Bidon",
+                        "precio":  14900,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "ACEITE DE OLIVA MONTEOLIVO x3Lts  [Bidon]",
+                        "unidad":  "Bidon",
+                        "precio":  22310,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "ACEITE GIRASOL CRISOL x10Lts  [Bidon]",
+                        "unidad":  "Bidon",
+                        "precio":  24531,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "ACEITUNAS NEGRAS  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  39266,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "ACEITUNAS NEGRAS BLATI Nº5 x5Kg  [Bidon]",
+                        "unidad":  "Bidon",
+                        "precio":  39265.99,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "ACEITUNAS VERDES BLATI Nº5 x5Kg  [Bidon]",
+                        "unidad":  "Bidon",
+                        "precio":  29328,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "ACETO BALSAMICO LA FLAMENCA x500ml [un]",
+                        "unidad":  "Uni",
+                        "precio":  3140,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "AGUJA  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  11602.5,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "ARROZ GALLO DOBLE CAROLINA x500Gr  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  1490,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "ARROZ GALLO PARBOIL 5kg  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  7360,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "ARVEJA  INALPA 300GR  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  469,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "AZUCAR PORCIONADA x800Un  [Cj]",
+                        "unidad":  "Cj",
+                        "precio":  15543,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "AZUCAR x1Kg  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  900,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "BALDE POLLO FRITO CHICO x50oz  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  711,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "BALDE POLLO FRITO MEDIANO x130oz  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  1038,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "BALDE POLLO FRITO MINI x240Cc  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  95,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "BIFE ANGOSTO  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  19890,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "BIMBO PAN HAMBURGUESA BRIOCHE 4\"  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  542,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "BONDIOLA CURADA A/V 214  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  19390,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "BROWNIES EXQUISITA x425Gr  [Cj]",
+                        "unidad":  "Cj",
+                        "precio":  3150,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "CACAO NESQUIK x800Gr  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  8023,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "CAFE CON.FE x1Kg  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  28132,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "CAJITA COMBO KIDS  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  475.01,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "CEBOLLA BLANCA  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  700,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "CHAMPIGNONES LAMINADOS CUMANA x400Gr  [Lata]",
+                        "unidad":  "Lata",
+                        "precio":  2270,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "CHOCLO EN GRANO INALPA x300Gr  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  1069,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "CHOCOLATE BARRA 16g x50Un  [Cj]",
+                        "unidad":  "Cj",
+                        "precio":  40429,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "CREMA DE LECHE COSALTA x4Kg  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  30000,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "CREMA DE LECHE LEIGLAC x4Kg  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  27990,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "DULCE DE BATATA C/VAINILLA x5Kg  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  7390,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "DULCE DE LECHE CERROS TUCUMANOS x5Kg  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  14690,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "DULCE DE MEMBRILLO x5Kg  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  9990,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "DURAZNO MITADES AGUARIBAY x820Gr  [Lata]",
+                        "unidad":  "Lata",
+                        "precio":  1750,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "DURAZNO MITADES ALCO x820Gr  [Lata]",
+                        "unidad":  "Lata",
+                        "precio":  1880,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "EDULCORANTE PORCIONADO x400Un  [Cj]",
+                        "unidad":  "Cj",
+                        "precio":  7393.48,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "EDULCORANTE PORCIONADO x500Un  [Cj]",
+                        "unidad":  "Cj",
+                        "precio":  7900,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "ESPINACA  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  3000,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "ETIQUETA AMARILLA PARA BALDE x100Un  [Paq]",
+                        "unidad":  "Paq",
+                        "precio":  35000,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "ETIQUETA CHICA PARA BALDE x100Un  [Paq]",
+                        "unidad":  "Paq",
+                        "precio":  28000,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "ETIQUETA MEDIANA PARA BALDE x100Un  [Paq]",
+                        "unidad":  "Paq",
+                        "precio":  35000,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "ETIQUETA MINI PARA BALDE x100Un  [Paq]",
+                        "unidad":  "Paq",
+                        "precio":  28000,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "FALDA CON HUESO (QUEPERI)  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  8508.5,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "FIDEOS SPAGHETTI MATARAZZO x500Gr  [Paq]",
+                        "unidad":  "Paq",
+                        "precio":  1230,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "FILET POLLO  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  6266.67,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "GALLETAS OREO 118GR  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  1471,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "HARINA GRACIELA REAL 000 x25Kg  [Paq]",
+                        "unidad":  "bolsa",
+                        "precio":  13500,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "HARINA GRACIELA REAL 0000 x1Kg  [Paq]",
+                        "unidad":  "Paq",
+                        "precio":  854,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "HARINA GRACIELA REAL 0000 x25Kg  [Paq]",
+                        "unidad":  "bolsa",
+                        "precio":  16500,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "HUEVO MAPLE x 30u  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  5666.67,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "JAMON COCIDO SADIA  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  9799,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "JAMON CRUDO KLEIN  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  21820,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "KETCHUP HELLMANN\u0027S x3kg  [Sachet]",
+                        "unidad":  "Sachet",
+                        "precio":  11520,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "LECHE LARGA VIDA COSALTA x1Lts  [Sachet]",
+                        "unidad":  "Sachet",
+                        "precio":  1450,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "LEVADURA DUQUESA x500Gr  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  3990,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "MANTECA TEODORO x5Kg  [Pilon]",
+                        "unidad":  "Pilon",
+                        "precio":  43920,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "MATE COCIDO ENSOBRADO AMANDA x50Un  [Cj]",
+                        "unidad":  "Cj",
+                        "precio":  1950,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "MAYONESA HELLMANN\u0027S ORIGINAL x2.75Kg  [Sachet]",
+                        "unidad":  "Sachet",
+                        "precio":  10390,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "MERMELADA DURAZNO EMETH x 5.5kg  [Bd]",
+                        "unidad":  "Bidon",
+                        "precio":  13590,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "MERMELADA FRUTILLA DAVID FR x2Kg  [Pouch]",
+                        "unidad":  "Pouch",
+                        "precio":  14000,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "MERMELADA FRUTILLA EMETH x 5.5kg  [Bd]",
+                        "unidad":  "Bidon",
+                        "precio":  14824,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "MINI OREO x50Gr  [Paq]",
+                        "unidad":  "Paq",
+                        "precio":  761,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "MINI PEPITOS x50Gr  [Paq]",
+                        "unidad":  "Paq",
+                        "precio":  661,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "MOSTAZA SAVORA ORIGINAL x3Kg  [Sachet]",
+                        "unidad":  "Sachet",
+                        "precio":  9900,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "MUZZARELLA CILINDRO TREMBLAY  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  7305.6,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "MUZZARELLA EN BARRA TREMBLAY  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  9080.17,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "NALGA SIN TAPA  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  18232.5,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "NUTELLA x350Gr  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  7449,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "PAN CIABATTA x150Gr.  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  129,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "PAN DE MESA LACTAL x460Gr  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  3615,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "PANCETA AHUMADA LUVIANKA  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  15990,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "PAPA  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  700,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "PECHO  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  11050,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "PEPERONI CASAPUEBLO  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  15550,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "PEREJIL  [Ad]",
+                        "unidad":  "Ad",
+                        "precio":  3500,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "PIMIENTO ROJO  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  3000,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "PIMIENTO VERDE  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  2200,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "PRIMO  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  12599.99,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "PULPA DURAZNO CALIPUL x1100Gr  [Bot]",
+                        "unidad":  "Bot",
+                        "precio":  3628,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "PULPA FRUTILLA CALIPUL x1100Gr  [Bot]",
+                        "unidad":  "Bot",
+                        "precio":  4410,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "QUEPERÍ  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  14999.9,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "QUESO AZUL TREMBLAY  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  14733,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "QUESO CHEDDAR AMERICANO TONADITA x140 Fetas  [Paq]",
+                        "unidad":  "Paq",
+                        "precio":  18223,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "QUESO CHEDDAR LACTEAR EN BARRA [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  11290,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "QUESO CHEDDAR TONADITA x3Kg  [Pouch]",
+                        "unidad":  "Pouch",
+                        "precio":  18014.7,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "QUESO CREMA TONADITA x3kg  [Pouch]",
+                        "unidad":  "Pouch",
+                        "precio":  14875.83,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "QUESO CREMOSO TREMBLAY  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  6968,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "QUESO DANBO LA PAULINA  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  9522.73,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "QUESO DANBO TONADITA x144 Fetas  [Cj]",
+                        "unidad":  "Cj",
+                        "precio":  23091,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "QUESO DANBO TREMBLAY  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  8749,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "QUESO SARDO SILVIA  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  12250,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "QUESO SARDO TREMBLAY  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  14293,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "REBOZADOR PREFERIDO x5kg  [Paq]",
+                        "unidad":  "Paq",
+                        "precio":  11290,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "SAL FINA CELUSAL x500Gr  [Paq]",
+                        "unidad":  "Paq",
+                        "precio":  929,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "SALAME CANTIMPALO EL BIERZO  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  15480,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "SALSA BARBACOA HELLMANN´S x3Kg  [Sachet]",
+                        "unidad":  "Sachet",
+                        "precio":  9900,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "SALSA DE SOJA CALIPUL x 1L  [Uni]",
+                        "unidad":  "Bot",
+                        "precio":  5405.07,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "SALSA DULCE CARAMELO LHERITIER x500Cc  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  2298,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "SALSA DULCE CHOCOLATE LHERITIER x500Cc  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  2571,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "SALSA DULCE FRUTILLA LHERITIER x500Cc  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  2242,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "SALSA INGLESA VANOLI x950Ml  [Bot]",
+                        "unidad":  "Bot",
+                        "precio":  4250,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "TAPA ASADO  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  12400,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "TE BOLDO x20Un  [Cj]",
+                        "unidad":  "Cj",
+                        "precio":  1772.23,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "TE GREEN HILLS x100Un  [Cj]",
+                        "unidad":  "Cj",
+                        "precio":  6369,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "TE MANZANILLA x20Un  [Cj]",
+                        "unidad":  "Cj",
+                        "precio":  1886.05,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "TE VERDE x20Un  [Cj]",
+                        "unidad":  "Cj",
+                        "precio":  2145,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "TOMATE  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  1000,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "TOMATE TRITURADO GALLARDO x950Gr  [Bot]",
+                        "unidad":  "Bot",
+                        "precio":  1120,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "TOMATE TRITURADO SABORES DEL VALLE 970grs  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  1190,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "VINAGRE DE ALCOHOL FRAU x4.5Lts  [Bidon]",
+                        "unidad":  "Bidon",
+                        "precio":  3090,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "VINAGRE DE ALCOHOL SILVIA x5Lts  [Bidon]",
+                        "unidad":  "Bidon",
+                        "precio":  3890,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor) + QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "ZANAHORIA  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  1000,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "ZAPALLO BRASILERO  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  1250,
+                        "fuente":  "PLANTILLA COSTOS!PRECIOS INSUMOS (lista proveedor)",
+                        "categoria_sugerida":  "INSUMOS LISTA PROVEEDOR"
+                    },
+                    {
+                        "nombre":  "ACEITE DE GIRASOL LAGRIMAS DEL SOL x5Lts  [Bidon]",
+                        "unidad":  "Bidon",
+                        "precio":  14990,
+                        "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "REVENTA / COMPRA DIRECTA"
+                    },
+                    {
+                        "nombre":  "ACEITE DE GIRASOL NATURA x5Lts  [Bidon]",
+                        "unidad":  "Bidon",
+                        "precio":  19348.53,
+                        "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "REVENTA / COMPRA DIRECTA"
+                    },
+                    {
+                        "nombre":  "AZUCAR LEDESMA x1000Un [Cj]",
+                        "unidad":  "Cj",
+                        "precio":  16900,
+                        "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "REVENTA / COMPRA DIRECTA"
+                    },
+                    {
+                        "nombre":  "BALDE POLLO FRITO CHICO x50oz 200 unidades [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  142200,
+                        "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "DESCARTABLES"
+                    },
+                    {
+                        "nombre":  "BALDE POLLO FRITO MEDIANO x130oz 160 unidades  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  166080,
+                        "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "DESCARTABLES"
+                    },
+                    {
+                        "nombre":  "CAFE SANTOS CREMA x1Kg  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  41219.1,
+                        "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "REVENTA / COMPRA DIRECTA"
+                    },
+                    {
+                        "nombre":  "CAJITA COMBO KIDS MUNDIAL  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  675,
+                        "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "DESCARTABLES"
+                    },
+                    {
+                        "nombre":  "CHAMPIGNONES LAMINADOS BAHIA x400Gr  [Lata]",
+                        "unidad":  "Lata",
+                        "precio":  2590,
+                        "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "REVENTA / COMPRA DIRECTA"
+                    },
+                    {
+                        "nombre":  "CREMA DE LECHE TONADITA x4Kg  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  30000,
+                        "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "REVENTA / COMPRA DIRECTA"
+                    },
+                    {
+                        "nombre":  "ETIQUETA MUNDIAL PARA BALDE x100Un  [Paq]",
+                        "unidad":  "Paq",
+                        "precio":  35000,
+                        "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "DESCARTABLES"
+                    },
+                    {
+                        "nombre":  "HARINA CELESTIAL 0000 x 1kg  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  890,
+                        "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "REVENTA / COMPRA DIRECTA"
+                    },
+                    {
+                        "nombre":  "HARINA GRACIELA REAL 0000 x 1kg  [Uni]",
+                        "unidad":  "Paq",
+                        "precio":  1115,
+                        "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "REVENTA / COMPRA DIRECTA"
+                    },
+                    {
+                        "nombre":  "HARINA REINA ANA 0000 x 1kg  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  850,
+                        "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "REVENTA / COMPRA DIRECTA"
+                    },
+                    {
+                        "nombre":  "KINDER CHOCOLATE BARRITA X4 [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  3065,
+                        "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "REVENTA / COMPRA DIRECTA"
+                    },
+                    {
+                        "nombre":  "LACTAL PAN HAMBURGUESA  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  488.77,
+                        "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "REVENTA / COMPRA DIRECTA"
+                    },
+                    {
+                        "nombre":  "NUTELLA x3 KG  [Uni]",
+                        "unidad":  "Uni",
+                        "precio":  68900,
+                        "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "REVENTA / COMPRA DIRECTA"
+                    },
+                    {
+                        "nombre":  "PAPAS MC CAIN ONE FREY x 15 kg  [CAJA]  [FARPEP]",
+                        "unidad":  "Cj",
+                        "precio":  40485,
+                        "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "REVENTA / COMPRA DIRECTA"
+                    },
+                    {
+                        "nombre":  "PAPAS MC CAIN ONE FREY x 15 kg  [CAJA]  [VIA]",
+                        "unidad":  "Cj",
+                        "precio":  50779,
+                        "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "REVENTA / COMPRA DIRECTA"
+                    },
+                    {
+                        "nombre":  "PAPAS SIMPLOT TRADICIONALES x 15 kg  [CAJA]",
+                        "unidad":  "Cj",
+                        "precio":  48540,
+                        "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "REVENTA / COMPRA DIRECTA"
+                    },
+                    {
+                        "nombre":  "PEPERONI CASAPUEBLO (El Familiar)  [Kg]",
+                        "unidad":  "Kg",
+                        "precio":  15990,
+                        "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "REVENTA / COMPRA DIRECTA"
+                    },
+                    {
+                        "nombre":  "TE VERDE LA VIRGINIA x20u  [Cj]",
+                        "unidad":  "Cj",
+                        "precio":  7668,
+                        "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS",
+                        "categoria_sugerida":  "REVENTA / COMPRA DIRECTA"
+                    },
+                    {
+                        "nombre":  "AGUA",
+                        "unidad":  "Lts",
+                        "precio":  null,
+                        "fuente":  "PLANTILLA COSTOS (recetas, sin precio)",
+                        "categoria_sugerida":  "POR CLASIFICAR"
+                    },
+                    {
+                        "nombre":  "CEBOLLA CRISPY",
+                        "unidad":  null,
+                        "precio":  null,
+                        "fuente":  "PLANTILLA COSTOS (recetas, sin precio)",
+                        "categoria_sugerida":  "POR CLASIFICAR"
+                    },
+                    {
+                        "nombre":  "BOLSITA COND",
+                        "unidad":  null,
+                        "precio":  null,
+                        "fuente":  "PLANTILLA COSTOS (recetas, sin precio)",
+                        "categoria_sugerida":  "POR CLASIFICAR"
+                    },
+                    {
+                        "nombre":  "PULLED PORK",
+                        "unidad":  null,
+                        "precio":  null,
+                        "fuente":  "PLANTILLA COSTOS (recetas, sin precio)",
+                        "categoria_sugerida":  "POR CLASIFICAR"
+                    },
+                    {
+                        "nombre":  "CAJA BROWNIE 450g",
+                        "unidad":  "U",
+                        "precio":  null,
+                        "fuente":  "PLANTILLA COSTOS (recetas, sin precio)",
+                        "categoria_sugerida":  "POR CLASIFICAR"
+                    },
+                    {
+                        "nombre":  "NUECES",
+                        "unidad":  "Gr",
+                        "precio":  null,
+                        "fuente":  "PLANTILLA COSTOS (recetas, sin precio)",
+                        "categoria_sugerida":  "POR CLASIFICAR"
+                    }
+                ],
+    "productos_terminados_detectados":  [
+                                            {
+                                                "nombre":  "BASTONES MINI TYBO  [Uni]",
+                                                "unidad":  "Uni",
+                                                "precio":  205,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "BLEND DE QUESOS x180Gr  [Prc]",
+                                                "unidad":  "Prc",
+                                                "precio":  1233,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "BROWNIE DE CHOCOLATE  [Uni]",
+                                                "unidad":  "Uni",
+                                                "precio":  1186,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "CANASTA x 150g  [Uni]",
+                                                "unidad":  "Uni",
+                                                "precio":  94,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "FAJITA ESPINACA  [Uni]",
+                                                "unidad":  "Uni",
+                                                "precio":  120,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "FINGER CHICKEN x 150grs  [Prc]",
+                                                "unidad":  "Prc",
+                                                "precio":  860,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "FOCACCIA  [Uni]",
+                                                "unidad":  "Uni",
+                                                "precio":  2816,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "HAMBURGUESA x 100g  [Uni]",
+                                                "unidad":  "Uni",
+                                                "precio":  939,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "LOMO ENSALADA x 100gr  [Uni]",
+                                                "unidad":  "Uni",
+                                                "precio":  1570,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "LOMO MENÚ x 250gr  [Uni]",
+                                                "unidad":  "Uni",
+                                                "precio":  3925,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "LOMO ROLL x 200gr  [Uni]",
+                                                "unidad":  "Uni",
+                                                "precio":  2960,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "MEDALLÓN DE 4 QUESOS  [Uni]",
+                                                "unidad":  "Uni",
+                                                "precio":  971,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "MILANESAS DE CARNE  [Uni]",
+                                                "unidad":  "Uni",
+                                                "precio":  2407,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "MINI HAMBURGUESA x 40g (EVENTO)  [Uni]",
+                                                "unidad":  "Uni",
+                                                "precio":  496,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "MINI TORTA BROWNIE  [Uni]",
+                                                "unidad":  "Uni",
+                                                "precio":  1173,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "MUZZA FRACCIONADA P/MILANESAS x60Gr  [Prc]",
+                                                "unidad":  "Prc",
+                                                "precio":  366,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "NACHOS  [Kg]",
+                                                "unidad":  "Kg",
+                                                "precio":  868,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "PAN CIABATTA x150Gr.  [Uni]",
+                                                "unidad":  "Uni",
+                                                "precio":  129,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "PEPINOS ENCURTIDOS  [Kg]",
+                                                "unidad":  "Kg",
+                                                "precio":  1137,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "PICADA 24 ST  [Prc]",
+                                                "unidad":  "Prc",
+                                                "precio":  4939,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "PIZZA  24ST NAPOLITANA  [Uni]",
+                                                "unidad":  "Uni",
+                                                "precio":  245,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "POLLO BROASTER MIX x 10u  [Prc]",
+                                                "unidad":  "Prc",
+                                                "precio":  2219,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "POLLO BROASTER MIX x 6u  [Prc]",
+                                                "unidad":  "Prc",
+                                                "precio":  1331,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "POLLO CORTE MARIPOSA x 200grs  [Uni]",
+                                                "unidad":  "Uni",
+                                                "precio":  1421,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "POLLO ENSALADA x 150gr  [Uni]",
+                                                "unidad":  "Uni",
+                                                "precio":  863,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "POLLO MENÚ x 250gr  [Uni]",
+                                                "unidad":  "Uni",
+                                                "precio":  1438,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "POLLO MINI CRISPY 200 GR  [Prc]",
+                                                "unidad":  "Prc",
+                                                "precio":  2320,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "POLLO ROLL x 200gr  [Uni]",
+                                                "unidad":  "Uni",
+                                                "precio":  1151,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "PRE PIZZA LENGÜETA  [Uni]",
+                                                "unidad":  "Uni",
+                                                "precio":  195,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "RECORTES DE MILANESA  [Uni]",
+                                                "unidad":  "Uni",
+                                                "precio":  2789,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "SALSA CHICK FILA  [Kg]",
+                                                "unidad":  "Kg",
+                                                "precio":  3325,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "SALSA MAC  [Kg]",
+                                                "unidad":  "Kg",
+                                                "precio":  3568,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "SALSA STACKER  [Kg]",
+                                                "unidad":  "Kg",
+                                                "precio":  3028,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "SALSA TASTY  [Kg]",
+                                                "unidad":  "Kg",
+                                                "precio":  3922,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "SANGUCHERIA- LENGUA hervida [Kg]",
+                                                "unidad":  "Kg",
+                                                "precio":  15000,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "SANGUCHERIA- LOMITO DE CARNE [Uni]",
+                                                "unidad":  "Uni",
+                                                "precio":  4041,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "SANGUCHERIA- MILA DE CARNE 190 grs [Uni]",
+                                                "unidad":  "Uni",
+                                                "precio":  3041,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "SUPREMAS  [Uni]",
+                                                "unidad":  "Uni",
+                                                "precio":  1182,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "TARTA DE CALABAZA  [Uni]",
+                                                "unidad":  "Uni",
+                                                "precio":  958,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "TARTA DE ESPINACA  [Uni]",
+                                                "unidad":  "Uni",
+                                                "precio":  876,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "TARTA DE POLLO Y PUERRO  [Uni]",
+                                                "unidad":  "Uni",
+                                                "precio":  1681,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            },
+                                            {
+                                                "nombre":  "TEQUEÑOS  [Uni]",
+                                                "unidad":  "Uni",
+                                                "precio":  295,
+                                                "fuente":  "QUE_MILA_BOBO_SEM1_JULIO!PRODUCTOS"
+                                            }
+                                        ],
+    "unidades_mencionadas":  [
+                                 "AD",
+                                 "BIDON",
+                                 "BOLSA",
+                                 "BOT",
+                                 "CJ",
+                                 "GR",
+                                 "KG",
+                                 "LATA",
+                                 "LT",
+                                 "LTS",
+                                 "MT",
+                                 "PAQ",
+                                 "PILON",
+                                 "POUCH",
+                                 "ROLLO",
+                                 "SACHET",
+                                 "U",
+                                 "UN",
+                                 "UNI"
+                             ]
+}

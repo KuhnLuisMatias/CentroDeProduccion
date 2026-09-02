@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Guía interactiva del Centro de Producción — modelo de negocio actualizado tras el refactor validado" />
+<title>Centro de Producción — Guía del Modelo de Negocio</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --bg-soft: #1e293b;
+    --bg-card: #16202f;
+    --border: #2c3a4f;
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --dim: #64748b;
+    --accent: #3b82f6;
+    --accent-soft: #1e3a5f;
+    --green: #10b981;
+    --amber: #f59e0b;
+    --violet: #8b5cf6;
+    --red: #f87171;
+    --radius: 14px;
+    --shadow: 0 1px 3px rgba(0,0,0,.35), 0 8px 24px rgba(0,0,0,.25);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== Top progress bar ===== */
+  #progress-wrap {
+    position: fixed; top: 0; left: 0; right: 0; height: 5px;
+    background: var(--bg-soft); z-index: 100;
+  }
+  #progress-bar {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--accent), var(--violet));
+    transition: width .35s ease;
+  }
+
+  /* ===== Header ===== */
+  header.app-header {
+    background: var(--bg-card); color: var(--text);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 20px; display: flex; align-items: center; gap: 12px;
+    position: sticky; top: 5px; z-index: 90;
+  }
+  header.app-header .logo {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px; border-radius: 11px; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--accent), var(--violet));
+    font-weight: 800; font-size: 13px; color: #fff;
+  }
+  header.app-header h1 { font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
+  header.app-header p { font-size: 12px; color: var(--muted); }
+
+  .shell { max-width: 1180px; margin: 0 auto; padding: 20px 16px 110px; }
+
+  /* ===== Stepper (horizontal dots) ===== */
+  nav.stepper {
+    display: flex; gap: 6px; overflow-x: auto; padding: 16px 2px 10px;
+    scrollbar-width: thin; margin-bottom: 8px;
+  }
+  nav.stepper button {
+    flex-shrink: 0; border: 1px solid var(--border); background: var(--bg-card);
+    border-radius: 999px; padding: 7px 14px; font-size: 12.5px; font-weight: 600;
+    color: var(--muted); cursor: pointer; transition: all .15s ease;
+    display: flex; align-items: center; gap: 7px; font-family: inherit;
+  }
+  nav.stepper button .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 21px; height: 21px; border-radius: 50%;
+    background: var(--bg-soft); font-size: 11px; color: var(--muted);
+    transition: all .15s ease;
+  }
+  nav.stepper button:hover { border-color: var(--accent); color: var(--text); }
+  nav.stepper button.active {
+    background: var(--accent); border-color: var(--accent); color: #fff;
+  }
+  nav.stepper button.active .num { background: rgba(255,255,255,.25); color: #fff; }
+  nav.stepper button.done .num { background: var(--green); color: #fff; }
+
+  /* ===== Step panels & cards ===== */
+  .step-panel { display: none; animation: fadeIn .25s ease; }
+  .step-panel.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .card {
+    background: var(--bg-card); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 24px; margin-bottom: 16px;
+    border: 1px solid var(--border);
+  }
+  h2.step-title { font-size: 22px; font-weight: 800; letter-spacing: -.02em; color: var(--text); }
+  h2.step-title .chip-step {
+    display: inline-block; vertical-align: middle; margin-right: 10px;
+    background: var(--accent); color: #fff; font-size: 13px; font-weight: 700;
+    padding: 3px 11px; border-radius: 999px;
+  }
+  h3.section-h {
+    font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em;
+    color: var(--muted); margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+  }
+  .card p { margin-bottom: 10px; font-size: 14.5px; }
+  ul.plain { list-style: none; }
+  ul.plain li { padding-left: 22px; position: relative; margin-bottom: 6px; font-size: 14.5px; }
+  ul.plain li::before { content: "▸"; position: absolute; left: 4px; color: var(--accent); font-weight: 700; }
+  strong { color: var(--text); }
+
+  /* Menu path chips */
+  kbd.path {
+    display: inline-block; font-family: inherit; font-size: 12.5px; font-weight: 700;
+    background: var(--bg-soft); color: var(--text);
+    border: 1px solid var(--border); border-radius: 7px; padding: 3px 9px; white-space: nowrap;
+  }
+  kbd.path .sep { color: var(--accent); padding: 0 4px; }
+  code.money {
+    font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px;
+    background: var(--bg-soft); border: 1px solid var(--border);
+    padding: 1px 6px; border-radius: 5px; color: var(--amber);
+  }
+
+  /* ===== Tables ===== */
+  .table-scroll { overflow-x: auto; }
+  table.data {
+    width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13.5px;
+    background: var(--bg-card); border-radius: 10px; overflow: hidden;
+  }
+  table.data th {
+    background: var(--bg-soft); color: var(--muted); text-align: left;
+    padding: 9px 12px; font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em;
+    border-bottom: 1px solid var(--border);
+  }
+  table.data td { padding: 9px 12px; border-top: 1px solid var(--border); }
+  table.data tr:nth-child(even) td { background: rgba(30, 41, 59, .45); }
+
+  /* ===== Flow diagram ===== */
+  .flow-diagram { display: flex; flex-direction: column; gap: 0; margin: 14px 0; }
+  .flow-row { display: flex; align-items: stretch; justify-content: center; flex-wrap: wrap; gap: 8px; }
+  .flow-node {
+    background: var(--bg-soft); color: var(--text); border: 1px solid var(--border);
+    border-radius: 12px; padding: 10px 16px; font-size: 13px; font-weight: 700;
+    text-align: center; min-width: 120px;
+  }
+  .flow-node small { display: block; font-weight: 500; color: var(--muted); font-size: 11px; }
+  .flow-node.action { background: var(--accent); border-color: var(--accent); }
+  .flow-node.action small { color: #dbeafe; }
+  .flow-node.money-node { background: linear-gradient(135deg, var(--amber), #d97706); border-color: transparent; }
+  .flow-node.money-node small { color: #fef3c7; }
+  .flow-node.ref-node { border-style: dashed; color: var(--muted); }
+  .flow-arrow { align-self: center; color: var(--dim); font-size: 20px; font-weight: 700; padding: 2px 4px; }
+  .flow-arrow.down { transform: rotate(90deg); }
+
+  /* ===== Callouts ===== */
+  .callout {
+    border-radius: 12px; padding: 14px 16px; margin: 12px 0; font-size: 14px;
+    border-left: 4px solid; border-top: 1px solid var(--border);
+    border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .callout .ico { font-size: 17px; line-height: 1.3; flex-shrink: 0; }
+  .callout.warn { background: rgba(245, 158, 11, .1); border-color: var(--amber); color: #fcd34d; }
+  .callout.warn strong { color: #fde68a; }
+  .callout.ok { background: rgba(16, 185, 129, .1); border-color: var(--green); color: #6ee7b7; }
+  .callout.ok strong { color: #a7f3d0; }
+  .callout.info { background: rgba(59, 130, 246, .1); border-color: var(--accent); color: #93c5fd; }
+  .callout.info strong { color: #bfdbfe; }
+  .callout.violet { background: rgba(139, 92, 246, .1); border-color: var(--violet); color: #c4b5fd; }
+  .callout.violet strong { color: #ddd6fe; }
+  .callout.danger { background: rgba(248, 113, 113, .08); border-color: var(--red); color: #fca5a5; }
+  .callout.danger strong { color: #fecaca; }
+
+  /* Template sections */
+  .tpl-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+  @media (min-width: 860px) { .tpl-grid.two { grid-template-columns: 1fr 1fr; } }
+  .tpl-section { border: 1px dashed var(--border); border-radius: 12px; padding: 16px; }
+  .tpl-section h4 { font-size: 13px; font-weight: 800; margin-bottom: 8px; display: flex; gap: 7px; align-items: center; }
+
+  .badge-role {
+    display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 9px;
+    border-radius: 999px; margin-right: 6px;
+  }
+  .role-adm { background: rgba(139,92,246,.18); color: #c4b5fd; }
+  .role-prod { background: rgba(59,130,246,.18); color: #93c5fd; }
+  .role-comp { background: rgba(16,185,129,.18); color: #6ee7b7; }
+  .role-vent { background: rgba(245,158,11,.18); color: #fcd34d; }
+
+  /* Módulos dashboard */
+  .mod-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 12px 0; }
+  .mod-tile {
+    background: var(--bg-soft); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px; text-align: center;
+  }
+  .mod-tile .ico { font-size: 26px; display: block; margin-bottom: 8px; }
+  .mod-tile strong { display: block; font-size: 14px; margin-bottom: 4px; }
+  .mod-tile small { color: var(--muted); font-size: 12px; }
+
+  /* ===== Checklist ===== */
+  .check-item {
+    display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px;
+    border: 1px solid var(--border); border-radius: 12px; margin-bottom: 8px;
+    cursor: pointer; transition: all .15s; background: var(--bg-card); user-select: none;
+  }
+  .check-item:hover { border-color: var(--accent); }
+  .check-item input[type="checkbox"] { width: 19px; height: 19px; margin-top: 2px; accent-color: var(--green); cursor: pointer; flex-shrink: 0; }
+  .check-item input:checked ~ span.txt { text-decoration: line-through; color: var(--dim); }
+  .check-item span.txt { font-size: 14.5px; }
+  .check-item span.txt small { display: block; color: var(--muted); font-size: 12.5px; }
+
+  /* ===== Footer nav ===== */
+  .wizard-footer {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 80;
+    background: rgba(15, 23, 42, .92); backdrop-filter: blur(8px);
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 16px; gap: 10px;
+  }
+  .btn {
+    border: none; border-radius: 10px; padding: 10px 22px; font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: all .15s; font-family: inherit;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #2563eb; }
+  .btn-secondary { background: var(--bg-soft); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-danger { background: rgba(248,113,113,.12); color: var(--red); }
+  .btn-danger:hover { background: rgba(248,113,113,.22); }
+  .btn[disabled] { opacity: .4; cursor: not-allowed; }
+  .footer-progress-label { font-size: 12.5px; font-weight: 700; color: var(--muted); }
+  @media (max-width: 520px) {
+    .btn { padding: 9px 16px; font-size: 13px; }
+    .card { padding: 18px 16px; }
+  }
+  #final-msg { display: none; margin-top: 16px; }
+
+  /* ===== Watermark ===== */
+  .watermark {
+    position: fixed; bottom: 62px; right: 14px; z-index: 70;
+    font-size: 11px; font-weight: 800; letter-spacing: .18em;
+    color: var(--dim); opacity: .55; pointer-events: none; user-select: none;
+  }
+
+  /* ===== Print: linear for PDF ===== */
+  @media print {
+    #progress-wrap, nav.stepper, .wizard-footer, header.app-header p, .watermark { display: none !important; }
+    body { background: #fff; color: #0f172a; }
+    .step-panel { display: block !important; page-break-before: always; }
+    .step-panel:first-of-type { page-break-before: avoid; }
+    .card { box-shadow: none; break-inside: avoid; border-color: #cbd5e1; background: #fff; }
+    .card, table.data td, table.data th, .flow-node, .tpl-section, .mod-tile { color: #0f172a !important; }
+    .wizard-footer-note { display: block; }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress-wrap"><div id="progress-bar"></div></div>
+
+<header class="app-header">
+  <span class="logo">CP</span>
+  <div>
+    <h1>Centro de Producción — Guía del Modelo de Negocio</h1>
+    <p>Versión 2 · modelo actualizado tras el refactor validado · tu progreso se guarda en este dispositivo</p>
+  </div>
+</header>
+
+<div class="shell">
+
+  <nav class="stepper" id="stepper" aria-label="Pasos de la guía"></nav>
+
+  <!-- ================= STEP 0 — EL NEGOCIO ================= -->
+  <section class="step-panel" data-step="0">
+    <div class="card">
+      <h2 class="step-title">El negocio: cómo funciona el Centro de Producción</h2>
+      <p style="margin-top:8px;">Antes de tocar el sistema, entendé el flujo completo. Todo el software existe para administrar <strong>este ciclo</strong>:</p>
+
+      <div class="flow-diagram">
+        <div class="flow-row">
+          <div class="flow-node action">FACTURA DE COMPRA<small>documento real del proveedor</small></div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node">STOCK INSUMOS ↑<small>suma cantidades y precios</small></div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node money-node">💰 DEUDA PROVEEDOR<small>cta. cte. automática</small></div>
+        </div>
+        <div class="flow-row" style="margin-top:6px;">
+          <div class="flow-node ref-node">ORDEN DE COMPRA<small>solo referencial — NO toca stock</small></div>
+        </div>
+        <div class="flow-row" style="margin-top:12px;">
+          <span class="flow-arrow down">↓</span>
+        </div>
+        <div class="flow-row">
+          <div class="flow-node action">PRODUCCIÓN<small>1 receta = 1 PT · insumos editables</small></div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node">STOCK PT ↑<small>lote trazable + costeado</small></div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node">COSTO PT<small>Σ insumos reales ÷ producido</small></div>
+        </div>
+        <div class="flow-row" style="margin-top:12px;">
+          <span class="flow-arrow down">↓</span>
+        </div>
+        <div class="flow-row">
+          <div class="flow-node action">PEDIDO AL BAR<small>remito</small></div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node">STOCK PT ↓<small>+ insumos reventa</small></div>
+          <span class="flow-arrow">→</span>
+          <div class="flow-node money-node">DEUDA DEL BAR<small>cta. cte. del bar</small></div>
+        </div>
+        <div class="flow-row" style="margin-top:12px;">
+          <span class="flow-arrow down">↓</span>
+        </div>
+        <div class="flow-row">
+          <div class="flow-node money-node">COBRO<small>resta deuda en cta. cte.</small></div>
+        </div>
+      </div>
+
+      <div class="callout info">
+        <span class="ico">⚙️</span>
+        <div><strong>Cuenta corriente:</strong> es el registro de <strong>ingresos</strong> (cobros de bares) y <strong>egresos</strong> (pagos a proveedores) de la empresa. Un solo lugar para ver la plata que entra y sale.</div>
+      </div>
+      <div class="callout violet">
+        <span class="ico">🏷️</span>
+        <div><strong>Reventa de insumos al bar:</strong> el bar también compra insumos sueltos y descartables. Se los facturamos a <strong>costo + margen configurable por bar</strong>. El producto terminado va siempre a precio de costo unitario del lote.</div>
+      </div>
+      <div class="callout danger">
+        <span class="ico">🚫</span>
+        <div><strong>Eliminado en el refactor:</strong> <strong>Mano de Obra</strong> y <strong>Cheques</strong> ya no existen como módulos. El costo del PT es <strong>solo insumos</strong>. Los cheques, si los hay, se registran como <strong>número de texto</strong> en la factura.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="section-h">🔁 Qué cambió con el refactor</h3>
+      <div class="table-scroll">
+        <table class="data">
+          <thead><tr><th>Concepto</th><th>Antes</th><th>Ahora</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Factura de compra</strong></td><td>No existía como documento</td><td>Documento real: insumos con cantidades y precios, suma stock y genera deuda</td></tr>
+            <tr><td><strong>Orden de compra</strong></td><td>Borrador→Enviada→Confirmada→Recepción, movía stock</td><td><strong>Solo referencial</strong>: Borrador→Enviada→Cancelada. NO modifica stock</td></tr>
+            <tr><td><strong>Producción</strong></td><td>BOM fijo + salidas múltiples</td><td><strong>1 receta = 1 PT</strong>. Insumos editables al producir. El PT se crea solo si no existe</td></tr>
+            <tr><td><strong>Cuenta corriente</strong></td><td>Saldo por entidad</td><td>Ingresos (cobros de bares) y egresos (pagos a proveedores) de la empresa</td></tr>
+            <tr><td><strong>Mano de Obra</strong></td><td>Módulo con horas y tarifas</td><td><strong>Eliminado</strong>. Costo del PT = solo insumos</td></tr>
+            <tr><td><strong>Cheques</strong></td><td>Módulo propio (existente/nuevo, estados)</td><td><strong>Eliminado</strong>. Número de texto en la factura</td></tr>
+            <tr><td><strong>Dashboard</strong></td><td>KPIs únicos</td><td><strong>Por módulos</strong>: Producción / Stock / Ventas / Finanzas</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="section-h">👥 Roles del sistema</h3>
+      <div class="table-scroll">
+        <table class="data">
+          <thead><tr><th>Rol</th><th>Puede hacer</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge-role role-adm">Administrador</span></td><td>Todo el sistema, incluido Dashboard por módulos.</td></tr>
+            <tr><td><span class="badge-role role-prod">EncargadoProduccion</span></td><td>Recetas, producción, stock de insumos y PT.</td></tr>
+            <tr><td><span class="badge-role role-comp">EncargadoCompras</span></td><td>Facturas de compra, órdenes de compra (referenciales), pagos a proveedores.</td></tr>
+            <tr><td><span class="badge-role role-vent">EncargadoVentas</span></td><td>Pedidos al bar, devoluciones, cobros de bares.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin-top:8px;">Si no ves un menú, es porque tu rol no lo incluye — es intencional.</p>
+    </div>
+
+    <div class="callout ok">
+      <span class="ico">🎯</span>
+      <div>Los pasos 1 a 7 replican un ciclo real de operación con datos del negocio. Hacelos en orden: cada uno depende del anterior.</div>
+    </div>
+  </section>
+
+  <!-- ================= STEP 1 — MAESTROS ================= -->
+  <section class="step-panel" data-step="1">
+    <div class="card">
+      <h2 class="step-title"><span class="chip-step">Paso 1</span>Maestros: la base de todo</h2>
+      <p style="margin-top:8px;">Los maestros son los catálogos que usa todo lo demás. Sin ellos no podés facturar, producir ni vender.</p>
+      <div class="tpl-grid two" style="margin-top:14px;">
+        <div class="tpl-section">
+          <h4>📍 Dónde</h4>
+          <p><kbd class="path">Catálogos <span class="sep">›</span> Bares</kbd></p>
+          <p><kbd class="path">Catálogos <span class="sep">›</span> Proveedores</kbd></p>
+          <p><kbd class="path">Catálogos <span class="sep">›</span> Categorías</kbd></p>
+          <p><kbd class="path">Catálogos <span class="sep">›</span> Unidades</kbd></p>
+        </div>
+        <div class="tpl-section">
+          <h4>✍️ Datos a cargar</h4>
+          <div class="table-scroll">
+            <table class="data">
+              <thead><tr><th>Tipo</th><th>Nombre</th><th>Dato clave</th></tr></thead>
+              <tbody>
+                <tr><td>Bar</td><td>QUE MILA BOBO</td><td>Margen <strong>0%</strong> = precio de costo</td></tr>
+                <tr><td>Proveedor</td><td>JRB</td><td>—</td></tr>
+                <tr><td>Proveedor</td><td>PAISANITOS</td><td>—</td></tr>
+                <tr><td>Proveedor</td><td>CDP INSUMOS</td><td>—</td></tr>
+                <tr><td>Categoría</td><td>LÁCTEOS, ALMACÉN, DESCARTABLES…</td><td>Agrupan insumos y PT</td></tr>
+                <tr><td>Unidades</td><td>Kg, Lt, Un, Gr, Caja</td><td>Con factores de conversión</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="callout info">
+        <span class="ico">⚙️</span>
+        <div>El margen del bar define a qué precio le vendemos insumos de reventa: <code class="money">costo × (1 + margen)</code>. Con 0% el bar paga exactamente lo que nos costó.</div>
+      </div>
+      <div class="callout ok">
+        <span class="ico">✔️</span>
+        <div><strong>Verificación:</strong> el bar QUE MILA BOBO figura con margen 0% y los proveedores aparecen en Catálogos → Proveedores.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= STEP 2 — FACTURA DE COMPRA ================= -->
+  <section class="step-panel" data-step="2">
+    <div class="card">
+      <h2 class="step-title"><span class="chip-step">Paso 2</span>Factura de compra: el documento real</h2>
+      <p style="margin-top:8px;">La factura de compra es el <strong>documento real</strong> que te dio el proveedor. Cargás los insumos con cantidades y precios tal cual vienen en el papel.</p>
+      <div class="callout violet">
+        <span class="ico">🧾</span>
+        <div><strong>Nuevo modelo:</strong> la factura <strong>suma stock de insumos</strong> y <strong>genera la deuda del proveedor</strong> en un solo paso. Ya no hay "recepción de OC": el documento que mueve stock es la factura.</div>
+      </div>
+      <div class="tpl-grid two" style="margin-top:14px;">
+        <div class="tpl-section">
+          <h4>📍 Dónde</h4>
+          <p><kbd class="path">Compras <span class="sep">›</span> Facturas <span class="sep">›</span> Nueva</kbd></p>
+          <p>Elegís proveedor, método de pago y cargás las líneas de insumos.</p>
+        </div>
+        <div class="tpl-section">
+          <h4>✍️ Datos a cargar — ejemplo JRB</h4>
+          <div class="table-scroll">
+            <table class="data">
+              <thead><tr><th>Campo</th><th>Valor</th></tr></thead>
+              <tbody>
+                <tr><td>Proveedor</td><td><strong>JRB</strong></td></tr>
+                <tr><td>Insumo 1</td><td>QUESO MOZZARELLA · 8 Kg × <code class="money">$4.250</code> = <code class="money">$34.000</code></td></tr>
+                <tr><td>Insumo 2</td><td>ORÉGANO · 4 Kg × <code class="money">$1.500</code> = <code class="money">$6.000</code></td></tr>
+                <tr><td>Total factura</td><td><strong><code class="money">$40.000</code></strong></td></tr>
+                <tr><td>Método de pago</td><td>Efectivo</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="callout info">
+        <span class="ico">⚙️</span>
+        <div>Al confirmar la factura, el sistema automáticamente:<br>
+        • <strong>Suma el stock</strong> de cada insumo (con conversión de unidades si aplica)<br>
+        • <strong>Actualiza el precio promedio ponderado</strong> del insumo<br>
+        • <strong>Genera la deuda</strong> del proveedor en la cuenta corriente</div>
+      </div>
+      <div class="callout warn">
+        <span class="ico">⚠️</span>
+        <div><strong>Error conceptual común:</strong> la deuda es <strong>por proveedor</strong>. JRB $40.000 y PAISANITOS $564.000 son saldos independientes — <u>no se suman entre sí</u>.</div>
+      </div>
+      <div class="callout ok">
+        <span class="ico">✔️</span>
+        <div><strong>Verificación:</strong> el stock de QUESO MOZZARELLA sube <strong>+8 Kg</strong> y el de ORÉGANO <strong>+4 Kg</strong>. En <kbd class="path">Cuenta Corriente <span class="sep">›</span> Proveedores</kbd>, JRB muestra saldo <code class="money">$40.000</code>.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="section-h">📄 La Orden de Compra: solo referencial</h3>
+      <p>La OC es una <strong>nota interna de intención de compra</strong>. Sirve para planificar y avisar al proveedor, pero <strong>NO toca el stock</strong>.</p>
+      <div class="flow-row" style="justify-content:flex-start; margin: 12px 0;">
+        <div class="flow-node" style="min-width:auto;padding:8px 14px;">Borrador</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-node" style="min-width:auto;padding:8px 14px;">Enviada</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-node ref-node" style="min-width:auto;padding:8px 14px;">Cancelada</div>
+      </div>
+      <div class="callout danger">
+        <span class="ico">🚫</span>
+        <div>Ya <strong>no existe</strong> "Confirmada" ni "Recepción de OC". Si cargás la OC y no registrás la factura, <strong>el stock no se mueve y la deuda no se genera</strong>. La OC solo referencia: podés crearla para anticipar lo que vas a comprar y luego facturar sobre eso.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= STEP 3 — RECETA ================= -->
+  <section class="step-panel" data-step="3">
+    <div class="card">
+      <h2 class="step-title"><span class="chip-step">Paso 3</span>Receta: la fórmula del producto terminado</h2>
+      <div class="tpl-grid two" style="margin-top:14px;">
+        <div class="tpl-section">
+          <h4>📍 Dónde</h4>
+          <p><kbd class="path">Producción <span class="sep">›</span> Recetas</kbd></p>
+          <p>Elegí una receta → botón <strong>Costeo</strong> en el detalle para ver el costo calculado.</p>
+        </div>
+        <div class="tpl-section">
+          <h4>🧩 Estructura de una receta</h4>
+          <ul class="plain">
+            <li>Líneas de <strong>insumos</strong> con cantidad y unidad</li>
+            <li><strong>Rendimiento</strong>: cuánto produce la receta completa</li>
+            <li><strong>Versionado automático</strong>: cada cambio guarda una versión — podés comparar costos históricos</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout info">
+        <span class="ico">⚙️</span>
+        <div><strong>Nuevo modelo:</strong> <strong>1 receta = 1 producto terminado</strong>. La receta define exactamente qué PT produce. No hay salidas múltiples ni subproductos.</div>
+      </div>
+      <div class="callout violet">
+        <span class="ico">🍕</span>
+        <div><strong>Ejemplo real verificado:</strong> la receta <strong>PIZZA 24ST NAPOLITANA 300GR</strong> costea <code class="money">$236.31/u</code> — idéntica al Excel original del negocio (<strong>Δ 0%</strong>). El costeo del sistema es confiable.</div>
+      </div>
+      <div class="callout warn">
+        <span class="ico">💡</span>
+        <div><strong>El costo es solo insumos:</strong> <code class="money">costo receta = Σ (cantidad × precio insumo)</code>. Ya no se suma mano de obra — ese módulo fue eliminado.</div>
+      </div>
+      <div class="callout ok">
+        <span class="ico">✔️</span>
+        <div><strong>Verificación:</strong> abrí PIZZA 24ST → Costeo → el costo unitario es <code class="money">$236.31</code> y coincide con el Excel original.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= STEP 4 — PRODUCCIÓN ================= -->
+  <section class="step-panel" data-step="4">
+    <div class="card">
+      <h2 class="step-title"><span class="chip-step">Paso 4</span>Producción: producir de verdad</h2>
+      <p style="margin-top:8px;">La producción es el corazón del sistema. Elegís una receta, ajustás lo que realmente usaste, y el sistema hace el resto.</p>
+      <div class="tpl-grid two" style="margin-top:14px;">
+        <div class="tpl-section">
+          <h4>📍 Dónde</h4>
+          <p><kbd class="path">Producción <span class="sep">›</span> Nueva producción</kbd></p>
+        </div>
+        <div class="tpl-section">
+          <h4>✍️ Datos a cargar — ejemplo MAYONESA</h4>
+          <ul class="plain">
+            <li>Receta: <strong>MAYONESA</strong></li>
+            <li>El sistema propone los insumos con sus cantidades — <strong>podés editarlas</strong> (ej.: usaste 14,5 Lt de aceite en vez de 15)</li>
+            <li>Cantidad producida: <strong>15 Lt</strong></li>
+            <li>Confirmar la producción</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout info">
+        <span class="ico">⚙️</span>
+        <div>Al confirmar, el sistema automáticamente:<br>
+        • <strong>Descuenta los insumos con las cantidades reales editadas</strong> (no las teóricas de la receta)<br>
+        • <strong>Crea el PT si no existe</strong> — derivado automáticamente de la receta (MAYONESA, unidad Lt)<br>
+        • <strong>Suma el stock del PT</strong> producido<br>
+        • Genera un <strong>LOTE trazable</strong> con fecha y trazabilidad completa<br>
+        • <strong>Costea el lote</strong>: <code class="money">costo unitario = Σ insumos reales ÷ cantidad producida</code></div>
+      </div>
+      <div class="callout violet">
+        <span class="ico">✏️</span>
+        <div><strong>Insumos editables:</strong> la receta es la teoría; la producción es la realidad. Si el operador usó más o menos de algún insumo, lo ajusta en el momento y el costo del lote refleja lo que <em>realmente</em> gastó.</div>
+      </div>
+      <div class="callout ok">
+        <span class="ico">✔️</span>
+        <div><strong>Verificación:</strong> el stock de PT <strong>MAYONESA sube +15 Lt</strong>, los insumos de la receta bajan según lo editado, y el lote nuevo aparece con su costo unitario calculado.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= STEP 5 — PEDIDO AL BAR ================= -->
+  <section class="step-panel" data-step="5">
+    <div class="card">
+      <h2 class="step-title"><span class="chip-step">Paso 5</span>Pedido al bar: el remito</h2>
+      <div class="tpl-grid two" style="margin-top:14px;">
+        <div class="tpl-section">
+          <h4>📍 Dónde</h4>
+          <p><kbd class="path">Ventas <span class="sep">›</span> Pedidos <span class="sep">›</span> Nuevo</kbd></p>
+        </div>
+        <div class="tpl-section">
+          <h4>✍️ El pedido MIXTO a QUE MILA BOBO</h4>
+          <div class="table-scroll">
+            <table class="data">
+              <thead><tr><th>Tipo línea</th><th>Producto</th><th>Cant.</th><th>Precio</th></tr></thead>
+              <tbody>
+                <tr><td>PT</td><td>PIZZA 24ST NAPOLITANA 300GR</td><td>50</td><td>Costo unitario del lote</td></tr>
+                <tr><td>Insumo reventa</td><td>PAPAS MC CAIN X15KG</td><td>2</td><td>Costo × (1 + margen)</td></tr>
+                <tr><td>Descartables</td><td>DESCARTABLE BANDEJA 107</td><td>50</td><td>Costo × (1 + margen)</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>Cada línea acepta <strong>observaciones</strong> para faltantes o aclaraciones para el repartidor.</p>
+        </div>
+      </div>
+      <div class="flow-row" style="justify-content:flex-start; margin: 12px 0;">
+        <div class="flow-node" style="min-width:auto;padding:8px 14px;">PENDIENTE</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-node" style="min-width:auto;padding:8px 14px;">EN PROCESO</div>
+        <span class="flow-arrow">→</span>
+        <div class="flow-node action" style="min-width:auto;padding:8px 14px;">ENVIADO (Confirmar)</div>
+      </div>
+      <div class="callout info">
+        <span class="ico">⚙️</span>
+        <div>Al confirmar el envío:<br>
+        • <strong>Descuenta stock PT</strong> e <strong>insumos de reventa</strong><br>
+        • <strong>Genera la deuda del bar</strong> en su cuenta corriente<br>
+        • <strong>Precios automáticos:</strong> PT a costo unitario del lote; insumos a <code class="money">costo × (1 + margen del bar)</code> — QUE MILA BOBO tiene 0%, así que paga a costo</div>
+      </div>
+      <div class="callout violet">
+        <span class="ico">🖨️</span>
+        <div><strong>Luego IMPRIMIR:</strong> comprobante en formato <strong>A4 o ticket</strong> + la <strong>Orden de carga del repartidor</strong>. Ambos botones tienen dropdown de formato.</div>
+      </div>
+      <div class="callout ok">
+        <span class="ico">✔️</span>
+        <div><strong>Verificación:</strong> el stock de PIZZA 24ST baja <strong>−50</strong>, el de PAPAS baja <strong>−2</strong>, y en <kbd class="path">Cuenta Corriente <span class="sep">›</span> Bares</kbd> QUE MILA BOBO muestra la deuda del remito.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= STEP 6 — COBRO ================= -->
+  <section class="step-panel" data-step="6">
+    <div class="card">
+      <h2 class="step-title"><span class="chip-step">Paso 6</span>Cobro y cuenta corriente</h2>
+      <div class="tpl-grid two" style="margin-top:14px;">
+        <div class="tpl-section">
+          <h4>💳 Cobro del bar</h4>
+          <p><kbd class="path">Ventas <span class="sep">›</span> Pagos de Bares</kbd></p>
+          <p>Registrás el método de pago (efectivo, transferencia, cheque — como <strong>número de texto</strong>) y lo <strong>asignás al remito</strong> correspondiente. El saldo del bar baja.</p>
+        </div>
+        <div class="tpl-section">
+          <h4>📒 Cuenta Corriente</h4>
+          <p><kbd class="path">Ventas/Ctas <span class="sep">›</span> Cuenta Corriente</kbd></p>
+          <p>El registro de <strong>ingresos y egresos de la empresa</strong>: cobros de bares entran, pagos a proveedores salen. Con saldo corrido por entidad y soporte para <strong>notas débito/crédito/compensación</strong>.</p>
+        </div>
+      </div>
+      <div class="callout info">
+        <span class="ico">⚙️</span>
+        <div>Al registrar el cobro: la deuda del bar <strong>baja automáticamente</strong> y el movimiento figura como <strong>ingreso</strong> en la cuenta corriente. Los pagos a proveedores (por las facturas de compra) figuran como <strong>egresos</strong>.</div>
+      </div>
+      <div class="callout warn">
+        <span class="ico">🚫</span>
+        <div><strong>Cheques:</strong> ya no hay módulo de cheques ni estados (Emitido/En Cartera/etc.). Si cobrás o pagás con cheque, el número se escribe como <strong>texto</strong> en el registro del pago.</div>
+      </div>
+      <div class="callout ok">
+        <span class="ico">✔️</span>
+        <div><strong>Verificación:</strong> el saldo de QUE MILA BOBO baja el importe cobrado y la cuenta corriente muestra el ingreso. Con esto cerraste el ciclo: <strong>compra → producción → venta → cobro</strong>.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= STEP 7 — DASHBOARD Y REPORTES ================= -->
+  <section class="step-panel" data-step="7">
+    <div class="card">
+      <h2 class="step-title"><span class="chip-step">Paso 7</span>Dashboard por módulos y Reportes</h2>
+      <p style="margin-top:8px;"><kbd class="path">Principal <span class="sep">›</span> Dashboard</kbd> — KPIs organizados <strong>por módulos</strong>, con actualización en vivo:</p>
+      <div class="mod-grid">
+        <div class="mod-tile"><span class="ico">🏭</span><strong>Producción</strong><small>Lotes, costos, recetas activas</small></div>
+        <div class="mod-tile"><span class="ico">📦</span><strong>Stock</strong><small>Valorización de insumos y PT</small></div>
+        <div class="mod-tile"><span class="ico">🛒</span><strong>Ventas</strong><small>Pedidos, deuda de bares</small></div>
+        <div class="mod-tile"><span class="ico">💰</span><strong>Finanzas</strong><small>Ingresos, egresos, saldos</small></div>
+      </div>
+      <div class="tpl-grid two">
+        <div class="tpl-section">
+          <h4>📑 Reportes</h4>
+          <p><kbd class="path">Reportes</kbd></p>
+          <p><strong>18+ reportes exportables</strong> a Excel/PDF: ventas por bar, rentabilidad por producto (ingresos − costos), valorización de stock, movimientos de cuenta corriente, entre otros.</p>
+        </div>
+        <div class="tpl-section">
+          <h4>💡 Cómo usarlos</h4>
+          <ul class="plain">
+            <li><strong>Producción</strong> te dice qué conviene producir según costo</li>
+            <li><strong>Stock</strong> avisa faltantes antes de que frenen la producción</li>
+            <li><strong>Ventas</strong> muestra qué bar debe qué</li>
+            <li><strong>Finanzas</strong> resume la plata: entró, salió, quedó</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout ok">
+        <span class="ico">🏁</span>
+        <div>Con el ciclo completo cargado, el dashboard y los reportes muestran datos reales de punta a punta. Ese es todo el negocio.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= STEP 8 — REPLICÁ VOS ================= -->
+  <section class="step-panel" data-step="8">
+    <div class="card">
+      <h2 class="step-title"><span class="chip-step">Final</span>Replicá vos ✅</h2>
+      <p style="margin-top:8px;">Marcá cada acción cuando la hayas hecho <em>vos mismo</em> en el sistema. Tu avance queda guardado en este dispositivo.</p>
+      <div id="final-checklist" style="margin-top:14px;"></div>
+      <div class="callout ok" id="final-msg">
+        <span class="ico">🎉</span>
+        <div><strong>¡Listo! Con esto dominás el ciclo completo del centro de producción.</strong> Facturaste, produjiste, vendiste y cobraste — el circuito entero está bajo tu control.</div>
+      </div>
+      <div style="margin-top:18px; display:flex; gap:10px; flex-wrap:wrap;">
+        <button type="button" class="btn btn-danger" id="btn-reset">🔄 Reiniciar progreso</button>
+      </div>
+      <p style="margin-top:14px; font-size:12.5px; color:var(--muted);" class="wizard-footer-note">
+        Guía interactiva del Centro de Producción · Modelo v2 (post-refactor) — disponible offline en toda la red local.
+      </p>
+    </div>
+  </section>
+
+</div><!-- /shell -->
+
+<div class="wizard-footer">
+  <button type="button" class="btn btn-secondary" id="btn-prev">←</button>
+  <span class="footer-progress-label" id="progress-label">Paso 0 de 8</span>
+  <button type="button" class="btn btn-primary" id="btn-next">→</button>
+</div>
+
+<div class="watermark" aria-hidden="true">KUCHI SOFT</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var STEPS = [
+    { n: 0, label: "El negocio" },
+    { n: 1, label: "Maestros" },
+    { n: 2, label: "Factura de compra" },
+    { n: 3, label: "Receta" },
+    { n: 4, label: "Producción" },
+    { n: 5, label: "Pedido al bar" },
+    { n: 6, label: "Cobro" },
+    { n: 7, label: "Dashboard y Reportes" },
+    { n: 8, label: "Replicá vos" }
+  ];
+  var LAST_STEP = STEPS.length - 1;
+
+  var PROGRESS_KEY = "guia_v2_progress";   // { step: number }
+  var CHECK_KEY = "guia_v2_checklist";     // array of booleans
+
+  function storeGet(key, fallback) {
+    try {
+      var raw = window.localStorage.getItem(key);
+      return raw === null ? fallback : JSON.parse(raw);
+    } catch (e) { return fallback; }
+  }
+  function storeSet(key, value) {
+    try { window.localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* private mode */ }
+  }
+
+  var CHECK_ITEMS = [
+    { t: "Crear maestros base", d: "Bar QUE MILA BOBO (margen 0%), proveedores JRB/PAISANITOS/CDP INSUMOS, categorías y unidades." },
+    { t: "Cargar la factura de compra de JRB", d: "2 insumos, total $40.000, método efectivo. Verificar que el stock suba y que JRB deba $40.000." },
+    { t: "Crear una OC referencial", d: "Borrador → Enviada. Confirmar que NO mueve stock ni genera deuda." },
+    { t: "Verificar el costeo de una receta", d: "Abrir PIZZA 24ST NAPOLITANA 300GR → Costeo → verificar $236.31/u (solo insumos)." },
+    { t: "Confirmar una producción", d: "Receta MAYONESA → editar cantidades de insumos → confirmar 15 Lt. Verificar lote, stock PT y costo." },
+    { t: "Armar y enviar el pedido MIXTO", d: "PT + insumo reventa + descartables a QUE MILA BOBO. Imprimir comprobante y orden de carga." },
+    { t: "Registrar cobro y revisar cuenta corriente", d: "Pago del bar asignado al remito. Verificar que el saldo baje y el ingreso figure." },
+    { t: "Explorar Dashboard y exportar un reporte", d: "KPIs por módulos (Producción/Stock/Ventas/Finanzas) + al menos un reporte Excel/PDF." }
+  ];
+
+  var current = 0;
+  var checks = storeGet(CHECK_KEY, null);
+  if (!Array.isArray(checks) || checks.length !== CHECK_ITEMS.length) {
+    checks = new Array(CHECK_ITEMS.length).fill(false);
+  }
+
+  // --- Build stepper ---
+  var stepper = document.getElementById("stepper");
+  STEPS.forEach(function (s) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.setAttribute("data-nav", s.n);
+    b.innerHTML = '<span class="num">' + s.n + "</span>" + s.label;
+    b.addEventListener("click", function () { goTo(s.n); });
+    stepper.appendChild(b);
+  });
+
+  // --- Build checklist ---
+  var checklistEl = document.getElementById("final-checklist");
+  CHECK_ITEMS.forEach(function (item, i) {
+    var label = document.createElement("label");
+    label.className = "check-item";
+    var input = document.createElement("input");
+    input.type = "checkbox";
+    input.checked = !!checks[i];
+    input.addEventListener("change", function () {
+      checks[i] = input.checked;
+      storeSet(CHECK_KEY, checks);
+      updateFinalMsg();
+    });
+    var txt = document.createElement("span");
+    txt.className = "txt";
+    txt.innerHTML = "<strong>" + item.t + "</strong><small>" + item.d + "</small>";
+    label.appendChild(input);
+    label.appendChild(txt);
+    checklistEl.appendChild(label);
+  });
+
+  function updateFinalMsg() {
+    var all = checks.every(Boolean);
+    document.getElementById("final-msg").style.display = all ? "flex" : "none";
+  }
+
+  function goTo(n) {
+    if (n < 0 || n > LAST_STEP) return;
+    current = n;
+    storeSet(PROGRESS_KEY, { step: current });
+
+    var panels = document.querySelectorAll(".step-panel");
+    for (var i = 0; i < panels.length; i++) {
+      panels[i].classList.toggle("active", Number(panels[i].getAttribute("data-step")) === current);
+    }
+
+    var btns = stepper.querySelectorAll("[data-nav]");
+    for (var j = 0; j < btns.length; j++) {
+      var bn = Number(btns[j].getAttribute("data-nav"));
+      btns[j].classList.toggle("active", bn === current);
+      btns[j].classList.toggle("done", bn < current);
+    }
+
+    var pct = LAST_STEP === 0 ? 100 : Math.round((current / LAST_STEP) * 100);
+    document.getElementById("progress-bar").style.width = pct + "%";
+    document.getElementById("progress-label").textContent =
+      "Paso " + current + " de " + LAST_STEP + " (" + pct + "%)";
+
+    document.getElementById("btn-prev").disabled = current === 0;
+    document.getElementById("btn-next").textContent = current === LAST_STEP ? "Volver al inicio ↺" : "Siguiente →";
+
+    // Keep active dot visible on horizontal scroll
+    var activeBtn = stepper.querySelector("[data-nav='" + current + "']");
+    if (activeBtn && activeBtn.scrollIntoView) {
+      activeBtn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    }
+
+    updateFinalMsg();
+    window.scrollTo({ top: 0 });
+  }
+
+  document.getElementById("btn-prev").addEventListener("click", function () { goTo(current - 1); });
+  document.getElementById("btn-next").addEventListener("click", function () {
+    goTo(current === LAST_STEP ? 0 : current + 1);
+  });
+
+  // Keyboard arrows
+  document.addEventListener("keydown", function (e) {
+    var tag = (e.target.tagName || "").toLowerCase();
+    if (tag === "input" || tag === "textarea" || tag === "select") return;
+    if (e.key === "ArrowRight") goTo(current + 1);
+    if (e.key === "ArrowLeft") goTo(current - 1);
+  });
+
+  // Reset (wizard step + checklist)
+  document.getElementById("btn-reset").addEventListener("click", function () {
+    try {
+      window.localStorage.removeItem(PROGRESS_KEY);
+      window.localStorage.removeItem(CHECK_KEY);
+    } catch (e) { /* noop */ }
+    checks = new Array(CHECK_ITEMS.length).fill(false);
+    var boxes = checklistEl.querySelectorAll('input[type="checkbox"]');
+    for (var i = 0; i < boxes.length; i++) boxes[i].checked = false;
+    goTo(0);
+  });
+
+  // Restore persisted step
+  var saved = storeGet(PROGRESS_KEY, null);
+  var startStep = saved && typeof saved.step === "number"
+    ? Math.min(Math.max(saved.step, 0), LAST_STEP)
+    : 0;
+  goTo(startStep);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Centro de Producción — Mockup SPA</title>
+<style>
+  :root {
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --border: #e5e5e5;
+    --text: #171717;
+    --text-2: #737373;
+    --accent: #4f46e5;
+    --red: #dc2626;
+    --amber: #d97706;
+    --green: #16a34a;
+    --radius: 10px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ---------- CSS-only SPA navigation ---------- */
+  body > input { position: absolute; opacity: 0; pointer-events: none; }
+  .login, .app, .view { display: none; }
+
+  #nav-login:checked ~ .login { display: grid; }
+
+  #nav-dashboard:checked ~ .app,
+  #nav-pedidos:checked ~ .app,
+  #nav-costeo:checked ~ .app,
+  #nav-catalogo:checked ~ .app,
+  #nav-stock:checked ~ .app,
+  #nav-clientes:checked ~ .app,
+  #nav-reportes:checked ~ .app,
+  #nav-config:checked ~ .app { display: grid; }
+
+  #nav-dashboard:checked ~ .app .v-dashboard,
+  #nav-pedidos:checked ~ .app .v-pedidos,
+  #nav-costeo:checked ~ .app .v-costeo,
+  #nav-catalogo:checked ~ .app .v-catalogo,
+  #nav-stock:checked ~ .app .v-stock,
+  #nav-clientes:checked ~ .app .v-clientes,
+  #nav-reportes:checked ~ .app .v-reportes,
+  #nav-config:checked ~ .app .v-config { display: block; }
+
+  #nav-dashboard:checked ~ .app nav label[for="nav-dashboard"],
+  #nav-pedidos:checked ~ .app nav label[for="nav-pedidos"],
+  #nav-costeo:checked ~ .app nav label[for="nav-costeo"],
+  #nav-catalogo:checked ~ .app nav label[for="nav-catalogo"],
+  #nav-stock:checked ~ .app nav label[for="nav-stock"],
+  #nav-clientes:checked ~ .app nav label[for="nav-clientes"],
+  #nav-reportes:checked ~ .app nav label[for="nav-reportes"],
+  #nav-config:checked ~ .app nav label[for="nav-config"] {
+    background: var(--text);
+    color: #fff;
+  }
+
+  /* ---------- Login ---------- */
+  .login { min-height: 100vh; place-items: center; padding: 24px; }
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    width: 100%;
+    max-width: 340px;
+  }
+  .login-card h1 { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+  .login-card .sub { color: var(--text-2); font-size: 13px; margin-bottom: 20px; }
+
+  /* ---------- App shell ---------- */
+  .app { grid-template-columns: 220px 1fr; min-height: 100vh; }
+  aside {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 20px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    padding: 4px 10px 18px;
+    font-weight: 600; font-size: 15px;
+  }
+  .brand .logo {
+    width: 28px; height: 28px;
+    background: var(--text); color: #fff;
+    border-radius: 8px;
+    display: grid; place-items: center;
+    font-size: 12px;
+  }
+  nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+  nav label, .logout {
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--text-2);
+    font-size: 13.5px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  nav label:hover, .logout:hover { background: var(--bg); color: var(--text); }
+  nav label .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .35; }
+  .logout { border-top: 1px solid var(--border); border-radius: 0; padding-top: 14px; margin-top: 8px; }
+
+  .main { display: flex; flex-direction: column; min-width: 0; }
+
+  /* ---------- Topbar ---------- */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  header .search {
+    flex: 1; max-width: 420px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 12px;
+    color: var(--text-2); font-size: 13px;
+  }
+  header .bell {
+    margin-left: auto;
+    position: relative;
+    width: 34px; height: 34px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: grid; place-items: center;
+    color: var(--text-2);
+  }
+  header .bell::after {
+    content: "";
+    position: absolute; top: 7px; right: 8px;
+    width: 7px; height: 7px;
+    background: var(--red);
+    border-radius: 50%;
+    border: 2px solid var(--surface);
+  }
+  header .user { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  header .avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--accent); color: #fff;
+    display: grid; place-items: center;
+    font-size: 12px; font-weight: 600;
+  }
+
+  /* ---------- Views ---------- */
+  .view { padding: 24px; max-width: 1240px; }
+  .view h2 { font-size: 20px; font-weight: 600; margin-bottom: 2px; }
+  .view .desc { color: var(--text-2); font-size: 13px; margin-bottom: 20px; }
+  .view-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+  .view-head .desc { margin-bottom: 0; }
+
+  /* ---------- Components ---------- */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+  .grid { display: grid; gap: 14px; }
+  .grid.kpis { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); margin-bottom: 20px; }
+  .grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+
+  .kpi .label { color: var(--text-2); font-size: 12px; margin-bottom: 6px; }
+  .kpi .value { font-size: 24px; font-weight: 650; letter-spacing: -0.02em; }
+  .kpi .hint { color: var(--text-2); font-size: 12px; margin-top: 4px; }
+  .kpi.alert { border-color: #fecaca; background: #fef2f2; }
+  .kpi.alert .value { color: var(--red); }
+  .kpi.star { border-color: #c7d2fe; background: #eef2ff; }
+  .kpi.star .value { color: var(--accent); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    text-align: left;
+    color: var(--text-2); font-weight: 500; font-size: 12px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 9px 12px; border-bottom: 1px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .muted { color: var(--text-2); }
+  tr.subtotal td { background: var(--bg); font-weight: 500; }
+  tr.grand td { background: var(--text); color: #fff; font-weight: 600; }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11.5px; font-weight: 500;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text-2);
+    white-space: nowrap;
+  }
+  .badge.red { background: #fef2f2; border-color: #fecaca; color: var(--red); }
+  .badge.amber { background: #fffbeb; border-color: #fde68a; color: var(--amber); }
+  .badge.green { background: #f0fdf4; border-color: #bbf7d0; color: var(--green); }
+  .badge.blue { background: #eef2ff; border-color: #c7d2fe; color: var(--accent); }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-size: 13px; cursor: pointer; white-space: nowrap;
+  }
+  .btn.primary { background: var(--text); color: #fff; border-color: var(--text); }
+
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 12px; color: var(--text-2); margin-bottom: 4px; }
+  .field .input {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    background: var(--surface);
+    color: var(--text-2); font-size: 13px;
+  }
+
+  .tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--border); overflow-x: auto; }
+  .tabs span { padding: 8px 12px; font-size: 13px; color: var(--text-2); white-space: nowrap; }
+  .tabs span.active { color: var(--text); font-weight: 500; border-bottom: 2px solid var(--text); margin-bottom: -1px; }
+
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+  .chip {
+    padding: 5px 12px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    font-size: 12.5px; color: var(--text-2);
+  }
+  .chip.on { background: var(--text); color: #fff; border-color: var(--text); }
+  .chip .mini { font-size: 10.5px; opacity: .7; margin-left: 4px; }
+
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .seg span { padding: 6px 12px; font-size: 12.5px; color: var(--text-2); background: var(--surface); }
+  .seg span.on { background: var(--text); color: #fff; }
+
+  /* Fake charts (pure CSS) */
+  .bars { display: flex; align-items: flex-end; gap: 5px; height: 110px; padding-top: 10px; }
+  .bars .col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; height: 100%; }
+  .bars i { background: #e5e5e5; border-radius: 3px 3px 0 0; display: block; }
+  .bars i.hot { background: var(--accent); }
+  .bars .day { font-size: 10px; color: var(--text-2); text-align: center; }
+  .chart-title { font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+  .chart-sub { font-size: 12px; color: var(--text-2); }
+
+  .donut {
+    width: 110px; height: 110px;
+    border-radius: 50%;
+    background: conic-gradient(var(--text) 0 78%, #a3a3a3 78% 100%);
+    margin: 8px auto;
+    position: relative;
+  }
+  .donut::after {
+    content: "";
+    position: absolute; inset: 26px;
+    background: var(--surface);
+    border-radius: 50%;
+  }
+  .legend { font-size: 12px; color: var(--text-2); display: grid; gap: 4px; margin-top: 8px; }
+  .legend b { color: var(--text); font-weight: 500; float: right; }
+  .legend i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; }
+
+  /* Yield chain (rinde cárnico) */
+  .yield { display: flex; align-items: stretch; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; }
+  .yield .step {
+    flex: 1; min-width: 120px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: var(--bg);
+  }
+  .yield .step .t { font-size: 11px; color: var(--text-2); text-transform: uppercase; letter-spacing: .04em; }
+  .yield .step .v { font-size: 18px; font-weight: 650; }
+  .yield .step .s { font-size: 11.5px; color: var(--text-2); }
+  .yield .arrow { align-self: center; color: var(--text-2); }
+  .yield .step.loss { border-color: #fecaca; background: #fef2f2; }
+  .yield .step.loss .v { color: var(--red); }
+  .yield .step.gain { border-color: #bbf7d0; background: #f0fdf4; }
+  .yield .step.gain .v { color: var(--green); }
+
+  .costeo-lines { font-size: 13px; display: grid; gap: 6px; }
+  .costeo-lines .row { display: flex; justify-content: space-between; gap: 12px; }
+  .costeo-lines .total { border-top: 1px solid var(--border); padding-top: 8px; margin-top: 4px; font-weight: 600; }
+  .costeo-lines .hero { background: #eef2ff; border-radius: 8px; padding: 8px 10px; font-weight: 600; color: var(--accent); }
+
+  .note {
+    font-size: 12.5px; color: var(--text-2);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-top: 12px;
+  }
+  .note b { color: var(--text); }
+
+  .report-card h3 { font-size: 13.5px; font-weight: 600; margin-bottom: 6px; }
+  .report-card ul { list-style: none; font-size: 12.5px; color: var(--text-2); display: grid; gap: 3px; margin-bottom: 10px; }
+  .report-card ul li::before { content: "· "; }
+
+  @media (max-width: 900px) {
+    .app { grid-template-columns: 1fr; }
+    aside {
+      flex-direction: row; align-items: center;
+      overflow-x: auto;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      padding: 10px 12px;
+    }
+    .brand { padding: 4px 10px 4px 0; }
+    .brand span.txt { display: none; }
+    nav { flex-direction: row; }
+    nav label { white-space: nowrap; }
+    nav label .dot { display: none; }
+    .logout { border-top: none; margin: 0; padding-top: 8px; white-space: nowrap; }
+    .grid.cols-2, .grid.cols-3 { grid-template-columns: 1fr; }
+    header .user .name { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== SPA navigation state (CSS only, no JS) ===== -->
+<input type="radio" name="view" id="nav-login">
+<input type="radio" name="view" id="nav-dashboard" checked>
+<input type="radio" name="view" id="nav-pedidos">
+<input type="radio" name="view" id="nav-costeo">
+<input type="radio" name="view" id="nav-catalogo">
+<input type="radio" name="view" id="nav-stock">
+<input type="radio" name="view" id="nav-clientes">
+<input type="radio" name="view" id="nav-reportes">
+<input type="radio" name="view" id="nav-config">
+
+<!-- ===== Login ===== -->
+<div class="login">
+  <div class="login-card">
+    <h1>Centro de Producción</h1>
+    <p class="sub">Gestión de producción, costeo y pedidos</p>
+    <div class="field"><label>Email</label><div class="input">produccion@centro.com</div></div>
+    <div class="field"><label>Contraseña</label><div class="input">••••••••</div></div>
+    <label for="nav-dashboard" class="btn primary" style="width:100%; justify-content:center; margin-top:8px;">Ingresar</label>
+  </div>
+</div>
+
+<!-- ===== App shell ===== -->
+<div class="app">
+  <aside>
+    <div class="brand"><span class="logo">CP</span><span class="txt">Centro de Producción</span></div>
+    <nav>
+      <label for="nav-dashboard"><span class="dot"></span>Dashboard</label>
+      <label for="nav-pedidos"><span class="dot"></span>Pedidos</label>
+      <label for="nav-costeo"><span class="dot"></span>Costeo</label>
+      <label for="nav-catalogo"><span class="dot"></span>Catálogo</label>
+      <label for="nav-stock"><span class="dot"></span>Stock insumos</label>
+      <label for="nav-clientes"><span class="dot"></span>Clientes</label>
+      <label for="nav-reportes"><span class="dot"></span>Reportes</label>
+      <label for="nav-config"><span class="dot"></span>Configuración</label>
+    </nav>
+    <label for="nav-login" class="logout">Cerrar sesión</label>
+  </aside>
+
+  <div class="main">
+    <header>
+      <div class="search">Buscar artículos, pedidos, recetas…</div>
+      <div class="bell">●</div>
+      <div class="user"><span class="avatar">EP</span><span class="name">Encargado · <span class="muted">Producción</span></span></div>
+    </header>
+
+    <!-- ===== Dashboard ===== -->
+    <section class="view v-dashboard">
+      <h2>Dashboard</h2>
+      <p class="desc">Semana 29/06 al 05/07/2026 · datos reales de Que Mila Bobo</p>
+
+      <div class="grid kpis">
+        <div class="card kpi"><div class="label">Pedidos de la semana</div><div class="value">$ 5.847.965</div><div class="hint">5 pedidos enviados · 2 pendientes</div></div>
+        <div class="card kpi star"><div class="label">Producto estrella</div><div class="value">Mila 190grs</div><div class="hint">1.312 u. · $ 3.989.792 (68% del total)</div></div>
+        <div class="card kpi alert"><div class="label">Faltante detectado</div><div class="value">Lomito</div><div class="hint">"faltante 26 - SIN STOCK" (01/07)</div></div>
+        <div class="card kpi"><div class="label">Venta de insumos (reventa)</div><div class="value">$ 1.300.749</div><div class="hint">22% del total · a precio de costo</div></div>
+      </div>
+
+      <div class="grid cols-3">
+        <div class="card">
+          <div class="chart-title">Pedidos por día</div>
+          <div class="chart-sub">Total $ por día de la semana</div>
+          <div class="bars">
+            <div class="col"><i style="height:42%"></i><span class="day">Lun</span></div>
+            <div class="col"><i style="height:2%"></i><span class="day">Mar</span></div>
+            <div class="col"><i style="height:96%"></i><span class="day">Mié</span></div>
+            <div class="col"><i style="height:30%"></i><span class="day">Jue</span></div>
+            <div class="col"><i style="height:56%"></i><span class="day">Vie</span></div>
+            <div class="col"><i style="height:100%" class="hot"></i><span class="day">Sáb</span></div>
+            <div class="col"><i style="height:2%"></i><span class="day">Dom</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="chart-title">Ventas por origen</div>
+          <div class="chart-sub">Subtotales de la semana</div>
+          <div class="donut"></div>
+          <div class="legend">
+            <span><i style="background:#171717"></i>Centro de Producción <b>$ 4.547.216</b></span>
+            <span><i style="background:#a3a3a3"></i>CDP Insumos <b>$ 1.300.749</b></span>
+            <span><i style="background:#d4d4d4"></i>Descartables <b>$ 0</b></span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="chart-title">Top artículos de la semana</div>
+          <div class="chart-sub">Por importe vendido</div>
+          <table style="margin-top:8px;">
+            <tbody>
+              <tr><td>Mila de Carne 190grs</td><td class="num">1.312 u.</td><td class="num">$ 3.989.792</td></tr>
+              <tr><td>Lomito de Carne</td><td class="num">124 u.</td><td class="num">$ 501.084</td></tr>
+              <tr><td>Jamón Cocido Sadia</td><td class="num">35,75 kg</td><td class="num">$ 381.810</td></tr>
+              <tr><td>Queso Danbo La Paulina</td><td class="num">26,14 kg</td><td class="num">$ 273.581</td></tr>
+              <tr><td>Mayonesa Hellmann's</td><td class="num">23 u.</td><td class="num">$ 248.400</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="note">
+        <b>Regla del negocio:</b> todo se vende a <b>costo exacto</b>. La Mila de Carne 190grs se vende a
+        <b>$ 3.041</b> = $ 775.412 de costo del lote ÷ 255 unidades producidas. Sin margen.
+      </div>
+    </section>
+
+    <!-- ===== Pedidos ===== -->
+    <section class="view v-pedidos">
+      <div class="view-head">
+        <div><h2>Pedidos</h2><p class="desc">Cliente: <b>Que Mila Bobo</b> · un pedido por día, con 3 orígenes mezclados</p></div>
+        <span class="btn primary">+ Nuevo pedido</span>
+      </div>
+
+      <div class="chips">
+        <span class="chip">Lun 29/06 <span class="mini">✓</span></span>
+        <span class="chip">Mar 30/06 <span class="mini">pendiente</span></span>
+        <span class="chip on">Mié 01/07 <span class="mini">✓</span></span>
+        <span class="chip">Jue 02/07 <span class="mini">✓</span></span>
+        <span class="chip">Vie 03/07 <span class="mini">✓</span></span>
+        <span class="chip">Sáb 04/07 <span class="mini">✓</span></span>
+        <span class="chip">Dom 05/07 <span class="mini">pendiente</span></span>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+          <div><b>Pedido — Miércoles 01/07/2026</b></div>
+          <span class="badge green">✓ PEDIDO ENVIADO</span>
+        </div>
+        <table>
+          <thead><tr><th>Producto</th><th class="num">Cantidad</th><th>Unidad</th><th class="num">Precio unit.</th><th>Origen</th><th class="num">Total</th><th>Observaciones</th></tr></thead>
+          <tbody>
+            <tr><td>SANGUCHERIA — Mila de Carne 190 grs</td><td class="num">350</td><td class="muted">Uni</td><td class="num">$ 3.041</td><td><span class="badge blue">Centro de Producción</span></td><td class="num">$ 1.064.350</td><td></td></tr>
+            <tr><td>SANGUCHERIA — Lomito de Carne</td><td class="num">24</td><td class="muted">Uni</td><td class="num">$ 4.041</td><td><span class="badge blue">Centro de Producción</span></td><td class="num">$ 96.984</td><td><span class="badge red">faltante 26 · SIN STOCK</span></td></tr>
+            <tr><td>Hamburguesa x 100g</td><td class="num">60</td><td class="muted">Uni</td><td class="num">$ 939</td><td><span class="badge blue">Centro de Producción</span></td><td class="num">$ 56.340</td><td></td></tr>
+            <tr><td>Jamón Cocido Sadia</td><td class="num">13</td><td class="muted">Kg</td><td class="num">$ 10.680</td><td><span class="badge">CDP Insumos</span></td><td class="num">$ 138.840</td><td></td></tr>
+            <tr><td>Queso Cremoso Tremblay</td><td class="num">13,85</td><td class="muted">Kg</td><td class="num">$ 7.315</td><td><span class="badge">CDP Insumos</span></td><td class="num">$ 101.312,75</td><td></td></tr>
+            <tr><td>Mayonesa Hellmann's x2.75Kg</td><td class="num">12</td><td class="muted">Sachet</td><td class="num">$ 10.800</td><td><span class="badge">CDP Insumos</span></td><td class="num">$ 129.600</td><td></td></tr>
+            <tr><td>Queso Danbo La Paulina</td><td class="num">7,49</td><td class="muted">Kg</td><td class="num">$ 10.466</td><td><span class="badge">CDP Insumos</span></td><td class="num">$ 78.390,34</td><td></td></tr>
+            <tr><td>Mostaza Savora x3Kg</td><td class="num">3</td><td class="muted">Sachet</td><td class="num">$ 10.500</td><td><span class="badge">CDP Insumos</span></td><td class="num">$ 31.500</td><td></td></tr>
+            <tr><td>Bimbo Pan Hamburguesa Brioche 4"</td><td class="num">30</td><td class="muted">Uni</td><td class="num">$ 542,42</td><td><span class="badge">CDP Insumos</span></td><td class="num">$ 16.272,60</td><td></td></tr>
+            <tr><td>Tomate Triturado 970grs</td><td class="num">12</td><td class="muted">Uni</td><td class="num">$ 1.490</td><td><span class="badge">CDP Insumos</span></td><td class="num">$ 17.880</td><td></td></tr>
+            <tr class="subtotal"><td colspan="5">Subtotal Centro de Producción</td><td class="num">$ 1.217.674</td><td></td></tr>
+            <tr class="subtotal"><td colspan="5">Subtotal CDP Insumos</td><td class="num">$ 513.795,69</td><td></td></tr>
+            <tr class="subtotal"><td colspan="5">Subtotal CDP Descartables</td><td class="num">$ 0</td><td></td></tr>
+            <tr class="grand"><td colspan="5">TOTAL DEL PEDIDO</td><td class="num">$ 1.731.469,69</td><td></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note">
+        <b>Flujo de estados real:</b> Pendiente → En proceso → Pedido enviado.
+        Al confirmar, el sistema descuenta stock de productos terminados e insumos según el origen de cada línea,
+        y marca faltantes si no alcanza (como el Lomito del 01/07).
+      </div>
+    </section>
+
+    <!-- ===== Costeo ===== -->
+    <section class="view v-costeo">
+      <div class="view-head">
+        <div><h2>Costeo</h2><p class="desc">Recetas con rinde, descarte y sub-recetas · el precio de venta ES el costo</p></div>
+        <span class="btn primary">+ Nueva receta</span>
+      </div>
+
+      <div class="chips">
+        <span class="chip">Masa-Leudado</span>
+        <span class="chip">Molida-Medallones</span>
+        <span class="chip on">Milanesas</span>
+        <span class="chip">Pollo Frito</span>
+        <span class="chip">Rebozados</span>
+        <span class="chip">Fraccionados</span>
+        <span class="chip">Tartas</span>
+        <span class="chip">Encurtidos-Salsas</span>
+        <span class="chip">Eventos</span>
+      </div>
+
+      <div class="grid cols-2">
+        <div class="card">
+          <div class="chart-title" style="margin-bottom:2px;">MILANESAS DE CARNE <span class="badge blue">lote sanguchería</span></div>
+          <p class="chart-sub" style="margin-bottom:8px;">Rinde cárnico multi-etapa</p>
+
+          <div class="yield">
+            <div class="step"><div class="t">Inicio</div><div class="v">39 kg</div><div class="s">carne nalga × $ 18.800</div></div>
+            <span class="arrow">→</span>
+            <div class="step"><div class="t">Limpio</div><div class="v">30 kg</div><div class="s">77% aprovechable</div></div>
+            <span class="arrow">→</span>
+            <div class="step gain"><div class="t">Recorte</div><div class="v">2 kg</div><div class="s">se VENDE $ 2.789/u</div></div>
+            <span class="arrow">→</span>
+            <div class="step loss"><div class="t">Desperdicio</div><div class="v">7 kg</div><div class="s">18% merma real</div></div>
+          </div>
+
+          <table style="margin-top:12px;">
+            <thead><tr><th>Insumo</th><th class="num">Cantidad</th><th class="num">Precio</th><th class="num">Total</th></tr></thead>
+            <tbody>
+              <tr><td>Carne (etapa limpieza)</td><td class="num">39 kg</td><td class="num">$ 18.800 /kg</td><td class="num">$ 733.200</td></tr>
+              <tr><td>Huevos</td><td class="num">100 u.</td><td class="num">$ 170 /u</td><td class="num">$ 17.000</td></tr>
+              <tr><td>Pan rallado</td><td class="num">13,38 kg</td><td class="num">$ 1.129 /kg</td><td class="num">$ 15.106</td></tr>
+              <tr><td>Leche</td><td class="num">1 L</td><td class="num">$ 1.260 /L</td><td class="num">$ 1.260</td></tr>
+              <tr><td>Mostaza</td><td class="num">1 kg</td><td class="num">$ 3.300 /kg</td><td class="num">$ 3.300</td></tr>
+              <tr><td>Sal, provenzal, ajo, pimienta, perejil</td><td class="num">—</td><td class="num">—</td><td class="num">$ 5.547</td></tr>
+            </tbody>
+          </table>
+
+          <div class="costeo-lines" style="margin-top:12px;">
+            <div class="row"><span class="muted">Costo total del lote</span><span>$ 775.412</span></div>
+            <div class="row"><span class="muted">Productividad</span><span>255 unidades de 190 grs</span></div>
+            <div class="row hero"><span>P.U. = Precio de venta a Que Mila Bobo</span><span>$ 3.041</span></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card" style="margin-bottom:14px;">
+            <div class="chart-title" style="margin-bottom:10px;">PIZZA FRITA 4 QUESOS <span class="badge amber">usa sub-receta</span></div>
+            <table>
+              <thead><tr><th>Insumo</th><th class="num">Cantidad</th><th class="num">Total</th></tr></thead>
+              <tbody>
+                <tr><td>Masa <span class="badge amber">sub-receta</span></td><td class="num">20 u. × $ 124,21</td><td class="num">$ 2.484</td></tr>
+                <tr><td>Queso Tybo</td><td class="num">1 kg × $ 7.684</td><td class="num">$ 7.684</td></tr>
+                <tr><td>Muzzarella dura</td><td class="num">1 kg × $ 7.816</td><td class="num">$ 7.816</td></tr>
+                <tr><td>Queso Sardo</td><td class="num">0,6 kg × $ 11.890</td><td class="num">$ 7.134</td></tr>
+                <tr><td>Queso Azul</td><td class="num">0,6 kg × $ 13.117</td><td class="num">$ 7.870</td></tr>
+                <tr><td>Salsa</td><td class="num">0,3 kg × $ 1.290</td><td class="num">$ 387</td></tr>
+              </tbody>
+            </table>
+            <div class="costeo-lines" style="margin-top:12px;">
+              <div class="row"><span class="muted">Total · Productividad 20 u. × 365g</span><span>$ 33.375</span></div>
+              <div class="row total"><span>P.U.</span><span>$ 1.668,77</span></div>
+            </div>
+          </div>
+
+          <div class="note" style="margin-top:0;">
+            <b>Sub-recetas (BOM recursivo):</b> la "Masa" es una receta propia
+            (harina, levadura, sal, agua, semolín, hielo → $ 7.949 el lote de 64 u.)
+            que otras recetas consumen como insumo. Si cambia el precio de la harina,
+            se recalcula la masa y, en cascada, todas las pizzas fritas.
+          </div>
+
+          <div class="note">
+            <b>Ojo:</b> el costeo actual de la plantilla <b>no incluye mano de obra</b> —
+            solo insumos. La imputación de horas por producto es una mejora
+            del sistema nuevo, no algo que el negocio haga hoy.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Catálogo ===== -->
+    <section class="view v-catalogo">
+      <div class="view-head">
+        <div><h2>Catálogo</h2><p class="desc">~120 artículos · los 3 orígenes en una sola lista con precios a costo</p></div>
+        <span class="btn">Exportar</span>
+      </div>
+
+      <div class="tabs"><span class="active">Todos</span><span>Centro de Producción</span><span>CDP Insumos</span><span>CDP Descartables</span></div>
+
+      <div class="card">
+        <table>
+          <thead><tr><th>Artículo</th><th>Unidad</th><th class="num">Precio</th><th>Origen</th></tr></thead>
+          <tbody>
+            <tr><td>SANGUCHERIA — Mila de Carne 190 grs</td><td class="muted">Uni</td><td class="num">$ 3.041</td><td><span class="badge blue">Centro de Producción</span></td></tr>
+            <tr><td>SANGUCHERIA — Lomito de Carne</td><td class="muted">Uni</td><td class="num">$ 4.041</td><td><span class="badge blue">Centro de Producción</span></td></tr>
+            <tr><td>Milanesas de Carne</td><td class="muted">Uni</td><td class="num">$ 2.407</td><td><span class="badge blue">Centro de Producción</span></td></tr>
+            <tr><td>Hamburguesa x 100g</td><td class="muted">Uni</td><td class="num">$ 939</td><td><span class="badge blue">Centro de Producción</span></td></tr>
+            <tr><td>Recortes de Milanesa</td><td class="muted">Uni</td><td class="num">$ 2.789</td><td><span class="badge blue">Centro de Producción</span></td></tr>
+            <tr><td>Pollo Broaster Mix x 10u</td><td class="muted">Prc</td><td class="num">$ 2.219</td><td><span class="badge blue">Centro de Producción</span></td></tr>
+            <tr><td>Mini Torta Brownie</td><td class="muted">Uni</td><td class="num">$ 1.173</td><td><span class="badge blue">Centro de Producción</span></td></tr>
+            <tr><td>Pan Ciabatta x150Gr</td><td class="muted">Uni</td><td class="num">$ 129</td><td><span class="badge blue">Centro de Producción</span></td></tr>
+            <tr><td>Pizza 24ST Napolitana</td><td class="muted">Uni</td><td class="num">$ 245</td><td><span class="badge blue">Centro de Producción</span></td></tr>
+            <tr><td>Aceite de Girasol Natura x5Lts</td><td class="muted">Bidon</td><td class="num">$ 19.348</td><td><span class="badge">CDP Insumos</span></td></tr>
+            <tr><td>Muzzarella Cilindro Tremblay</td><td class="muted">Kg</td><td class="num">$ 7.632</td><td><span class="badge">CDP Insumos</span></td></tr>
+            <tr><td>Jamón Cocido Sadia</td><td class="muted">Kg</td><td class="num">$ 10.680</td><td><span class="badge">CDP Insumos</span></td></tr>
+            <tr><td>Rebozador Preferido x5kg</td><td class="muted">Paq</td><td class="num">$ 11.290</td><td><span class="badge">CDP Insumos</span></td></tr>
+            <tr><td>Balde Pollo Frito Chico x50oz (200 u.)</td><td class="muted">Uni</td><td class="num">$ 142.200</td><td><span class="badge amber">CDP Descartables</span></td></tr>
+            <tr><td>Etiqueta chica para balde x100</td><td class="muted">Paq</td><td class="num">$ 25.000</td><td><span class="badge amber">CDP Descartables</span></td></tr>
+            <tr><td>Cajita Combo Kids</td><td class="muted">Uni</td><td class="num">$ 675</td><td><span class="badge amber">CDP Descartables</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===== Stock insumos ===== -->
+    <section class="view v-stock">
+      <div class="view-head">
+        <div><h2>Stock de insumos</h2><p class="desc">Precios relevados de la plantilla de costos · alertas contra consumo semanal</p></div>
+        <span class="btn">+ Ajuste manual</span>
+      </div>
+
+      <div class="card">
+        <table>
+          <thead><tr><th>Insumo</th><th>Categoría</th><th class="num">Stock actual</th><th class="num">Stock mínimo</th><th class="num">Precio x kg/u</th><th>Estado</th></tr></thead>
+          <tbody>
+            <tr><td>Carne nalga</td><td class="muted">Carnes</td><td class="num">12 kg</td><td class="num">40 kg</td><td class="num">$ 18.800</td><td><span class="badge red">Crítico</span></td></tr>
+            <tr><td>Pan rallado</td><td class="muted">Secos</td><td class="num">9 kg</td><td class="num">20 kg</td><td class="num">$ 1.129</td><td><span class="badge amber">Bajo</span></td></tr>
+            <tr><td>Muzzarella cilindro Tremblay</td><td class="muted">Lácteos</td><td class="num">3 kg</td><td class="num">5 kg</td><td class="num">$ 7.632</td><td><span class="badge amber">Bajo</span></td></tr>
+            <tr><td>Huevos</td><td class="muted">Frescos</td><td class="num">240 u.</td><td class="num">200 u.</td><td class="num">$ 170</td><td><span class="badge green">OK</span></td></tr>
+            <tr><td>Harina 000</td><td class="muted">Secos</td><td class="num">46 kg</td><td class="num">25 kg</td><td class="num">$ 640</td><td><span class="badge green">OK</span></td></tr>
+            <tr><td>Levadura</td><td class="muted">Secos</td><td class="num">2 kg</td><td class="num">1 kg</td><td class="num">$ 9.980</td><td><span class="badge green">OK</span></td></tr>
+            <tr><td>Tomate triturado</td><td class="muted">Conservas</td><td class="num">30 L</td><td class="num">15 L</td><td class="num">$ 1.290</td><td><span class="badge green">OK</span></td></tr>
+            <tr><td>Aceite</td><td class="muted">Aceites</td><td class="num">40 L</td><td class="num">20 L</td><td class="num">$ 2.780</td><td><span class="badge green">OK</span></td></tr>
+            <tr><td>Sal</td><td class="muted">Secos</td><td class="num">10 kg</td><td class="num">5 kg</td><td class="num">$ 1.856</td><td><span class="badge green">OK</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="note">
+        <b>El mínimo de carne (40 kg) sale del consumo real:</b> una semana de milas para
+        Que Mila Bobo (1.312 u.) consume ~39 kg de carne de inicio. Si el miércoles hay
+        pedido de 350 milas y quedan 12 kg, el sistema avisa ANTES de aceptar el pedido —
+        es exactamente el faltante de lomito que pasó el 01/07.
+      </div>
+    </section>
+
+    <!-- ===== Clientes ===== -->
+    <section class="view v-clientes">
+      <div class="view-head">
+        <div><h2>Clientes</h2><p class="desc">Los "bares" del spec: locales propios que compran a costo</p></div>
+        <span class="btn primary">+ Nuevo cliente</span>
+      </div>
+
+      <div class="grid cols-2" style="grid-template-columns: 320px 1fr;">
+        <div class="card">
+          <div class="chart-title" style="margin-bottom:10px;">Que Mila Bobo</div>
+          <div class="costeo-lines">
+            <div class="row"><span class="muted">Tipo</span><span>Sanguchería</span></div>
+            <div class="row"><span class="muted">Estado</span><span class="badge green">Activo</span></div>
+            <div class="row"><span class="muted">Pedidos esta semana</span><span>5 de 7 días</span></div>
+            <div class="row"><span class="muted">Regla de precio</span><span class="badge blue">Costo exacto</span></div>
+            <div class="row total"><span>Total semana 29/06–05/07</span><span>$ 5.847.965</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="chart-title" style="margin-bottom:10px;">Cuenta corriente — semana actual</div>
+          <table>
+            <thead><tr><th>Fecha</th><th>Comprobante</th><th>Estado</th><th class="num">Total</th></tr></thead>
+            <tbody>
+              <tr><td class="muted">Lun 29/06</td><td>Pedido diario</td><td><span class="badge green">Enviado</span></td><td class="num">$ 757.332</td></tr>
+              <tr><td class="muted">Mar 30/06</td><td>—</td><td><span class="badge">Pendiente</span></td><td class="num">$ 0</td></tr>
+              <tr><td class="muted">Mié 01/07</td><td>Pedido diario</td><td><span class="badge green">Enviado</span></td><td class="num">$ 1.731.470</td></tr>
+              <tr><td class="muted">Jue 02/07</td><td>Pedido diario</td><td><span class="badge green">Enviado</span></td><td class="num">$ 545.566</td></tr>
+              <tr><td class="muted">Vie 03/07</td><td>Pedido diario</td><td><span class="badge green">Enviado</span></td><td class="num">$ 1.004.194</td></tr>
+              <tr><td class="muted">Sáb 04/07</td><td>Pedido diario</td><td><span class="badge green">Enviado</span></td><td class="num">$ 1.809.403</td></tr>
+              <tr class="grand"><td colspan="3">Total de la semana</td><td class="num">$ 5.847.965</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Reportes ===== -->
+    <section class="view v-reportes">
+      <h2>Reportes</h2>
+      <p class="desc">El resumen semanal que el cliente ya usa hoy, más los reportes del sistema nuevo</p>
+
+      <div class="card" style="margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+          <div class="chart-title">Resumen semanal — Que Mila Bobo · 29/06 al 05/07</div>
+          <div><span class="badge">Excel</span> <span class="badge">PDF</span></div>
+        </div>
+        <table>
+          <thead><tr><th>Artículo</th><th class="num">Lun</th><th class="num">Mar</th><th class="num">Mié</th><th class="num">Jue</th><th class="num">Vie</th><th class="num">Sáb</th><th class="num">Dom</th><th class="num">Total cant.</th><th class="num">Total $</th></tr></thead>
+          <tbody>
+            <tr><td>Mila de Carne 190 grs <span class="badge blue">CdP</span></td><td class="num">201</td><td class="num">—</td><td class="num">350</td><td class="num">61</td><td class="num">200</td><td class="num">500</td><td class="num">—</td><td class="num"><b>1.312</b></td><td class="num"><b>$ 3.989.792</b></td></tr>
+            <tr><td>Lomito de Carne <span class="badge blue">CdP</span></td><td class="num">—</td><td class="num">—</td><td class="num">24</td><td class="num">50</td><td class="num">50</td><td class="num">—</td><td class="num">—</td><td class="num"><b>124</b></td><td class="num"><b>$ 501.084</b></td></tr>
+            <tr><td>Hamburguesa x 100g <span class="badge blue">CdP</span></td><td class="num">—</td><td class="num">—</td><td class="num">60</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num"><b>60</b></td><td class="num"><b>$ 56.340</b></td></tr>
+            <tr><td>Jamón Cocido Sadia <span class="badge">Insumos</span></td><td class="num">3,25</td><td class="num">—</td><td class="num">13</td><td class="num">6,5</td><td class="num">6,5</td><td class="num">6,5</td><td class="num">—</td><td class="num"><b>35,75 kg</b></td><td class="num"><b>$ 381.810</b></td></tr>
+            <tr><td>Queso Danbo La Paulina <span class="badge">Insumos</span></td><td class="num">—</td><td class="num">—</td><td class="num">7,49</td><td class="num">7,35</td><td class="num">3,7</td><td class="num">7,6</td><td class="num">—</td><td class="num"><b>26,14 kg</b></td><td class="num"><b>$ 273.581</b></td></tr>
+            <tr><td>Mayonesa Hellmann's <span class="badge">Insumos</span></td><td class="num">2</td><td class="num">—</td><td class="num">12</td><td class="num">—</td><td class="num">6</td><td class="num">3</td><td class="num">—</td><td class="num"><b>23</b></td><td class="num"><b>$ 248.400</b></td></tr>
+            <tr><td>Queso Cremoso Tremblay <span class="badge">Insumos</span></td><td class="num">—</td><td class="num">—</td><td class="num">13,85</td><td class="num">—</td><td class="num">—</td><td class="num">11,23</td><td class="num">—</td><td class="num"><b>25,08 kg</b></td><td class="num"><b>$ 183.460</b></td></tr>
+            <tr><td>Mostaza Savora <span class="badge">Insumos</span></td><td class="num">2</td><td class="num">—</td><td class="num">3</td><td class="num">—</td><td class="num">2</td><td class="num">—</td><td class="num">—</td><td class="num"><b>7</b></td><td class="num"><b>$ 73.500</b></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="grid cols-3">
+        <div class="card report-card">
+          <h3>Producción y costeo</h3>
+          <ul><li>Costo por producto (con rinde y descarte)</li><li>Evolución de costo de insumos</li><li>Historial de versiones de receta</li></ul>
+          <span class="badge">Excel</span> <span class="badge">PDF</span>
+        </div>
+        <div class="card report-card">
+          <h3>Stock</h3>
+          <ul><li>Stock actual con alertas</li><li>Faltantes por pedido (como el lomito)</li><li>Consumo de insumos por producción</li></ul>
+          <span class="badge">Excel</span> <span class="badge">PDF</span>
+        </div>
+        <div class="card report-card">
+          <h3>Clientes</h3>
+          <ul><li>Pedidos por período y cliente</li><li>Cuenta corriente por cliente</li><li>Ranking de artículos por cliente</li></ul>
+          <span class="badge">Excel</span> <span class="badge">PDF</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== Configuración ===== -->
+    <section class="view v-config">
+      <h2>Configuración</h2>
+      <p class="desc">Parámetros del centro de producción</p>
+
+      <div class="grid cols-2">
+        <div class="card">
+          <div class="chart-title" style="margin-bottom:12px;">Centro de producción</div>
+          <div class="field"><label>Nombre</label><div class="input">Centro de Producción</div></div>
+          <div class="field"><label>CUIT</label><div class="input">30-71234567-8</div></div>
+        </div>
+        <div class="card">
+          <div class="chart-title" style="margin-bottom:12px;">Reglas de negocio</div>
+          <div class="field"><label>Precio de venta a clientes</label>
+            <div class="seg"><span class="on">Costo exacto</span><span>Costo + %</span></div>
+          </div>
+          <div class="field"><label>Método de costeo de insumos</label>
+            <div class="seg"><span class="on">Último precio</span><span>Promedio ponderado</span><span>Manual</span></div>
+          </div>
+          <div class="field"><label>Validación de stock al tomar pedidos</label>
+            <div class="seg"><span class="on">Avisar faltantes</span><span>Bloquear</span><span>No validar</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="chart-title" style="margin-bottom:12px;">Categorías de producto</div>
+          <div class="chips" style="margin-bottom:0;">
+            <span class="chip">Masa-Leudado</span><span class="chip">Molida-Medallones</span><span class="chip">Milanesas</span><span class="chip">Pollo Frito</span><span class="chip">Rebozados</span><span class="chip">Fraccionados</span><span class="chip">Tartas</span><span class="chip">Encurtidos-Salsas</span><span class="chip">Eventos</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="chart-title" style="margin-bottom:12px;">Orígenes de líneas de pedido</div>
+          <div class="costeo-lines">
+            <div class="row"><span><span class="badge blue">Centro de Producción</span></span><span class="muted">productos terminados · costo de producción</span></div>
+            <div class="row"><span><span class="badge">CDP Insumos</span></span><span class="muted">reventa · precio de compra</span></div>
+            <div class="row"><span><span class="badge amber">CDP Descartables</span></span><span class="muted">packaging · precio de compra</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+</body>
+</html>
