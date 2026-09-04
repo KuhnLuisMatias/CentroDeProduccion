@@ -157,7 +157,6 @@ public class ConfirmProduccionCommandHandler
 
         // Costeo over REAL consumption only (edited lines), not the template.
         var costoTotalInsumos = lineas.Sum(l => insumos[l.InsumoId].PrecioUltimaCompra * l.Cantidad);
-        var costoUnitario = costoTotalInsumos / command.CantidadProducida;
 
         // Single internal salida row keeps rentabilidad/reports reading Salidas working.
         // No explicit Id: graph-discovered through the tracked parent (preset key would be
@@ -166,7 +165,6 @@ public class ConfirmProduccionCommandHandler
         {
             ProductoTerminadoId = producto.Id,
             Cantidad = command.CantidadProducida,
-            CostoUnitario = costoUnitario,
             TipoSalida = TipoSalidaProduccion.Primario
         });
 

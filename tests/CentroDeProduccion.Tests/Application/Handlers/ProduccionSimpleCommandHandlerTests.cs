@@ -280,8 +280,7 @@ public class ProduccionSimpleCommandHandlerTests
         var salida = produccion.Salidas.Single();
         salida.TipoSalida.ShouldBe(TipoSalidaProduccion.Primario);
         salida.Cantidad.ShouldBe(40m);
-        // Costeo: Σ reales = 2500×10 + 30×25 = 25750 → P.U. = 25750 / 40 = 643.75
-        salida.CostoUnitario.ShouldBe(643.75m);
+        // Costeo: Σ reales = 2500×10 + 30×25 = 25750
         produccion.CostoTotalInsumos.ShouldBe(25750m);
         produccion.CantidadProducida.ShouldBe(40m);
         produccion.Estado.ShouldBe(EstadoProduccion.Confirmada);

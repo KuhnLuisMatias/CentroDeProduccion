@@ -4,8 +4,8 @@ namespace CentroDeProduccion.Domain.Entities;
 
 /// <summary>
 /// One output of a production run. Supports the multi-stage yield (spec §18.5): a run can emit
-/// a primary product plus a recoverable subproduct ("Recorte") valued separately instead of as
-/// merma. Cost is prorated across outputs.
+/// a primary product plus a recoverable subproduct ("Recorte") instead of counting it as
+/// merma. Cost is tracked at the Produccion level.
 /// </summary>
 public class ProduccionSalida
 {
@@ -17,9 +17,6 @@ public class ProduccionSalida
 
     /// <summary>Quantity produced in this output.</summary>
     public decimal Cantidad { get; set; }
-
-    /// <summary>Prorated unit cost assigned to this output.</summary>
-    public decimal CostoUnitario { get; set; }
 
     public TipoSalidaProduccion TipoSalida { get; set; } = TipoSalidaProduccion.Primario;
 }

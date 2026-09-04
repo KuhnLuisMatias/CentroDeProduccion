@@ -244,17 +244,21 @@ export default function InsumosPage() {
     {
       accessorKey: "stockActual",
       header: "Stock",
-      cell: ({ row }) => (
-        <span
-          className={
-            row.original.stockActual <= row.original.stockMinimo
-              ? "font-medium text-red-600"
-              : undefined
-          }
-        >
-          {row.original.stockActual}
-        </span>
-      ),
+      cell: ({ row }) => {
+        const simbolo = row.original.unidadConsumo?.simbolo;
+        return (
+          <span
+            className={
+              row.original.stockActual <= row.original.stockMinimo
+                ? "font-medium text-red-600"
+                : undefined
+            }
+          >
+            {row.original.stockActual}
+            {simbolo ? ` ${simbolo}` : ""}
+          </span>
+        );
+      },
     },
     {
       accessorKey: "precioUltimaCompra",

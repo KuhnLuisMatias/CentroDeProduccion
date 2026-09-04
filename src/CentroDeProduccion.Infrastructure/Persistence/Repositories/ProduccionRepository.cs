@@ -27,6 +27,7 @@ public class ProduccionRepository : IProduccionRepository
         => await _context.Producciones
             .Include(p => p.Receta)
             .Include(p => p.Responsable)
+            .Include(p => p.InsumosConsumidos).ThenInclude(pi => pi.Insumo)
             .OrderByDescending(p => p.Fecha)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
@@ -70,42 +71,6 @@ public class ProduccionRepository : IProduccionRepository
             .OrderByDescending(p => p.Fecha)
             .AsNoTracking()
             .ToListAsync(ct);
-
-    public async Task<IReadOnlyDictionary<Guid, decimal>> GetLastConfirmedUnitCostsAsync(
-        IEnumerable<Guid> productoTerminadoIds,
-        CancellationToken ct = default)
-    {
-        var ids = productoTerminadoIds.Distinct().ToList();
-        if (ids.Count == 0)
-            return new Dictionary<Guid, decimal>();
-
-        var filas = await _context.Producciones
-            .AsNoTracking()
-            .Where(p => p.Estado == EstadoProduccion.Confirmada &&
-                        p.Salidas.Any(s => ids.Contains(s.ProductoTerminadoId)))
-            .SelectMany(p => p.Salidas
-                .Where(s => ids.Contains(s.ProductoTerminadoId))
-                .Select(s => new
-                {
-                    s.ProductoTerminadoId,
-                    p.Fecha,
-                    p.Id,
-                    p.CostoTotal,
-                    p.CantidadProducida
-                }))
-            .ToListAsync(ct);
-
-        var costos = new Dictionary<Guid, decimal>();
-        foreach (var grupo in filas.GroupBy(x => x.ProductoTerminadoId))
-        {
-            var ultima = grupo.OrderByDescending(x => x.Fecha).ThenByDescending(x => x.Id).First();
-            costos[grupo.Key] = ultima.CantidadProducida == 0
-                ? 0m
-                : ultima.CostoTotal / ultima.CantidadProducida;
-        }
-
-        return costos;
-    }
 
     public async Task<IReadOnlyList<Produccion>> GetByDateRangeAsync(DateTime from, DateTime to, CancellationToken ct = default)
         => await _context.Producciones

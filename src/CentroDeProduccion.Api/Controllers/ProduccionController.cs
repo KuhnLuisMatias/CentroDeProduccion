@@ -6,6 +6,7 @@ using CentroDeProduccion.Application.Features.Produccion.Commands.CancelProducci
 using CentroDeProduccion.Application.Features.Produccion.Commands.EditarInsumosProduccion;
 using CentroDeProduccion.Application.Features.Produccion.Queries.GetProduccionById;
 using CentroDeProduccion.Application.Features.Produccion.Queries.GetProducciones;
+using CentroDeProduccion.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -43,21 +44,33 @@ public class ProduccionController : ControllerBase
 
         // Explicit mapping: never serialize the entity graph (Usuario.PasswordHash leak via
         // Responsable navigation). Same field names as GetProduccionByIdResponse minus salidas.
-        var response = producciones.Select(p => new GetProduccionListItemResponse(
-            p.Id,
-            p.RecetaId,
-            p.Receta is null ? null : new ProduccionRecetaInfo(p.Receta.Id, p.Receta.Nombre, null),
-            p.Lote,
-            p.Fecha,
-            p.ResponsableId,
-            new ProduccionResponsableInfo(p.ResponsableId, p.Responsable?.Nombre ?? string.Empty, p.Responsable?.Apellido ?? string.Empty),
-            p.Estado,
-            p.Observaciones,
-            p.CantidadProducida,
-            p.FechaVencimiento,
-            p.CostoTotalInsumos,
-            p.CostoTotal,
-            p.RowVersion)).ToList();
+        var response = producciones.Select(p =>
+        {
+            // Borrador runs don't persist costs (written only on confirm); compute the estimate
+            // on read so insumo quantity edits are reflected (same formula as ConfirmProduccionCommandHandler).
+            var esBorrador = p.Estado == EstadoProduccion.Borrador;
+            var costoInsumos = esBorrador
+                ? p.InsumosConsumidos?.Sum(pi => (pi.Insumo?.PrecioUltimaCompra ?? 0m) * pi.Cantidad) ?? 0m
+                : p.CostoTotalInsumos;
+
+            return new GetProduccionListItemResponse(
+                p.Id,
+                p.RecetaId,
+                p.Receta is null ? null : new ProduccionRecetaInfo(p.Receta.Id, p.Receta.Nombre, null),
+                p.Lote,
+                p.Fecha,
+                p.ResponsableId,
+                new ProduccionResponsableInfo(p.ResponsableId, p.Responsable?.Nombre ?? string.Empty, p.Responsable?.Apellido ?? string.Empty),
+                p.Estado,
+                p.Observaciones,
+                // Display-only: Borrador runs show 1 unit so rows aren't empty; the persisted
+                // column stays 0 until confirm so dashboard sums aren't polluted.
+                esBorrador ? 1m : p.CantidadProducida,
+                p.FechaVencimiento,
+                costoInsumos,
+                esBorrador ? costoInsumos : p.CostoTotal,
+                p.RowVersion);
+        }).ToList();
 
         return Ok(response);
     }
@@ -71,6 +84,8 @@ public class ProduccionController : ControllerBase
 
         // Explicit mapping: never serialize the entity graph (Usuario.PasswordHash leak +
         // Produccion↔Salidas recursion). Shape matches frontend/src/lib/types.ts Produccion.
+        // Display-only (same as GetAll): Borrador shows 1 unit without persisting it.
+        var esBorrador = produccion.Estado == EstadoProduccion.Borrador;
         var response = new GetProduccionByIdResponse(
             produccion.Id,
             produccion.RecetaId,
@@ -83,7 +98,7 @@ public class ProduccionController : ControllerBase
             new ProduccionResponsableInfo(produccion.ResponsableId, produccion.Responsable?.Nombre ?? string.Empty, produccion.Responsable?.Apellido ?? string.Empty),
             produccion.Estado,
             produccion.Observaciones,
-            produccion.CantidadProducida,
+            esBorrador ? 1m : produccion.CantidadProducida,
             produccion.FechaVencimiento,
             produccion.CostoTotalInsumos,
             produccion.CostoTotal,
@@ -96,7 +111,6 @@ public class ProduccionController : ControllerBase
                     ? null
                     : new ProduccionSalidaProductoInfo(s.ProductoTerminado.Id, s.ProductoTerminado.Nombre, s.ProductoTerminado.CodigoSku),
                 s.Cantidad,
-                s.CostoUnitario,
                 s.TipoSalida)).ToList(),
             produccion.InsumosConsumidos.Select(i => new ProduccionInsumoResponse(
                 i.Id,

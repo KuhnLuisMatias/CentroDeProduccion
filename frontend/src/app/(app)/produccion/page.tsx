@@ -422,8 +422,6 @@ export default function ProduccionPage() {
       ? resumen.costoTotalInsumos
       : totalCosto(resumen.insumosConsumidos)
     : 0;
-  const resumenCostoUnitario =
-    resumen && resumen.cantidadProducida > 0 ? resumen.costoTotal / resumen.cantidadProducida : 0;
 
   // Default counting unit fallback ("Uni") — overridden by openClosing's detail fetch.
   const handleCancel = async () => {
@@ -465,15 +463,6 @@ export default function ProduccionPage() {
       id: "fecha",
       header: "Fecha",
       cell: ({ row }) => new Date(row.original.fecha).toLocaleDateString("es-AR"),
-    },
-    { accessorKey: "cantidadProducida", header: "Cantidad" },
-    {
-      id: "costoUnitario",
-      header: "Costo unitario",
-      cell: ({ row }) =>
-        row.original.estado === 2 && row.original.cantidadProducida > 0
-          ? MONEY.format(row.original.costoTotal / row.original.cantidadProducida)
-          : "—",
     },
     {
       accessorKey: "costoTotal",
@@ -879,10 +868,6 @@ export default function ProduccionPage() {
               <div>
                 <span className="font-medium">Costo total de insumos:</span>{" "}
                 {MONEY.format(resumenCostoInsumos)}
-              </div>
-              <div>
-                <span className="font-medium">Costo unitario:</span>{" "}
-                {MONEY.format(resumenCostoUnitario)}
               </div>
             </div>
           ) : null}

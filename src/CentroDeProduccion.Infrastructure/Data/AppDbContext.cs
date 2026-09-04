@@ -240,7 +240,6 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<ProduccionSalida>(e =>
         {
             e.Property(ps => ps.Cantidad).HasPrecision(18, 4);
-            e.Property(ps => ps.CostoUnitario).HasPrecision(18, 4);
             e.Property(ps => ps.TipoSalida).HasConversion<int>();
             e.HasOne(ps => ps.Produccion)
              .WithMany(p => p.Salidas)

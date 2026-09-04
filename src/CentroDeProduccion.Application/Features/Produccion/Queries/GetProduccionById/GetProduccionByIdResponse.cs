@@ -37,7 +37,6 @@ public sealed record ProduccionSalidaResponse(
     Guid ProductoTerminadoId,
     ProduccionSalidaProductoInfo? ProductoTerminado,
     decimal Cantidad,
-    decimal CostoUnitario,
     TipoSalidaProduccion TipoSalida);
 
 public sealed record ProduccionSalidaProductoInfo(Guid Id, string Nombre, string CodigoSku);
