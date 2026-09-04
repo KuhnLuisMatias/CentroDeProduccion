@@ -6,4 +6,5 @@ public sealed record UpdateUnidadMedidaCommand(
     Guid Id,
     string Nombre,
     string Simbolo,
-    TipoUnidadMedida Tipo);
+    TipoUnidadMedida Tipo,
+    bool Activo);

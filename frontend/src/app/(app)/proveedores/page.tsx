@@ -11,7 +11,6 @@ import { apiClient, ApiError } from "@/lib/api";
 import type { Proveedor, CreateProveedorCommand, UpdateProveedorCommand } from "@/lib/types";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
-import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -93,9 +92,7 @@ export default function ProveedoresPage() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Proveedor | null>(null);
-
-  const [deactivating, setDeactivating] = useState<Proveedor | null>(null);
-  const [deactivateBusy, setDeactivateBusy] = useState(false);
+  const [editActivo, setEditActivo] = useState("true");
 
   const load = useCallback(async () => {
     try {
@@ -127,6 +124,7 @@ export default function ProveedoresPage() {
 
   const openEdit = (row: Proveedor) => {
     setEditing(row);
+    setEditActivo(row.activo ? "true" : "false");
     form.reset({
       nombreRazonSocial: row.nombreRazonSocial,
       cuit: row.cuit,
@@ -161,7 +159,11 @@ export default function ProveedoresPage() {
     };
     try {
       if (editing) {
-        const payload: UpdateProveedorCommand = { ...base, id: editing.id };
+        const payload: UpdateProveedorCommand = {
+          ...base,
+          id: editing.id,
+          activo: editActivo === "true",
+        };
         await apiClient<void>(`/proveedores/${editing.id}`, { method: "PUT", body: payload });
         toast.success(`Proveedor "${base.nombreRazonSocial}" actualizado.`);
       } else {
@@ -174,22 +176,6 @@ export default function ProveedoresPage() {
       toast.error(err instanceof ApiError ? err.message : "No se pudo guardar el proveedor.");
     }
   });
-
-  const handleDeactivate = async () => {
-    if (!deactivating) return;
-    setDeactivateBusy(true);
-    try {
-      await apiClient<void>(`/proveedores/${deactivating.id}`, { method: "DELETE" });
-      toast.success(`Proveedor "${deactivating.nombreRazonSocial}" desactivado.`);
-      setDeactivating(null);
-      await load();
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "No se pudo desactivar el proveedor.");
-      setDeactivating(null);
-    } finally {
-      setDeactivateBusy(false);
-    }
-  };
 
   const columns: ColumnDef<Proveedor, unknown>[] = [
     { accessorKey: "nombreRazonSocial", header: "Razón social" },
@@ -214,6 +200,11 @@ export default function ProveedoresPage() {
       header: "Contacto",
       cell: ({ getValue }) => getValue<string>() || "—",
     },
+    {
+      accessorKey: "activo",
+      header: "Estado",
+      cell: ({ row }) => (row.original.activo ? "Activo" : "Inactivo"),
+    },
   ];
 
   const { register, control, formState: { errors } } = form;
@@ -221,16 +212,13 @@ export default function ProveedoresPage() {
   return (
     <div>
       <PageHeader
-        title="Proveedores"
-        description="Catálogo de proveedores."
         actions={
           <>
-            <Button size="sm" onClick={openCreate}>
-              <Plus className="size-4" />
-              Nuevo proveedor
+            <Button size="sm" onClick={openCreate} aria-label="Nuevo proveedor" title="Nuevo proveedor">
+              <Plus className="size-5" />
             </Button>
             <Button variant="outline" size="sm" onClick={() => void load()} disabled={loading}>
-              <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw className={`size-5 ${loading ? "animate-spin" : ""}`} />
               Actualizar
             </Button>          </>
         }
@@ -243,14 +231,9 @@ export default function ProveedoresPage() {
         error={error}
         emptyMessage="No hay proveedores."
         actions={(row) => (
-          <>
-            <Button variant="outline" size="sm" onClick={() => openEdit(row)}>
-              Editar
-            </Button>
-            <Button variant="destructive" size="sm" onClick={() => setDeactivating(row)}>
-              Desactivar
-            </Button>
-          </>
+          <Button variant="outline" size="sm" onClick={() => openEdit(row)}>
+            Editar
+          </Button>
         )}
       />
 
@@ -347,6 +330,21 @@ export default function ProveedoresPage() {
               <FieldError message={errors.observaciones?.message} />
             </div>
 
+            {editing && (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="prov-estado">Estado</Label>
+                <Select value={editActivo} onValueChange={setEditActivo}>
+                  <SelectTrigger id="prov-estado" className="w-full">
+                    <SelectValue placeholder="Seleccionar…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="true">Activo</SelectItem>
+                    <SelectItem value="false">Inactivo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <DialogFooter className="sm:col-span-2">
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                 Cancelar
@@ -358,19 +356,6 @@ export default function ProveedoresPage() {
           </form>
         </DialogContent>
       </Dialog>
-
-      <ConfirmDialog
-        open={deactivating !== null}
-        onOpenChange={(open) => {
-          if (!open) setDeactivating(null);
-        }}
-        title="Desactivar proveedor"
-        message={`¿Seguro que querés desactivar "${deactivating?.nombreRazonSocial ?? ""}"?`}
-        confirmLabel="Desactivar"
-        destructive
-        busy={deactivateBusy}
-        onConfirm={() => void handleDeactivate()}
-      />
     </div>
   );
 }

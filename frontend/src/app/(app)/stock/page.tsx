@@ -308,16 +308,13 @@ export default function StockPage() {
   return (
     <div>
       <PageHeader
-        title="Stock"
-        description="Niveles de stock, alertas y movimientos."
         actions={
           <>
-            <Button size="sm" onClick={openMovForm}>
-              <Plus className="size-4" />
-              Registrar movimiento
+            <Button size="sm" onClick={openMovForm} aria-label="Registrar movimiento" title="Registrar movimiento">
+              <Plus className="size-5" />
             </Button>
             <Button variant="outline" size="sm" onClick={() => void load()} disabled={loading}>
-              <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw className={`size-5 ${loading ? "animate-spin" : ""}`} />
               Actualizar
             </Button>          </>
         }

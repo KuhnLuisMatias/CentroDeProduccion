@@ -352,11 +352,9 @@ export default function CuentaCorrientePage() {
   return (
     <div>
       <PageHeader
-        title="Cuentas Corrientes"
-        description="Estado de cuenta y movimientos de proveedores y bares."
         actions={
           <Button variant="outline" size="sm" onClick={load} disabled={loading}>
-            <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`size-5 ${loading ? "animate-spin" : ""}`} />
             Actualizar
           </Button>
         }

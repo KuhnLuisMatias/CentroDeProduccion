@@ -113,7 +113,7 @@ public class UpdateBarCommandHandlerTests
     };
 
     private static UpdateBarCommand Command(Guid barId, byte[] rowVersion) => new(
-        barId, "Bar Sur", "Calle Falsa 456", "Juan", "555-1234", "10-18", 25m, rowVersion);
+        barId, "Bar Sur", "Calle Falsa 456", "Juan", "555-1234", "10-18", 25m, rowVersion, EstadoBar.Inactivo);
 
     [Fact]
     public async Task HandleAsync_BarValido_ActualizaCampos()
@@ -133,6 +133,7 @@ public class UpdateBarCommandHandlerTests
         bar.Telefono.ShouldBe("555-1234");
         bar.HorarioRecepcion.ShouldBe("10-18");
         bar.MargenReventaPorcentaje.ShouldBe(25m);
+        bar.Estado.ShouldBe(EstadoBar.Inactivo); // seeded Activo — proves estado write-back
         await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 

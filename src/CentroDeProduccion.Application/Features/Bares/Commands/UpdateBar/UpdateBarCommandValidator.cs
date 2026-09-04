@@ -1,3 +1,4 @@
+using CentroDeProduccion.Domain.Enums;
 using FluentValidation;
 
 namespace CentroDeProduccion.Application.Features.Bares.Commands.UpdateBar;
@@ -12,5 +13,6 @@ public class UpdateBarCommandValidator : AbstractValidator<UpdateBarCommand>
         RuleFor(x => x.Telefono).MaximumLength(20);
         RuleFor(x => x.HorarioRecepcion).MaximumLength(100);
         RuleFor(x => x.MargenReventaPorcentaje).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.Estado).IsInEnum();
     }
 }

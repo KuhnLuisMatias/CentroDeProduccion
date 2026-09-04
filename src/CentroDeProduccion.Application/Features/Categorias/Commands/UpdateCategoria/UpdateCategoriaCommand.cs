@@ -5,4 +5,5 @@ namespace CentroDeProduccion.Application.Features.Categorias.Commands.UpdateCate
 public sealed record UpdateCategoriaCommand(
     Guid Id,
     string Nombre,
-    AmbitoCategoria Ambito);
+    AmbitoCategoria Ambito,
+    bool Activo);

@@ -51,6 +51,7 @@ public class UpdateProveedorCommandHandler
         proveedor.CategoriasProvee = command.CategoriasProvee;
         proveedor.TipoFactura = command.TipoFactura;
         proveedor.Observaciones = command.Observaciones;
+        proveedor.Activo = command.Activo;
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

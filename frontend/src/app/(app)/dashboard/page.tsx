@@ -18,7 +18,6 @@ import { apiClient, ApiError } from "@/lib/api";
 import { MONEY } from "@/lib/utils";
 import type { DashboardCharts, DashboardKPIs } from "@/lib/types";
 import ChartCard from "@/components/ChartCard";
-import PageHeader from "@/components/shared/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -139,10 +138,6 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div>
-      <PageHeader
-        title="Dashboard"
-        description=""
-      />
         <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <Card key={i} className="animate-pulse py-5">
@@ -192,8 +187,6 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <PageHeader title="Dashboard" description="" />
-
       {KPI_SECTIONS.map((section) => {
         const defs = section.keys.map((key) => KPI_DEFS.find((d) => d.key === key)!);
         return (

@@ -18,7 +18,6 @@ import { TIPO_UNIDAD_MEDIDA_LABELS } from "@/lib/types";
 import { useAuth } from "@/context/AuthContext";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
-import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,9 +80,7 @@ export default function UnidadesPage() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<UnidadMedida | null>(null);
-
-  const [desactivando, setDesactivando] = useState<UnidadMedida | null>(null);
-  const [desactivandoBusy, setDesactivandoBusy] = useState(false);
+  const [editActivo, setEditActivo] = useState("true");
 
   const load = useCallback(async () => {
     try {
@@ -115,6 +112,7 @@ export default function UnidadesPage() {
 
   const openEdit = (row: UnidadMedida) => {
     setEditing(row);
+    setEditActivo(row.activo ? "true" : "false");
     form.reset({ nombre: row.nombre, simbolo: row.simbolo, tipo: String(row.tipo) as "1" | "2" | "3" });
     setDialogOpen(true);
   };
@@ -127,7 +125,11 @@ export default function UnidadesPage() {
     };
     try {
       if (editing) {
-        const payload: UpdateUnidadMedidaCommand = { ...base, id: editing.id };
+        const payload: UpdateUnidadMedidaCommand = {
+          ...base,
+          id: editing.id,
+          activo: editActivo === "true",
+        };
         await apiClient<void>(`/unidadesmedida/${editing.id}`, { method: "PUT", body: payload });
         toast.success(`Unidad "${base.nombre}" actualizada.`);
       } else {
@@ -141,22 +143,6 @@ export default function UnidadesPage() {
       toast.error(err instanceof ApiError ? err.message : "No se pudo guardar la unidad de medida.");
     }
   });
-
-  const handleDesactivar = async () => {
-    if (!desactivando) return;
-    setDesactivandoBusy(true);
-    try {
-      await apiClient<void>(`/unidadesmedida/${desactivando.id}`, { method: "DELETE" });
-      toast.success(`Unidad "${desactivando.nombre}" desactivada.`);
-      setDesactivando(null);
-      await load();
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "No se pudo desactivar la unidad de medida.");
-      setDesactivando(null);
-    } finally {
-      setDesactivandoBusy(false);
-    }
-  };
 
   const columns: ColumnDef<UnidadMedida, unknown>[] = [
     { accessorKey: "nombre", header: "Nombre" },
@@ -187,18 +173,15 @@ export default function UnidadesPage() {
   return (
     <div>
       <PageHeader
-        title="Unidades de Medida"
-        description="Catálogo de unidades de medida."
         actions={
           <>
             {isAdmin && (
-              <Button size="sm" onClick={openCreate}>
-                <Plus className="size-4" />
-                Nueva unidad
+              <Button size="sm" onClick={openCreate} aria-label="Nueva unidad" title="Nueva unidad">
+                <Plus className="size-5" />
               </Button>
             )}
             <Button variant="outline" size="sm" onClick={() => void load()} disabled={loading}>
-              <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw className={`size-5 ${loading ? "animate-spin" : ""}`} />
               Actualizar
             </Button>
           </>
@@ -214,16 +197,9 @@ export default function UnidadesPage() {
         actions={
           isAdmin
             ? (row) => (
-                <>
-                  <Button variant="outline" size="sm" onClick={() => openEdit(row)}>
-                    Editar
-                  </Button>
-                  {row.activo && (
-                    <Button variant="destructive" size="sm" onClick={() => setDesactivando(row)}>
-                      Desactivar
-                    </Button>
-                  )}
-                </>
+                <Button variant="outline" size="sm" onClick={() => openEdit(row)}>
+                  Editar
+                </Button>
               )
             : undefined
         }
@@ -276,6 +252,21 @@ export default function UnidadesPage() {
               <FieldError message={errors.tipo?.message} />
             </div>
 
+            {editing && (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="uni-estado">Estado</Label>
+                <Select value={editActivo} onValueChange={setEditActivo}>
+                  <SelectTrigger id="uni-estado" className="w-full">
+                    <SelectValue placeholder="Seleccionar…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="true">Activo</SelectItem>
+                    <SelectItem value="false">Inactivo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                 Cancelar
@@ -287,19 +278,6 @@ export default function UnidadesPage() {
           </form>
         </DialogContent>
       </Dialog>
-
-      <ConfirmDialog
-        open={desactivando !== null}
-        onOpenChange={(open) => {
-          if (!open) setDesactivando(null);
-        }}
-        title="Desactivar unidad de medida"
-        message={`¿Seguro que querés desactivar la unidad "${desactivando?.nombre ?? ""}"?`}
-        confirmLabel="Desactivar"
-        destructive
-        busy={desactivandoBusy}
-        onConfirm={() => void handleDesactivar()}
-      />
     </div>
   );
 }

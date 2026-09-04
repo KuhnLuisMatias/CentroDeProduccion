@@ -282,16 +282,13 @@ export default function InsumosPage() {
   return (
     <div>
       <PageHeader
-        title="Insumos"
-        description="Catálogo de materias primas e insumos."
         actions={
           <>
-            <Button size="sm" onClick={openCreate}>
-              <Plus className="size-4" />
-              Nuevo insumo
+            <Button size="sm" onClick={openCreate} aria-label="Nuevo insumo" title="Nuevo insumo">
+              <Plus className="size-5" />
             </Button>
             <Button variant="outline" size="sm" onClick={() => void load()} disabled={loading}>
-              <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw className={`size-5 ${loading ? "animate-spin" : ""}`} />
               Actualizar
             </Button>          </>
         }

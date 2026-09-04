@@ -188,11 +188,9 @@ export default function ProductosTerminadosPage() {
   return (
     <div>
       <PageHeader
-        title="Productos Terminados"
-        description="Productos generados por las producciones confirmadas."
         actions={
           <Button variant="outline" size="sm" onClick={() => void load()} disabled={loading}>
-            <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`size-5 ${loading ? "animate-spin" : ""}`} />
             Actualizar
           </Button>
         }

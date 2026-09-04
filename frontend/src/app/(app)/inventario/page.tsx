@@ -285,16 +285,13 @@ export default function InventarioPage() {
   return (
     <div>
       <PageHeader
-        title="Inventario guiado"
-        description="Tomas de inventario con conteo guiado y ajustes de stock."
         actions={
           <>
-            <Button size="sm" onClick={openCreate}>
-              <Plus className="size-4" aria-hidden="true" />
-              Nueva sesión
+            <Button size="sm" onClick={openCreate} aria-label="Nueva sesión" title="Nueva sesión">
+              <Plus className="size-5" aria-hidden="true" />
             </Button>
             <Button variant="outline" size="sm" onClick={() => void load()} disabled={loading}>
-              <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw className={`size-5 ${loading ? "animate-spin" : ""}`} />
               Actualizar
             </Button>          </>
         }

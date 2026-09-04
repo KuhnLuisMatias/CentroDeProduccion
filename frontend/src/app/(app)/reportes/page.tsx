@@ -9,7 +9,6 @@ import { MONEY } from "@/lib/utils";
 import { downloadReportExport } from "@/lib/export";
 import type { ReportEnvelope, ReportMetadata } from "@/lib/types";
 import { useAuth } from "@/context/AuthContext";
-import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -705,11 +704,6 @@ export default function ReportesPage() {
 
   return (
     <div>
-      <PageHeader
-        title="Reportes"
-        description="Consultas y reportes del sistema con exportación a Excel y PDF."
-      />
-
       <Tabs value={group} onValueChange={(value) => selectGroup(value as ReportGroup)} className="mb-4">
         <TabsList className="flex-wrap">
           {GROUPS.filter((g) => !g.adminOnly || isAdmin).map((g) => (

@@ -1,3 +1,5 @@
+using CentroDeProduccion.Domain.Enums;
+
 namespace CentroDeProduccion.Application.Features.Bares.Commands.UpdateBar;
 
 public sealed record UpdateBarCommand(
@@ -8,4 +10,5 @@ public sealed record UpdateBarCommand(
     string? Telefono,
     string? HorarioRecepcion,
     decimal MargenReventaPorcentaje,
-    byte[] RowVersion);
+    byte[] RowVersion,
+    EstadoBar Estado);

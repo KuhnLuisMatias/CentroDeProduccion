@@ -19,7 +19,6 @@ import { AMBITO_CATEGORIA_LABELS } from "@/lib/types";
 import { useAuth } from "@/context/AuthContext";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
-import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,9 +73,7 @@ export default function CategoriasPage() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Categoria | null>(null);
-
-  const [desactivando, setDesactivando] = useState<Categoria | null>(null);
-  const [desactivandoBusy, setDesactivandoBusy] = useState(false);
+  const [editActivo, setEditActivo] = useState("true");
 
   const load = useCallback(async () => {
     try {
@@ -116,6 +113,7 @@ export default function CategoriasPage() {
 
   const openEdit = (row: Categoria) => {
     setEditing(row);
+    setEditActivo(row.activo ? "true" : "false");
     form.reset({ nombre: row.nombre, ambito: String(row.ambito) as "1" | "2" });
     setDialogOpen(true);
   };
@@ -125,7 +123,12 @@ export default function CategoriasPage() {
     const ambito = Number(values.ambito) as AmbitoCategoria;
     try {
       if (editing) {
-        const payload: UpdateCategoriaCommand = { id: editing.id, nombre, ambito };
+        const payload: UpdateCategoriaCommand = {
+          id: editing.id,
+          nombre,
+          ambito,
+          activo: editActivo === "true",
+        };
         await apiClient<void>(`/categorias/${editing.id}`, { method: "PUT", body: payload });
         toast.success(`Categoría "${nombre}" actualizada.`);
       } else {
@@ -138,22 +141,6 @@ export default function CategoriasPage() {
       toast.error(err instanceof ApiError ? err.message : "No se pudo guardar la categoría.");
     }
   });
-
-  const handleDesactivar = async () => {
-    if (!desactivando) return;
-    setDesactivandoBusy(true);
-    try {
-      await apiClient<void>(`/categorias/${desactivando.id}`, { method: "DELETE" });
-      toast.success(`Categoría "${desactivando.nombre}" desactivada.`);
-      setDesactivando(null);
-      await load();
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "No se pudo desactivar la categoría.");
-      setDesactivando(null);
-    } finally {
-      setDesactivandoBusy(false);
-    }
-  };
 
   const columns: ColumnDef<Categoria, unknown>[] = [
     { accessorKey: "nombre", header: "Nombre" },
@@ -171,6 +158,11 @@ export default function CategoriasPage() {
           </Badge>
         ),
     },
+    {
+      accessorKey: "activo",
+      header: "Estado",
+      cell: ({ row }) => (row.original.activo ? "Activo" : "Inactivo"),
+    },
   ];
 
   const { register, control, formState: { errors } } = form;
@@ -178,16 +170,13 @@ export default function CategoriasPage() {
   return (
     <div>
       <PageHeader
-        title="Categorías"
-        description="Catálogo de categorías por ámbito."
         actions={
           <>
-            <Button size="sm" onClick={openCreate}>
-              <Plus className="size-4" />
-              Nueva categoría
+            <Button size="sm" onClick={openCreate} aria-label="Nueva categoría" title="Nueva categoría">
+              <Plus className="size-5" />
             </Button>
             <Button variant="outline" size="sm" onClick={() => void load()} disabled={loading}>
-              <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw className={`size-5 ${loading ? "animate-spin" : ""}`} />
               Actualizar
             </Button>          </>
         }
@@ -213,18 +202,15 @@ export default function CategoriasPage() {
         loading={loading}
         error={error}
         emptyMessage="No hay categorías."
-        actions={(row) => (
-          <>
-            <Button variant="outline" size="sm" onClick={() => openEdit(row)}>
-              Editar
-            </Button>
-            {isAdmin && row.activo && (
-              <Button variant="destructive" size="sm" onClick={() => setDesactivando(row)}>
-                Desactivar
-              </Button>
-            )}
-          </>
-        )}
+        actions={
+          isAdmin
+            ? (row) => (
+                <Button variant="outline" size="sm" onClick={() => openEdit(row)}>
+                  Editar
+                </Button>
+              )
+            : undefined
+        }
       />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -265,6 +251,21 @@ export default function CategoriasPage() {
               <FieldError message={errors.ambito?.message} />
             </div>
 
+            {editing && (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="cat-estado">Estado</Label>
+                <Select value={editActivo} onValueChange={setEditActivo}>
+                  <SelectTrigger id="cat-estado" className="w-full">
+                    <SelectValue placeholder="Seleccionar…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="true">Activo</SelectItem>
+                    <SelectItem value="false">Inactivo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                 Cancelar
@@ -276,19 +277,6 @@ export default function CategoriasPage() {
           </form>
         </DialogContent>
       </Dialog>
-
-      <ConfirmDialog
-        open={desactivando !== null}
-        onOpenChange={(open) => {
-          if (!open) setDesactivando(null);
-        }}
-        title="Desactivar categoría"
-        message={`¿Seguro que querés desactivar la categoría "${desactivando?.nombre ?? ""}"?`}
-        confirmLabel="Desactivar"
-        destructive
-        busy={desactivandoBusy}
-        onConfirm={() => void handleDesactivar()}
-      />
     </div>
   );
 }

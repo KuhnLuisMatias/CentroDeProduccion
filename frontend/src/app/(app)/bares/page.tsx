@@ -12,13 +12,11 @@ import type {
   Bar,
   BarListItem,
   CreateBarCommand,
-  DeleteBarCommand,
-  ReactivateBarCommand,
+  EstadoBar,
   UpdateBarCommand,
 } from "@/lib/types";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
-import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -89,10 +87,7 @@ export default function BaresPage() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Bar | null>(null);
-
-  const [actionBar, setActionBar] = useState<Bar | null>(null);
-  const [actionKind, setActionKind] = useState<"deactivate" | "reactivate" | null>(null);
-  const [actionBusy, setActionBusy] = useState(false);
+  const [editEstado, setEditEstado] = useState<EstadoBar>(1);
 
   const load = useCallback(async () => {
     try {
@@ -133,6 +128,7 @@ export default function BaresPage() {
     try {
       const bar = await fetchFull(row.id);
       setEditing(bar);
+      setEditEstado(bar.estado);
       form.reset({
         nombre: bar.nombre,
         direccion: bar.direccion,
@@ -158,7 +154,12 @@ export default function BaresPage() {
     };
     try {
       if (editing) {
-        const payload: UpdateBarCommand = { ...base, id: editing.id, rowVersion: editing.rowVersion };
+        const payload: UpdateBarCommand = {
+          ...base,
+          id: editing.id,
+          rowVersion: editing.rowVersion,
+          estado: editEstado,
+        };
         await apiClient<void>(`/bares/${editing.id}`, { method: "PUT", body: payload });
         toast.success(`Bar "${base.nombre}" actualizado.`);
       } else {
@@ -171,43 +172,6 @@ export default function BaresPage() {
       toast.error(err instanceof ApiError ? err.message : "No se pudo guardar el bar.");
     }
   });
-
-  const beginAction = async (row: BarListItem, kind: "deactivate" | "reactivate") => {
-    try {
-      const bar = await fetchFull(row.id);
-      setActionBar(bar);
-      setActionKind(kind);
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "No se pudo cargar el bar.");
-    }
-  };
-
-  const handleAction = async () => {
-    if (!actionBar || !actionKind) return;
-    setActionBusy(true);
-    try {
-      const id = actionBar.id;
-      const rowVersion = actionBar.rowVersion;
-      if (actionKind === "deactivate") {
-        const payload: DeleteBarCommand = { id, rowVersion };
-        await apiClient<void>(`/bares/${id}`, { method: "DELETE", body: payload });
-        toast.success(`Bar "${actionBar.nombre}" desactivado.`);
-      } else {
-        const payload: ReactivateBarCommand = { id, rowVersion };
-        await apiClient<void>(`/bares/${id}/reactivar`, { method: "POST", body: payload });
-        toast.success(`Bar "${actionBar.nombre}" reactivado.`);
-      }
-      setActionBar(null);
-      setActionKind(null);
-      await load();
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "No se pudo realizar la operación.");
-      setActionBar(null);
-      setActionKind(null);
-    } finally {
-      setActionBusy(false);
-    }
-  };
 
   const columns: ColumnDef<BarListItem, unknown>[] = [
     { accessorKey: "nombre", header: "Nombre" },
@@ -247,16 +211,13 @@ export default function BaresPage() {
   return (
     <div>
       <PageHeader
-        title="Bares"
-        description="Catálogo de bares clientes."
         actions={
           <>
-            <Button size="sm" onClick={openCreate}>
-              <Plus className="size-4" />
-              Nuevo bar
+            <Button size="sm" onClick={openCreate} aria-label="Nuevo bar" title="Nuevo bar">
+              <Plus className="size-5" />
             </Button>
             <Button variant="outline" size="sm" onClick={() => void load()} disabled={loading}>
-              <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw className={`size-5 ${loading ? "animate-spin" : ""}`} />
               Actualizar
             </Button>          </>
         }
@@ -288,20 +249,9 @@ export default function BaresPage() {
         error={error}
         emptyMessage="No hay bares."
         actions={(row) => (
-          <>
-            <Button variant="outline" size="sm" onClick={() => void openEdit(row)}>
-              Editar
-            </Button>
-            {row.estado === 1 ? (
-              <Button variant="destructive" size="sm" onClick={() => void beginAction(row, "deactivate")}>
-                Desactivar
-              </Button>
-            ) : (
-              <Button size="sm" onClick={() => void beginAction(row, "reactivate")}>
-                Reactivar
-              </Button>
-            )}
-          </>
+          <Button variant="outline" size="sm" onClick={() => void openEdit(row)}>
+            Editar
+          </Button>
         )}
       />
 
@@ -353,6 +303,21 @@ export default function BaresPage() {
               <FieldError message={errors.margenReventaPorcentaje?.message} />
             </div>
 
+            {editing && (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="bar-estado">Estado</Label>
+                <Select value={String(editEstado)} onValueChange={(v) => setEditEstado(Number(v) as EstadoBar)}>
+                  <SelectTrigger id="bar-estado" className="w-full">
+                    <SelectValue placeholder="Seleccionar…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">Activo</SelectItem>
+                    <SelectItem value="2">Inactivo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <DialogFooter className="sm:col-span-2">
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                 Cancelar
@@ -364,22 +329,6 @@ export default function BaresPage() {
           </form>
         </DialogContent>
       </Dialog>
-
-      <ConfirmDialog
-        open={actionBar !== null && actionKind !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            setActionBar(null);
-            setActionKind(null);
-          }
-        }}
-        title={actionKind === "deactivate" ? "Desactivar bar" : "Reactivar bar"}
-        message={`¿Seguro que querés ${actionKind === "deactivate" ? "desactivar" : "reactivar"} "${actionBar?.nombre ?? ""}"?`}
-        confirmLabel={actionKind === "deactivate" ? "Desactivar" : "Reactivar"}
-        destructive={actionKind === "deactivate"}
-        busy={actionBusy}
-        onConfirm={() => void handleAction()}
-      />
     </div>
   );
 }

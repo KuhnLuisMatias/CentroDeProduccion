@@ -48,6 +48,7 @@ public class UpdateUnidadMedidaCommandHandler
         unidad.Nombre = command.Nombre;
         unidad.Simbolo = command.Simbolo;
         unidad.Tipo = command.Tipo;
+        unidad.Activo = command.Activo;
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

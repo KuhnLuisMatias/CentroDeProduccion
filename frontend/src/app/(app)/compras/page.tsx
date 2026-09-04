@@ -416,16 +416,13 @@ export default function ComprasPage() {
   return (
     <div>
       <PageHeader
-        title="Órdenes de Compra"
-        description="Órdenes de compra a proveedores (documento referencial)."
         actions={
           <>
-            <Button size="sm" onClick={openCreate}>
-              <Plus className="size-4" />
-              Nueva orden
+            <Button size="sm" onClick={openCreate} aria-label="Nueva orden" title="Nueva orden">
+              <Plus className="size-5" />
             </Button>
             <Button variant="outline" size="sm" onClick={() => void load()} disabled={loading}>
-              <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw className={`size-5 ${loading ? "animate-spin" : ""}`} />
               Actualizar
             </Button>          </>
         }

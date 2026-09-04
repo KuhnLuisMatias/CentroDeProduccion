@@ -8,35 +8,10 @@ import {
   useMemo,
   useRef,
   useState,
-  type ComponentType,
   type ReactNode,
 } from "react";
 import { useAuth } from "@/context/AuthContext";
-import {
-  BookOpen,
-  Boxes,
-  ChartColumn,
-  CreditCard,
-  ExternalLink,
-  Factory,
-  Folder,
-  LogOut,
-  Menu,
-  NotebookText,
-  Package,
-  Plus,
-  Receipt,
-  Ruler,
-  Scale,
-  Search,
-  ShoppingCart,
-  Store,
-  Tag,
-  Truck,
-  Undo2,
-  Users,
-  X,
-} from "lucide-react";
+import { LogOut, Menu, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -47,116 +22,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-type Rol =
-  | "Administrador"
-  | "EncargadoProduccion"
-  | "EncargadoCompras"
-  | "EncargadoVentas";
-
-interface NavItem {
-  href: string;
-  label: string;
-  icon?: ComponentType<{ className?: string }>;
-  roles?: Rol[];
-}
-
-interface NavGroup {
-  id: string;
-  label: string;
-  icon: ComponentType<{ className?: string }>;
-  badge?: string | number;
-  items: NavItem[];
-}
-
-const NAV_GROUPS: NavGroup[] = [
-  {
-    id: "produccion",
-    label: "Producción",
-    icon: Factory,
-    items: [{ href: "/produccion", label: "Órdenes de Producción", icon: Factory }],
-  },
-  {
-    id: "stock",
-    label: "Stock",
-    icon: Boxes,
-    items: [
-      {
-        href: "/productos-terminados",
-        label: "Productos Terminados",
-        icon: Package,
-        roles: ["EncargadoProduccion"],
-      },
-      {
-        href: "/insumos",
-        label: "Insumos",
-        icon: Scale,
-        roles: ["EncargadoProduccion", "EncargadoCompras"],
-      },
-    ],
-  },
-  {
-    id: "compras",
-    label: "Compras",
-    icon: ShoppingCart,
-    items: [
-      { href: "/compras", label: "Órdenes de Compra", icon: ShoppingCart },
-      { href: "/pagos", label: "Facturas y Pagos", icon: Receipt },
-    ],
-  },
-  {
-    id: "ventas",
-    label: "Ventas",
-    icon: Receipt,
-    items: [
-      { href: "/remitos", label: "Pedidos y Remitos", icon: Receipt },
-      { href: "/devoluciones", label: "Devoluciones", icon: Undo2 },
-      { href: "/pagos-bar", label: "Pagos de Bares", icon: CreditCard },
-    ],
-  },
-  {
-    id: "cuenta-corriente",
-    label: "Cuentas Corrientes",
-    icon: NotebookText,
-    items: [
-      {
-        href: "/cuenta-corriente",
-        label: "Cuentas Corrientes",
-        icon: NotebookText,
-        roles: ["EncargadoCompras", "EncargadoVentas"],
-      },
-    ],
-  },
-  {
-    id: "reportes",
-    label: "Reportes",
-    icon: ChartColumn,
-    items: [{ href: "/reportes", label: "Reportes", icon: ChartColumn }],
-  },
-  {
-    id: "catalogos",
-    label: "Catálogos",
-    icon: Folder,
-    items: [
-      { href: "/recetas", label: "Recetas", icon: BookOpen },
-      { href: "/proveedores", label: "Proveedores", icon: Truck },
-      {
-        href: "/categorias",
-        label: "Categorías",
-        icon: Tag,
-        roles: ["EncargadoProduccion", "EncargadoCompras"],
-      },
-      {
-        href: "/unidades",
-        label: "Unidades de Medida",
-        icon: Ruler,
-        roles: ["EncargadoProduccion", "EncargadoCompras"],
-      },
-      { href: "/bares", label: "Bares", icon: Store, roles: ["EncargadoVentas"] },
-      { href: "/empleados", label: "Empleados", icon: Users, roles: ["EncargadoProduccion"] },
-    ],
-  },
-];
+import { isActive, NAV_GROUPS, type NavGroup, type Rol } from "@/lib/nav";
 
 const COLLAPSED_KEY = "cdp_sidebar_collapsed";
 
@@ -174,10 +40,6 @@ function isVisible(roles: Rol[] | undefined, rol: string): boolean {
   if (!roles) return true;
   if (rol === "Administrador") return true;
   return roles.includes(rol as Rol);
-}
-
-function isActive(pathname: string, href: string): boolean {
-  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 function groupHasActiveRoute(group: NavGroup, pathname: string): boolean {
@@ -468,11 +330,7 @@ function SidebarGroupAccordion({
         type="button"
         onClick={onToggle}
         aria-expanded={isOpen}
-        className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-150 ${
-          activeGroup
-            ? "bg-[#0a0a0a] text-white shadow-md"
-            : "bg-transparent text-slate-700 hover:bg-gray-100 hover:text-slate-900"
-        }`}
+        className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-150 bg-transparent text-slate-700 hover:bg-gray-100 hover:text-slate-900"
       >
         <div className="flex items-center gap-3 min-w-0">
           <GroupIcon className="size-4.5 shrink-0" />
@@ -655,7 +513,16 @@ function FlyoutSubmenuPanel({
 
 function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
   const { user, logout } = useAuth();
+  const pathname = usePathname();
   const name = user ? `${user.nombre} ${user.apellido}`.trim() : "Usuario";
+  let activeLabel: string | null = null;
+  for (const group of NAV_GROUPS) {
+    const item = group.items.find((navItem) => isActive(pathname, navItem.href));
+    if (item) {
+      activeLabel = group.label;
+      break;
+    }
+  }
   const initials = name
     .split(" ")
     .filter(Boolean)
@@ -678,7 +545,7 @@ function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
           <Menu className="size-4.5" />
         </Button>
         <span className="hidden truncate text-sm font-bold text-slate-700 dark:text-slate-300 sm:inline">
-          Centro de Producción
+          {activeLabel ?? "Centro de Producción"}
         </span>
       </div>
       <div className="flex items-center gap-3">

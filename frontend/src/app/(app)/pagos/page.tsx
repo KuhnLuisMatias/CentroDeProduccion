@@ -252,16 +252,13 @@ export default function PagosPage() {
   return (
     <div>
       <PageHeader
-        title="Facturas y Pagos"
-        description="Facturas de compra a proveedores: suman stock de insumos y generan deuda en cuenta corriente."
         actions={
           <>
-            <Button size="sm" onClick={openCreate}>
-              <Plus className="size-4" />
-              Nueva factura
+            <Button size="sm" onClick={openCreate} aria-label="Nueva factura" title="Nueva factura">
+              <Plus className="size-5" />
             </Button>
             <Button variant="outline" size="sm" onClick={() => void load()} disabled={loading}>
-              <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw className={`size-5 ${loading ? "animate-spin" : ""}`} />
               Actualizar
             </Button>          </>
         }

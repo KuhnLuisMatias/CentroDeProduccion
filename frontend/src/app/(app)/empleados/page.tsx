@@ -15,12 +15,10 @@ import type {
   Empleado,
   CreateEmpleadoCommand,
   UpdateEmpleadoCommand,
-  DeleteEmpleadoCommand,
 } from "@/lib/types";
 import { CARGO_EMPLEADO_LABELS, CATEGORIA_EMPLEADO_LABELS } from "@/lib/types";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
-import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -94,9 +92,7 @@ export default function EmpleadosPage() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Empleado | null>(null);
-
-  const [deactivating, setDeactivating] = useState<Empleado | null>(null);
-  const [deactivateBusy, setDeactivateBusy] = useState(false);
+  const [editActivo, setEditActivo] = useState("true");
 
   const load = useCallback(async () => {
     try {
@@ -133,6 +129,7 @@ export default function EmpleadosPage() {
 
   const openEdit = (row: Empleado) => {
     setEditing(row);
+    setEditActivo(row.activo ? "true" : "false");
     form.reset({
       nombre: row.nombre,
       apellido: row.apellido,
@@ -158,7 +155,7 @@ export default function EmpleadosPage() {
         const payload: UpdateEmpleadoCommand = {
           ...base,
           id: editing.id,
-          activo: editing.activo,
+          activo: editActivo === "true",
           rowVersion: editing.rowVersion,
         };
         await apiClient<void>(`/empleados/${editing.id}`, { method: "PUT", body: payload });
@@ -173,23 +170,6 @@ export default function EmpleadosPage() {
       toast.error(err instanceof ApiError ? err.message : "No se pudo guardar el empleado.");
     }
   });
-
-  const handleDeactivate = async () => {
-    if (!deactivating) return;
-    setDeactivateBusy(true);
-    try {
-      const payload: DeleteEmpleadoCommand = { id: deactivating.id, rowVersion: deactivating.rowVersion };
-      await apiClient<void>(`/empleados/${deactivating.id}`, { method: "DELETE", body: payload });
-      toast.success(`Empleado "${deactivating.nombre} ${deactivating.apellido}" desactivado.`);
-      setDeactivating(null);
-      await load();
-    } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : "No se pudo desactivar el empleado.");
-      setDeactivating(null);
-    } finally {
-      setDeactivateBusy(false);
-    }
-  };
 
   const columns: ColumnDef<Empleado, unknown>[] = [
     {
@@ -234,16 +214,13 @@ export default function EmpleadosPage() {
   return (
     <div>
       <PageHeader
-        title="Empleados"
-        description="Catálogo de empleados de producción."
         actions={
           <>
-            <Button size="sm" onClick={openCreate}>
-              <Plus className="size-4" />
-              Nuevo empleado
+            <Button size="sm" onClick={openCreate} aria-label="Nuevo empleado" title="Nuevo empleado">
+              <Plus className="size-5" />
             </Button>
             <Button variant="outline" size="sm" onClick={() => void load()} disabled={loading}>
-              <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw className={`size-5 ${loading ? "animate-spin" : ""}`} />
               Actualizar
             </Button>          </>
         }
@@ -315,16 +292,9 @@ export default function EmpleadosPage() {
         error={error}
         emptyMessage="No hay empleados."
         actions={(row) => (
-          <>
-            <Button variant="outline" size="sm" onClick={() => openEdit(row)}>
-              Editar
-            </Button>
-            {row.activo && (
-              <Button variant="destructive" size="sm" onClick={() => setDeactivating(row)}>
-                Desactivar
-              </Button>
-            )}
-          </>
+          <Button variant="outline" size="sm" onClick={() => openEdit(row)}>
+            Editar
+          </Button>
         )}
       />
 
@@ -410,6 +380,21 @@ export default function EmpleadosPage() {
               <FieldError message={errors.categoria?.message} />
             </div>
 
+            {editing && (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="emp-estado">Estado</Label>
+                <Select value={editActivo} onValueChange={setEditActivo}>
+                  <SelectTrigger id="emp-estado" className="w-full">
+                    <SelectValue placeholder="Seleccionar…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="true">Activo</SelectItem>
+                    <SelectItem value="false">Inactivo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <DialogFooter className="sm:col-span-2">
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                 Cancelar
@@ -421,19 +406,6 @@ export default function EmpleadosPage() {
           </form>
         </DialogContent>
       </Dialog>
-
-      <ConfirmDialog
-        open={deactivating !== null}
-        onOpenChange={(open) => {
-          if (!open) setDeactivating(null);
-        }}
-        title="Desactivar empleado"
-        message={`¿Seguro que querés desactivar a "${deactivating?.nombre ?? ""} ${deactivating?.apellido ?? ""}"?`}
-        confirmLabel="Desactivar"
-        destructive
-        busy={deactivateBusy}
-        onConfirm={() => void handleDeactivate()}
-      />
     </div>
   );
 }

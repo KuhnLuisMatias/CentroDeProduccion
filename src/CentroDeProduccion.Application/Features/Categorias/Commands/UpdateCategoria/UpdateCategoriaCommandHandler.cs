@@ -42,6 +42,7 @@ public class UpdateCategoriaCommandHandler
 
         categoria.Nombre = command.Nombre;
         categoria.Ambito = command.Ambito;
+        categoria.Activo = command.Activo;
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 

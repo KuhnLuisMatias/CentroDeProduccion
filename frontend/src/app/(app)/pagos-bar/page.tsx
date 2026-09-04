@@ -314,16 +314,13 @@ export default function PagosBarPage() {
   return (
     <div>
       <PageHeader
-        title="Pagos de Bares"
-        description="Pagos y su aplicación a remitos."
         actions={
           <>
-            <Button size="sm" onClick={openCreate}>
-              <Plus className="size-4" />
-              Nuevo pago
+            <Button size="sm" onClick={openCreate} aria-label="Nuevo pago" title="Nuevo pago">
+              <Plus className="size-5" />
             </Button>
             <Button variant="outline" size="sm" onClick={() => void load()} disabled={loading}>
-              <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw className={`size-5 ${loading ? "animate-spin" : ""}`} />
               Actualizar
             </Button>          </>
         }

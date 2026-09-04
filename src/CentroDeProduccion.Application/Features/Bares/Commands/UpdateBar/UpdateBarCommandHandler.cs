@@ -52,6 +52,7 @@ public class UpdateBarCommandHandler
         bar.Telefono = command.Telefono;
         bar.HorarioRecepcion = command.HorarioRecepcion;
         bar.MargenReventaPorcentaje = command.MargenReventaPorcentaje;
+        bar.Estado = command.Estado;
 
         try
         {

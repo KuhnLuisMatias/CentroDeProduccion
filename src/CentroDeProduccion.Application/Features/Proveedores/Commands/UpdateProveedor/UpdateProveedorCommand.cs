@@ -12,4 +12,5 @@ public sealed record UpdateProveedorCommand(
     string? HorarioAtencion,
     string CategoriasProvee,
     string TipoFactura,
-    string? Observaciones);
+    string? Observaciones,
+    bool Activo);

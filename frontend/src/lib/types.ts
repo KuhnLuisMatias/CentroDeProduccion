@@ -183,6 +183,7 @@ export interface CreateProveedorCommand {
 
 export interface UpdateProveedorCommand extends CreateProveedorCommand {
   id: string;
+  activo: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -203,6 +204,7 @@ export interface CreateCategoriaCommand {
 
 export interface UpdateCategoriaCommand extends CreateCategoriaCommand {
   id: string;
+  activo: boolean;
 }
 
 export interface CategoriasGrouped {
@@ -230,6 +232,7 @@ export interface CreateUnidadMedidaCommand {
 
 export interface UpdateUnidadMedidaCommand extends CreateUnidadMedidaCommand {
   id: string;
+  activo: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -270,6 +273,7 @@ export interface CreateBarCommand {
 export interface UpdateBarCommand extends CreateBarCommand {
   id: string;
   rowVersion: string;
+  estado: EstadoBar;
 }
 
 export interface DeleteBarCommand {

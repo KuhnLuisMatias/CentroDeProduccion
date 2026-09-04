@@ -1,3 +1,8 @@
+# Dependencies
+node_modules/
+.next/
+*.tsbuildinfo
+
 # Build output
 [Bb]in/
 [Oo]bj/
