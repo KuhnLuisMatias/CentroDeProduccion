@@ -10,15 +10,18 @@ namespace CentroDeProduccion.Application.Features.Recetas.Commands.CreateReceta;
 public class CreateRecetaCommandHandler
 {
     private readonly IRecetaRepository _recetaRepository;
+    private readonly IInsumoRepository _insumoRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IValidator<CreateRecetaCommand> _validator;
 
     public CreateRecetaCommandHandler(
         IRecetaRepository recetaRepository,
+        IInsumoRepository insumoRepository,
         IUnitOfWork unitOfWork,
         IValidator<CreateRecetaCommand> validator)
     {
         _recetaRepository = recetaRepository;
+        _insumoRepository = insumoRepository;
         _unitOfWork = unitOfWork;
         _validator = validator;
     }
@@ -38,6 +41,14 @@ public class CreateRecetaCommandHandler
                 Error.Conflict("SKU_ALREADY_EXISTS", "Ya existe una receta con ese SKU"));
         }
 
+        // Line units are derived server-side: the client-sent unit is not trusted.
+        var unidadesPorLinea = await RecetaLineaUnidades.DerivarAsync(
+            _insumoRepository, _recetaRepository, command.Insumos, cancellationToken);
+        if (unidadesPorLinea.IsFailure)
+        {
+            return Result.Failure<CreateRecetaResponse>(unidadesPorLinea.Error);
+        }
+
         var receta = new Receta
         {
             Id = Guid.NewGuid(),
@@ -51,8 +62,9 @@ public class CreateRecetaCommandHandler
             FechaCreacion = RelojDeNegocio.Ahora
         };
 
-        foreach (var detalle in command.Insumos)
+        for (var i = 0; i < command.Insumos.Count; i++)
         {
+            var detalle = command.Insumos[i];
             receta.Insumos.Add(new RecetaInsumo
             {
                 Id = Guid.NewGuid(),
@@ -60,7 +72,7 @@ public class CreateRecetaCommandHandler
                 InsumoId = detalle.InsumoId,
                 RecetaOrigenId = detalle.RecetaOrigenId,
                 CantidadNecesaria = detalle.CantidadNecesaria,
-                UnidadMedidaId = detalle.UnidadMedidaId,
+                UnidadMedidaId = unidadesPorLinea.Value[i],
                 Observaciones = detalle.Observaciones
             });
         }

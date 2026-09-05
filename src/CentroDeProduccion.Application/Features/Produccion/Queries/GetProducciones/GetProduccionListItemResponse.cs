@@ -23,4 +23,5 @@ public sealed record GetProduccionListItemResponse(
     DateTime? FechaVencimiento,
     decimal CostoTotalInsumos,
     decimal CostoTotal,
-    byte[] RowVersion);
+    byte[] RowVersion,
+    decimal CostoUnitario);

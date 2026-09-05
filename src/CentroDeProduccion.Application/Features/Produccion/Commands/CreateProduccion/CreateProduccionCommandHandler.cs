@@ -1,20 +1,20 @@
-using CentroDeProduccion.Domain.Services;
 using CentroDeProduccion.Application.Abstractions.Persistence;
 using CentroDeProduccion.Application.Abstractions.Security;
 using CentroDeProduccion.Application.Common;
 using CentroDeProduccion.Domain.Entities;
 using CentroDeProduccion.Domain.Enums;
+using CentroDeProduccion.Domain.Services;
 using FluentValidation;
 using ProduccionEntity = CentroDeProduccion.Domain.Entities.Produccion;
-using RecetaEntity = CentroDeProduccion.Domain.Entities.Receta;
 
 namespace CentroDeProduccion.Application.Features.Produccion.Commands.CreateProduccion;
 
 /// <summary>
 /// Creates a production run in Borrador state and seeds its editable consumption lines from the
-/// recipe BOM (flattened via <see cref="CostoService.ExplosionarInsumos"/>, already converted to
-/// each insumo's consumption unit). The operator edits these lines freely; stock is moved only
-/// at confirmation (<see cref="ConfirmProduccion.ConfirmProduccionCommandHandler"/>).
+/// recipe's OWN <c>receta.Insumos</c> (single level, NO BOM explosion): insumo lines are converted
+/// to the insumo's consumption unit, sub-recipe lines are kept as <see cref="ProduccionInsumo.RecetaOrigenId"/>
+/// lines whose finished product gets consumed at confirmation. The operator edits these lines
+/// freely; stock is moved only at confirmation (<see cref="ConfirmProduccion.ConfirmProduccionCommandHandler"/>).
 /// </summary>
 public class CreateProduccionCommandHandler
 {
@@ -57,33 +57,15 @@ public class CreateProduccionCommandHandler
                 Error.NotFound("RECETA_NOT_FOUND", "Receta no encontrada o inactiva"));
         }
 
-        // Load the recipe tree (sub-recipes) for BOM explosion.
-        var recetas = new Dictionary<Guid, RecetaEntity>();
-        await CargarArbolAsync(receta, recetas, new HashSet<Guid>(), cancellationToken);
-
-        // Load every direct insumo referenced by the recipe tree up-front so ExplosionarInsumos
-        // can convert each line to the insumo's consumption unit (purchase-unit lines × FactorConversion).
-        var insumoIds = recetas.Values
-            .SelectMany(r => r.Insumos)
+        // Load the direct insumos referenced by the recipe's own lines so each line can be
+        // converted to the insumo's consumption unit (purchase-unit lines × FactorConversion).
+        var insumoIds = receta.Insumos
             .Where(d => d.InsumoId.HasValue)
             .Select(d => d.InsumoId!.Value)
             .Distinct()
             .ToList();
-        var insumos = await _insumoRepository.GetByIdsAsync(insumoIds, cancellationToken);
-        var insumoDict = insumos.ToDictionary(i => i.Id);
-
-        Dictionary<Guid, decimal> cantidades;
-        try
-        {
-            cantidades = CostoService.ExplosionarInsumos(
-                receta,
-                id => recetas.TryGetValue(id, out var r) ? r : null,
-                id => insumoDict.GetValueOrDefault(id));
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Result.Failure<CreateProduccionResponse>(Error.Validation("BOM_UNIT_INVALID", ex.Message));
-        }
+        var insumos = (await _insumoRepository.GetByIdsAsync(insumoIds, cancellationToken))
+            .ToDictionary(i => i.Id);
 
         var produccion = new ProduccionEntity
         {
@@ -96,42 +78,56 @@ public class CreateProduccionCommandHandler
             Observaciones = command.Observaciones
         };
 
-        foreach (var (insumoId, cantidadNecesaria) in cantidades)
+        // One consumption line per recipe line. Sub-recipe quantities stay in the sub-recipe's
+        // result unit; enforcement of sub-PT existence/stock happens at confirmation.
+        foreach (var detalle in receta.Insumos)
         {
-            produccion.InsumosConsumidos.Add(new ProduccionInsumo
+            if (detalle.InsumoId.HasValue)
             {
-                Id = Guid.NewGuid(),
-                ProduccionId = produccion.Id,
-                InsumoId = insumoId,
-                Cantidad = cantidadNecesaria,
-                Observaciones = null
-            });
+                var cantidad = detalle.CantidadNecesaria;
+                var insumo = insumos.GetValueOrDefault(detalle.InsumoId.Value);
+                if (insumo is not null && detalle.UnidadMedidaId != insumo.UnidadConsumoId)
+                {
+                    if (detalle.UnidadMedidaId == insumo.UnidadCompraId)
+                    {
+                        cantidad *= insumo.FactorConversion;
+                    }
+                    else
+                    {
+                        return Result.Failure<CreateProduccionResponse>(Error.Validation(
+                            "BOM_UNIT_INVALID",
+                            $"La unidad de la línea de receta no coincide con las unidades del insumo {insumo.Nombre}"));
+                    }
+                }
+
+                produccion.InsumosConsumidos.Add(new ProduccionInsumo
+                {
+                    InsumoId = detalle.InsumoId.Value,
+                    Cantidad = cantidad,
+                    Observaciones = null
+                });
+            }
+            else if (detalle.RecetaOrigenId.HasValue)
+            {
+                if (detalle.RecetaOrigenId.Value == receta.Id)
+                {
+                    return Result.Failure<CreateProduccionResponse>(Error.Validation(
+                        "BOM_SELF_REFERENCE",
+                        $"La receta {receta.Nombre} no puede consumirse a sí misma"));
+                }
+
+                produccion.InsumosConsumidos.Add(new ProduccionInsumo
+                {
+                    RecetaOrigenId = detalle.RecetaOrigenId.Value,
+                    Cantidad = detalle.CantidadNecesaria, // whole batches of the sub-recipe
+                    Observaciones = null
+                });
+            }
         }
 
         await _produccionRepository.AddAsync(produccion, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         return new CreateProduccionResponse(produccion.Id, produccion.Estado);
-    }
-
-    private async Task CargarArbolAsync(
-        RecetaEntity receta,
-        Dictionary<Guid, RecetaEntity> recetas,
-        HashSet<Guid> visitados,
-        CancellationToken cancellationToken)
-    {
-        recetas[receta.Id] = receta;
-
-        foreach (var detalle in receta.Insumos)
-        {
-            if (detalle.RecetaOrigenId.HasValue && visitados.Add(detalle.RecetaOrigenId.Value))
-            {
-                var subReceta = await _recetaRepository.GetByIdWithDetallesAsync(detalle.RecetaOrigenId.Value, cancellationToken);
-                if (subReceta is not null)
-                {
-                    await CargarArbolAsync(subReceta, recetas, visitados, cancellationToken);
-                }
-            }
-        }
     }
 }

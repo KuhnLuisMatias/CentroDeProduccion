@@ -41,13 +41,20 @@ public sealed record ProduccionSalidaResponse(
 
 public sealed record ProduccionSalidaProductoInfo(Guid Id, string Nombre, string CodigoSku);
 
-/// <summary>One editable consumed-insumo line of the run (Producción simple).</summary>
+/// <summary>One editable consumption line of the run (Producción simple): either a direct
+/// insumo or a sub-recipe consumption whose finished product is deducted at confirm.</summary>
 public sealed record ProduccionInsumoResponse(
     Guid Id,
     Guid ProduccionId,
-    Guid InsumoId,
+    Guid? InsumoId,
     ProduccionInsumoInsumoInfo? Insumo,
+    Guid? RecetaOrigenId,
+    ProduccionInsumoRecetaInfo? RecetaOrigen,
     decimal Cantidad,
+    /// <summary>Insumo lines: PrecioUltimaCompra; sub-recipe lines: the sub-PT's live standard cost.</summary>
+    decimal CostoUnitario,
     string? Observaciones);
 
 public sealed record ProduccionInsumoInsumoInfo(Guid Id, string Nombre, string CodigoSku, Guid UnidadConsumoId);
+
+public sealed record ProduccionInsumoRecetaInfo(Guid Id, string Nombre, string? UnidadMedidaSimbolo);

@@ -27,8 +27,6 @@ public class CreateRecetaCommandValidator : AbstractValidator<CreateRecetaComman
         {
             detalle.RuleFor(d => d.CantidadNecesaria)
                 .GreaterThan(0).WithMessage("La cantidad debe ser mayor a cero");
-            detalle.RuleFor(d => d.UnidadMedidaId)
-                .NotEmpty().WithMessage("La unidad de medida es requerida");
             detalle.RuleFor(d => d)
                 .Must(d => (d.InsumoId.HasValue) != (d.RecetaOrigenId.HasValue))
                 .WithMessage("Debe indicar exactamente un insumo O una sub-receta, no ambos ni ninguno");

@@ -22,4 +22,13 @@ public interface IProduccionRepository
         Guid? recetaId = null,
         EstadoProduccion? estado = null,
         CancellationToken ct = default);
+
+    /// <summary>
+    /// For each finished-product id, returns the unit cost (CostoTotal / CantidadProducida) of
+    /// its most recent confirmed production run that emitted that product. Products with no
+    /// confirmed production are absent from the dictionary (treat as 0).
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, decimal>> GetLastConfirmedUnitCostsAsync(
+        IEnumerable<Guid> productoTerminadoIds,
+        CancellationToken ct = default);
 }

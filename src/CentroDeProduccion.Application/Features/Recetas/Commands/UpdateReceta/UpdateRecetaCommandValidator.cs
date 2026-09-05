@@ -18,7 +18,6 @@ public class UpdateRecetaCommandValidator : AbstractValidator<UpdateRecetaComman
         RuleForEach(x => x.Insumos).ChildRules(detalle =>
         {
             detalle.RuleFor(d => d.CantidadNecesaria).GreaterThan(0);
-            detalle.RuleFor(d => d.UnidadMedidaId).NotEmpty();
             detalle.RuleFor(d => d)
                 .Must(d => (d.InsumoId.HasValue) != (d.RecetaOrigenId.HasValue))
                 .WithMessage("Debe indicar exactamente un insumo O una sub-receta");

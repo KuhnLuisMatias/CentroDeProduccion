@@ -17,20 +17,20 @@ namespace CentroDeProduccion.Api.Controllers;
 public class ProductoTerminadoController : ControllerBase
 {
     private readonly IProductoTerminadoRepository _productoTerminadoRepository;
-    private readonly ProductoTerminadoCostoResolver _costoResolver;
+    private readonly IProduccionRepository _produccionRepository;
     private readonly CreateProductoTerminadoCommandHandler _createHandler;
     private readonly UpdateProductoTerminadoCommandHandler _updateHandler;
     private readonly ReserveStockCommandHandler _reserveHandler;
 
     public ProductoTerminadoController(
         IProductoTerminadoRepository productoTerminadoRepository,
-        ProductoTerminadoCostoResolver costoResolver,
+        IProduccionRepository produccionRepository,
         CreateProductoTerminadoCommandHandler createHandler,
         UpdateProductoTerminadoCommandHandler updateHandler,
         ReserveStockCommandHandler reserveHandler)
     {
         _productoTerminadoRepository = productoTerminadoRepository;
-        _costoResolver = costoResolver;
+        _produccionRepository = produccionRepository;
         _createHandler = createHandler;
         _updateHandler = updateHandler;
         _reserveHandler = reserveHandler;
@@ -41,14 +41,11 @@ public class ProductoTerminadoController : ControllerBase
     {
         var productos = await _productoTerminadoRepository.GetAllActiveAsync(cancellationToken);
 
-        // CostoUnitario computed live from the recipe BOM at current insumo prices
-        // via ProductoTerminadoCostoResolver (0 when the product has no recipe).
-        var costos = await _costoResolver.CalcularPorRecetasAsync(
-            productos.Select(p => p.RecetaId), cancellationToken);
+        // CostoUnitario = unit cost of the product's last confirmed production run (0 if none).
+        var costos = await _produccionRepository.GetLastConfirmedUnitCostsAsync(
+            productos.Select(p => p.Id), cancellationToken);
 
-        return Ok(productos.Select(p => Map(
-            p,
-            p.RecetaId is { } recetaId ? costos.GetValueOrDefault(recetaId) : 0m)));
+        return Ok(productos.Select(p => Map(p, costos.GetValueOrDefault(p.Id))));
     }
 
     [HttpGet("{id:guid}")]
@@ -58,8 +55,8 @@ public class ProductoTerminadoController : ControllerBase
         if (producto == null)
             return NotFound();
 
-        var costo = await _costoResolver.CalcularPorRecetaAsync(producto.RecetaId, cancellationToken);
-        return Ok(Map(producto, costo));
+        var costos = await _produccionRepository.GetLastConfirmedUnitCostsAsync([id], cancellationToken);
+        return Ok(Map(producto, costos.GetValueOrDefault(id)));
     }
 
     [HttpGet("expiring")]

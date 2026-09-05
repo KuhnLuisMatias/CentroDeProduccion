@@ -20,6 +20,10 @@ public interface IProductoTerminadoRepository
     /// <summary>Tracked find by exact name, case-insensitive (used by producción simple's
     /// find-or-create of the finished product derived from the recipe).</summary>
     Task<ProductoTerminado?> GetByNombreAsync(string nombre, CancellationToken cancellationToken = default);
+
+    /// <summary>TRACKED active finished product derived from <paramref name="recetaId"/> (used by
+    /// producción simple to deduct sub-recipe consumption from that product's stock at confirm).</summary>
+    Task<ProductoTerminado?> GetTrackedActiveByRecetaIdAsync(Guid recetaId, CancellationToken cancellationToken = default);
     Task AddAsync(ProductoTerminado producto, CancellationToken cancellationToken = default);
     Task<bool> ExistsActiveWithCategoriaAsync(Guid categoriaId, CancellationToken cancellationToken = default);
 }

@@ -415,7 +415,6 @@ export interface RecetaInsumoDto {
   insumoId: string | null;
   recetaOrigenId: string | null;
   cantidadNecesaria: number;
-  unidadMedidaId: string;
   observaciones?: string | null;
 }
 
@@ -471,13 +470,25 @@ export interface ProduccionInsumoInsumoInfo {
   unidadConsumoId: string;
 }
 
-// One editable consumed-insumo line of the run (Producción simple)
+// Display info of one sub-recipe consumption line (GET /api/produccion/{id})
+export interface ProduccionInsumoRecetaInfo {
+  id: string;
+  nombre: string;
+  unidadMedidaSimbolo: string | null;
+}
+
+// One editable consumption line of the run (Producción simple): either a direct insumo
+// or a sub-recipe consumption whose finished product is deducted at confirm.
 export interface ProduccionInsumoConsumido {
   id: string;
   produccionId: string;
-  insumoId: string;
+  insumoId: string | null;
   insumo: ProduccionInsumoInsumoInfo | null;
+  recetaOrigenId: string | null;
+  recetaOrigen: ProduccionInsumoRecetaInfo | null;
   cantidad: number;
+  // Insumo lines: precioUltimaCompra; receta lines: the sub-PT's live standard cost.
+  costoUnitario: number;
   observaciones: string | null;
 }
 
@@ -495,6 +506,8 @@ export interface Produccion {
   fechaVencimiento: string | null;
   costoTotalInsumos: number;
   costoTotal: number;
+  // List endpoint only (GET /api/produccion); GetById does not send it.
+  costoUnitario: number;
   // Base64 string — System.Text.Json serializes byte[] as base64
   rowVersion: string;
   insumosConsumidos: ProduccionInsumoConsumido[];
@@ -511,9 +524,11 @@ export interface CreateProduccionResponse {
   estado: EstadoProduccion;
 }
 
-// One line of PUT /api/produccion/{id}/insumos — replaces the FULL consumption list
+// One line of PUT /api/produccion/{id}/insumos — replaces the FULL consumption list.
+// Exactly one of insumoId / recetaOrigenId must be set (mirrors the backend rule).
 export interface LineaInsumoProduccionDto {
-  insumoId: string;
+  insumoId: string | null;
+  recetaOrigenId: string | null;
   cantidad: number; // must be > 0
   observaciones: string | null;
 }

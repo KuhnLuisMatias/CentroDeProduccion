@@ -18,14 +18,12 @@ export interface RecipeLineDraft {
   insumoId: string;
   recetaOrigenId: string;
   cantidadNecesaria: string;
-  unidadMedidaId: string;
 }
 
 interface RecipeLinesEditorProps {
   lines: RecipeLineDraft[];
-  insumos: { id: string; nombre: string; unidadConsumoId: string }[];
+  insumos: { id: string; nombre: string; unidadConsumoId: string; unidadConsumoSimbolo?: string | null }[];
   recetas: { id: string; nombre: string }[];
-  unidades: { id: string; nombre: string; simbolo: string }[];
   onChange: (lines: RecipeLineDraft[]) => void;
 }
 
@@ -37,7 +35,6 @@ export default function RecipeLinesEditor({
   lines,
   insumos,
   recetas,
-  unidades,
   onChange,
 }: RecipeLinesEditorProps) {
   const updateLine = (id: string, patch: Partial<RecipeLineDraft>) => {
@@ -45,7 +42,6 @@ export default function RecipeLinesEditor({
   };
 
   const addLine = (tipo: RecipeLineDraft["tipo"]) => {
-    const first = lines[0];
     onChange([
       ...lines,
       {
@@ -54,7 +50,6 @@ export default function RecipeLinesEditor({
         insumoId: "",
         recetaOrigenId: "",
         cantidadNecesaria: "1",
-        unidadMedidaId: first?.unidadMedidaId ?? "",
       },
     ]);
   };
@@ -77,13 +72,7 @@ export default function RecipeLinesEditor({
                 <Label className="text-xs text-muted-foreground">Insumo</Label>
                 <Select
                   value={line.insumoId || undefined}
-                  onValueChange={(v) => {
-                    const insumo = insumos.find((i) => i.id === v);
-                    updateLine(line.id, {
-                      insumoId: v,
-                      unidadMedidaId: insumo?.unidadConsumoId ?? line.unidadMedidaId,
-                    });
-                  }}
+                  onValueChange={(v) => updateLine(line.id, { insumoId: v })}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Seleccionar…" />
@@ -131,21 +120,13 @@ export default function RecipeLinesEditor({
 
             <div className="flex flex-col gap-1.5">
               <Label className="text-xs text-muted-foreground">Unidad</Label>
-              <Select
-                value={line.unidadMedidaId || undefined}
-                onValueChange={(v) => updateLine(line.id, { unidadMedidaId: v })}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="…" />
-                </SelectTrigger>
-                <SelectContent>
-                  {unidades.map((u) => (
-                    <SelectItem key={u.id} value={u.id}>
-                      {u.simbolo || u.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {/* Read-only: the line's unit is always the insumo's unidad de consumo
+                  (or the sub-receta's resulting unit) — derived server-side. */}
+              <div className="text-sm text-muted-foreground">
+                {line.tipo === "insumo"
+                  ? insumos.find((i) => i.id === line.insumoId)?.unidadConsumoSimbolo || "…"
+                  : "—"}
+              </div>
             </div>
 
             <Button

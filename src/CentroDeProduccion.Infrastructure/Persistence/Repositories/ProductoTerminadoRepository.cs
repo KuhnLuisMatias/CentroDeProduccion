@@ -73,6 +73,12 @@ public class ProductoTerminadoRepository : IProductoTerminadoRepository
             .Include(pt => pt.UnidadMedida)
             .FirstOrDefaultAsync(pt => pt.Nombre.ToLower() == nombre.ToLower(), cancellationToken);
 
+    public async Task<ProductoTerminado?> GetTrackedActiveByRecetaIdAsync(Guid recetaId, CancellationToken cancellationToken = default)
+        // Deliberately NO AsNoTracking: the caller mutates StockActual before SaveChanges.
+        => await _context.ProductosTerminados
+            .Include(pt => pt.UnidadMedida)
+            .FirstOrDefaultAsync(pt => pt.RecetaId == recetaId && pt.Activo, cancellationToken);
+
     public async Task AddAsync(ProductoTerminado producto, CancellationToken cancellationToken = default)
         => await _context.ProductosTerminados.AddAsync(producto, cancellationToken);
 

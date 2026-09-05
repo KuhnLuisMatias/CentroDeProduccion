@@ -47,12 +47,16 @@ type CreateFormInput = z.input<typeof createSchema>;
 type CreateFormValues = z.output<typeof createSchema>;
 
 // Editable consumption line of the production modal (ETAPA B). Cantidad is the
-// ONLY editable field; cost is derived client-side.
+// ONLY editable field; cost is derived client-side (insumos: last purchase price;
+// sub-recipe lines: the sub-PT's live unit cost that the API returns).
 interface EditorLine {
   key: string;
-  insumoId: string;
+  insumoId: string | null;
+  recetaOrigenId: string | null;
   nombre: string;
   cantidad: string;
+  unidad: string; // sub-recipe lines: the receta's result-unit symbol (from the API)
+  costoUnitario: number; // sub-recipe lines: API live cost; insumo lines: insumo price
 }
 
 // Module-level cache: the insumos list is static within a session and shared
@@ -77,8 +81,17 @@ function parseCantidad(cantidad: string): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
 }
 
-function lineCosto(line: ProduccionInsumoConsumido | { insumoId: string; cantidad: number }): number {
-  const price = getInsumoInfo(line.insumoId)?.precioUltimaCompra ?? 0;
+function lineCosto(
+  line: ProduccionInsumoConsumido | { insumoId: string | null; recetaOrigenId: string | null; cantidad: number; costoUnitario?: number },
+): number {
+  // Sub-recipe lines cost at the sub-PT's live unit cost returned by the API; insumo
+  // lines at the cached last purchase price (API costoUnitario as fallback).
+  if (line.recetaOrigenId) {
+    return line.cantidad * (line.costoUnitario ?? 0);
+  }
+  const price = line.insumoId
+    ? (getInsumoInfo(line.insumoId)?.precioUltimaCompra ?? line.costoUnitario ?? 0)
+    : (line.costoUnitario ?? 0);
   return line.cantidad * price;
 }
 
@@ -205,8 +218,11 @@ export default function ProduccionPage() {
       det.insumosConsumidos.map((l) => ({
         key: l.id,
         insumoId: l.insumoId,
-        nombre: l.insumo?.nombre ?? l.insumoId,
+        recetaOrigenId: l.recetaOrigenId,
+        nombre: l.recetaOrigen?.nombre ?? l.insumo?.nombre ?? l.insumoId ?? l.recetaOrigenId ?? "",
         cantidad: String(l.cantidad),
+        unidad: l.recetaOrigen?.unidadMedidaSimbolo ?? "",
+        costoUnitario: l.costoUnitario,
       })),
     );
   }, []);
@@ -321,18 +337,28 @@ export default function ProduccionPage() {
   };
 
   // Local (pre-save) computed costs for ETAPA B — live-update as cantidades change.
-  const editorLinesWithCost = lines.map((l) => ({
-    ...l,
-    costo: parseCantidad(l.cantidad) * (getInsumoInfo(l.insumoId)?.precioUltimaCompra ?? 0),
-    unidad: getInsumoInfo(l.insumoId)?.unidadConsumo?.simbolo ?? "",
-  }));
+  const editorLinesWithCost = lines.map((l) => {
+    const cantidad = parseCantidad(l.cantidad);
+    const esReceta = l.recetaOrigenId !== null;
+    const insumoInfo = l.insumoId ? getInsumoInfo(l.insumoId) : undefined;
+    return {
+      ...l,
+      costo: esReceta
+        ? cantidad * l.costoUnitario
+        : cantidad * (insumoInfo?.precioUltimaCompra ?? 0),
+      unidad: esReceta ? l.unidad : (insumoInfo?.unidadConsumo?.simbolo ?? ""),
+    };
+  });
   const editorTotal = editorLinesWithCost.reduce((acc, l) => acc + l.costo, 0);
 
   // Informational-only stock warnings: production may proceed even when stock
   // goes negative (backend allows it), so the Confirmar button stays enabled.
+  // Sub-recipe lines are excluded: their sub-PT stock is enforced server-side at
+  // confirm with a clear error ("Prodúzcala primero").
   const stockWarnings = isBorrador
     ? editorLinesWithCost.flatMap((l) => {
-        const stock = getInsumoInfo(l.insumoId)?.stockActual;
+        if (l.recetaOrigenId) return [];
+        const stock = l.insumoId ? getInsumoInfo(l.insumoId)?.stockActual : undefined;
         const cantidad = parseCantidad(l.cantidad);
         return stock !== undefined && cantidad > stock
           ? [`${l.nombre} (requiere ${cantidad}, disponible ${stock})`]
@@ -358,6 +384,7 @@ export default function ProduccionPage() {
         produccionId: detail.id,
         lineas: lines.map((l) => ({
           insumoId: l.insumoId,
+          recetaOrigenId: l.recetaOrigenId,
           cantidad: Number(l.cantidad),
           observaciones: detail.insumosConsumidos.find((d) => d.id === l.key)?.observaciones ?? null,
         })),
@@ -450,6 +477,11 @@ export default function ProduccionPage() {
 
   const columns: ColumnDef<Produccion, unknown>[] = [
     {
+      id: "fecha",
+      header: "Fecha",
+      cell: ({ row }) => new Date(row.original.fecha).toLocaleDateString("es-AR"),
+    },
+    {
       accessorKey: "lote",
       header: "Lote",
       cell: ({ row }) => row.original.lote || "—",
@@ -460,9 +492,20 @@ export default function ProduccionPage() {
       cell: ({ row }) => row.original.receta?.nombre ?? "—",
     },
     {
-      id: "fecha",
-      header: "Fecha",
-      cell: ({ row }) => new Date(row.original.fecha).toLocaleDateString("es-AR"),
+      accessorKey: "cantidadProducida",
+      header: "Cantidad",
+      // Plain render: the API already sends 1 for Borrador rows (display-only mapping).
+      cell: ({ getValue }) => getValue<number>(),
+    },
+    {
+      id: "unidadMedida",
+      header: "Unidad de medida",
+      cell: ({ row }) => row.original.receta?.unidadMedidaSimbolo ?? "—",
+    },
+    {
+      id: "costoUnitario",
+      header: "Costo unitario",
+      cell: ({ row }) => MONEY.format(row.original.costoUnitario),
     },
     {
       accessorKey: "costoTotal",

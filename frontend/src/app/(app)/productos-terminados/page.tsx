@@ -158,15 +158,19 @@ export default function ProductosTerminadosPage() {
     },
     {
       accessorKey: "stockActual",
-      header: "Stock",
+      header: "Cantidad",
+      cell: ({ row }) => (
+        <span className={row.original.stockActual <= 0 ? "font-medium text-red-600" : undefined}>
+          {row.original.stockActual}
+        </span>
+      ),
+    },
+    {
+      id: "unidad",
+      header: "Unidad de medida",
       cell: ({ row }) => {
         const u = row.original.unidadMedida;
-        return (
-          <span className={row.original.stockActual <= 0 ? "font-medium text-red-600" : undefined}>
-            {row.original.stockActual}
-            {u?.simbolo ? ` ${u.simbolo}` : ""}
-          </span>
-        );
+        return u?.simbolo || "—";
       },
     },
     {

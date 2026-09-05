@@ -14,10 +14,13 @@ public class EditarInsumosProduccionCommandValidator : AbstractValidator<EditarI
 
         RuleForEach(x => x.Lineas).ChildRules(linea =>
         {
-            linea.RuleFor(l => l.InsumoId)
-                .NotEmpty().WithMessage("El insumo es requerido");
             linea.RuleFor(l => l.Cantidad)
                 .GreaterThan(0).WithMessage("La cantidad debe ser mayor a cero");
+
+            // Exactly one origin, mirroring RecetaInsumo/ProduccionInsumo.
+            linea.RuleFor(l => l)
+                .Must(l => l.InsumoId.HasValue != l.RecetaOrigenId.HasValue)
+                .WithMessage("Cada línea debe referenciar un insumo o una subreceta, no ambos ni ninguno");
         });
     }
 }

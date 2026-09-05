@@ -1,6 +1,7 @@
 using CentroDeProduccion.Domain.Services;
 using CentroDeProduccion.Application.Abstractions.Persistence;
 using CentroDeProduccion.Application.Common;
+using CentroDeProduccion.Application.Features.Recetas.Commands.CreateReceta;
 using CentroDeProduccion.Domain.Entities;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
@@ -10,17 +11,20 @@ namespace CentroDeProduccion.Application.Features.Recetas.Commands.UpdateReceta;
 public class UpdateRecetaCommandHandler
 {
     private readonly IRecetaRepository _recetaRepository;
+    private readonly IInsumoRepository _insumoRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IValidator<UpdateRecetaCommand> _validator;
     private readonly ILogger<UpdateRecetaCommandHandler> _logger;
 
     public UpdateRecetaCommandHandler(
         IRecetaRepository recetaRepository,
+        IInsumoRepository insumoRepository,
         IUnitOfWork unitOfWork,
         IValidator<UpdateRecetaCommand> validator,
         ILogger<UpdateRecetaCommandHandler> logger)
     {
         _recetaRepository = recetaRepository;
+        _insumoRepository = insumoRepository;
         _unitOfWork = unitOfWork;
         _validator = validator;
         _logger = logger;
@@ -81,17 +85,26 @@ public class UpdateRecetaCommandHandler
         receta.Descripcion = command.Descripcion;
         receta.Estado = command.Estado;
 
+        // Line units are derived server-side: the client-sent unit is not trusted.
+        var unidadesPorLinea = await RecetaLineaUnidades.DerivarAsync(
+            _insumoRepository, _recetaRepository, command.Insumos, cancellationToken);
+        if (unidadesPorLinea.IsFailure)
+        {
+            return Result.Failure(unidadesPorLinea.Error);
+        }
+
         // Replace insumos: EF Core deletes orphans (required FK + Cascade) on collection removal.
         receta.Insumos.Clear();
-        foreach (var detalle in command.Insumos)
+        for (var i = 0; i < command.Insumos.Count; i++)
         {
+            var detalle = command.Insumos[i];
             receta.Insumos.Add(new RecetaInsumo
             {
                 RecetaId = receta.Id,
                 InsumoId = detalle.InsumoId,
                 RecetaOrigenId = detalle.RecetaOrigenId,
                 CantidadNecesaria = detalle.CantidadNecesaria,
-                UnidadMedidaId = detalle.UnidadMedidaId,
+                UnidadMedidaId = unidadesPorLinea.Value[i],
                 Observaciones = detalle.Observaciones
             });
         }

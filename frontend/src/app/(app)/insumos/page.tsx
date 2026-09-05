@@ -243,21 +243,25 @@ export default function InsumosPage() {
     },
     {
       accessorKey: "stockActual",
-      header: "Stock",
+      header: "Cantidad",
+      cell: ({ row }) => (
+        <span
+          className={
+            row.original.stockActual <= row.original.stockMinimo
+              ? "font-medium text-red-600"
+              : undefined
+          }
+        >
+          {row.original.stockActual}
+        </span>
+      ),
+    },
+    {
+      id: "unidad",
+      header: "Unidad de medida",
       cell: ({ row }) => {
-        const simbolo = row.original.unidadConsumo?.simbolo;
-        return (
-          <span
-            className={
-              row.original.stockActual <= row.original.stockMinimo
-                ? "font-medium text-red-600"
-                : undefined
-            }
-          >
-            {row.original.stockActual}
-            {simbolo ? ` ${simbolo}` : ""}
-          </span>
-        );
+        const u = row.original.unidadConsumo;
+        return u?.simbolo || "—";
       },
     },
     {

@@ -4,6 +4,7 @@ using CentroDeProduccion.Application.Common;
 using CentroDeProduccion.Application.Features.Produccion.Commands.ConfirmProduccion;
 using CentroDeProduccion.Application.Features.Produccion.Commands.CreateProduccion;
 using CentroDeProduccion.Application.Features.Produccion.Commands.EditarInsumosProduccion;
+using CentroDeProduccion.Application.Features.Reports.Costos;
 using CentroDeProduccion.Domain.Entities;
 using CentroDeProduccion.Domain.Enums;
 using NSubstitute;
@@ -14,10 +15,12 @@ namespace CentroDeProduccion.Tests.Application.Handlers;
 
 /// <summary>
 /// Verifies the validated "Producción simple (1 receta = 1 PT)" flow: creation seeds
-/// consumption lines from the recipe BOM (sub-recipes included, converted units), editing
-/// replaces them freely while Borrador, and confirmation deducts the EDITED quantities,
-/// find-or-creates the finished product derived from the recipe name, and costs by real
-/// consumption ÷ declared output.
+/// consumption lines from the recipe's OWN BOM (single level: insumo lines converted to
+/// consumption units + sub-recipe lines kept as RecetaOrigenId), editing replaces them freely
+/// while Borrador, and confirmation deducts the EDITED quantities — insumos from insumo stock,
+/// sub-recipe lines from the active finished product of that sub-recipe (fail-fast when it is
+/// missing or short on stock) —, find-or-creates the finished product derived from the recipe
+/// name, and costs by real consumption ÷ declared output.
 /// </summary>
 public class ProduccionSimpleCommandHandlerTests
 {
@@ -52,10 +55,13 @@ public class ProduccionSimpleCommandHandlerTests
             PrecioUltimaCompra = precio
         };
 
-    // ── CreateProduccion: seeds InsumosConsumidos from the BOM ─────────────────────────────
+    private ProductoTerminadoCostoResolver CreateCostoResolver()
+        => new(_recetaRepository, new RecetaCostoResolver(_recetaRepository, _insumoRepository));
+
+    // ── CreateProduccion: seeds InsumosConsumidos from the recipe's own BOM ────────────────
 
     [Fact]
-    public async Task Create_SeedsConsumptionLinesFromBomIncludingSubRecipesAndConvertedUnits()
+    public async Task Create_SeedsLinesFromOwnBom_SubRecetaKeptAsLineAndUnitsConverted()
     {
         var unidadKg = Guid.NewGuid();
         var unidadG = Guid.NewGuid();
@@ -68,21 +74,18 @@ public class ProduccionSimpleCommandHandlerTests
             UnidadCompraId = unidadKg, UnidadConsumoId = unidadG, FactorConversion = 1000m,
             StockActual = 5000m, Activo = true, PrecioUltimaCompra = 20m
         };
-        var agua = CreateInsumo("Agua", Guid.NewGuid(), Guid.NewGuid(), precio: 0m);
 
-        // Sub-recipe: each Masa batch needs 4 Agua + 1 Kg harina; main recipe uses 3 Masa batches
+        // Main recipe: 1 kg harina (direct, converted to g) + 3 batches of the Masa sub-recipe
         var masa = new RecetaEntity { Id = Guid.NewGuid(), Nombre = "Masa base", CodigoSku = "REC-MASA" };
-        masa.Insumos.Add(new RecetaInsumo { Id = Guid.NewGuid(), RecetaId = masa.Id, InsumoId = agua.Id, CantidadNecesaria = 4, UnidadMedidaId = agua.UnidadConsumoId });
-        masa.Insumos.Add(new RecetaInsumo { Id = Guid.NewGuid(), RecetaId = masa.Id, InsumoId = harina.Id, CantidadNecesaria = 1, UnidadMedidaId = unidadKg });
 
         var pan = new RecetaEntity { Id = Guid.NewGuid(), Nombre = "Pan francés", CodigoSku = "REC-PAN" };
-        pan.Insumos.Add(new RecetaInsumo { Id = Guid.NewGuid(), RecetaId = pan.Id, RecetaOrigenId = masa.Id, CantidadNecesaria = 3, UnidadMedidaId = agua.UnidadConsumoId });
+        pan.Insumos.Add(new RecetaInsumo { Id = Guid.NewGuid(), RecetaId = pan.Id, InsumoId = harina.Id, CantidadNecesaria = 1, UnidadMedidaId = unidadKg });
+        pan.Insumos.Add(new RecetaInsumo { Id = Guid.NewGuid(), RecetaId = pan.Id, RecetaOrigenId = masa.Id, CantidadNecesaria = 3, UnidadMedidaId = UnidadBase.Id });
 
         _recetaRepository.GetByIdWithDetallesAsync(pan.Id, Arg.Any<CancellationToken>()).Returns(pan);
-        _recetaRepository.GetByIdWithDetallesAsync(masa.Id, Arg.Any<CancellationToken>()).Returns(masa);
         _currentUser.UsuarioId.Returns(Guid.NewGuid());
         _insumoRepository.GetByIdsAsync(Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
-            .Returns(new[] { harina, agua });
+            .Returns(new[] { harina });
 
         var result = await new CreateProduccionCommandHandler(
             _produccionRepository, _recetaRepository, _insumoRepository, _unitOfWork, _currentUser,
@@ -95,15 +98,64 @@ public class ProduccionSimpleCommandHandlerTests
             Arg.Do<Produccion>(p =>
             {
                 p.InsumosConsumidos.Count.ShouldBe(2);
-                p.Salidas.Count.ShouldBe(0); // no salidas created at draft time anymore
+                p.Salidas.Count.ShouldBe(0); // no salidas created at draft time
 
-                // Harina: 1 kg per Masa batch × 3 batches, flattened to consumption
-                // units (1kg → 1000g conversion) = 3000 g
-                p.InsumosConsumidos.First(l => l.InsumoId == harina.Id).Cantidad.ShouldBe(3000m);
-                // Agua: 4 per Masa batch × 3 batches = 12
-                p.InsumosConsumidos.First(l => l.InsumoId == agua.Id).Cantidad.ShouldBe(12m);
+                // Harina: 1 kg per batch, converted to consumption units (1kg → 1000g)
+                var lineaHarina = p.InsumosConsumidos.Single(l => l.InsumoId == harina.Id);
+                lineaHarina.Cantidad.ShouldBe(1000m);
+                lineaHarina.RecetaOrigenId.ShouldBeNull();
+
+                // Sub-recipe survives as a PT-consumption line in the sub-recipe's result unit
+                var lineaMasa = p.InsumosConsumidos.Single(l => l.RecetaOrigenId == masa.Id);
+                lineaMasa.InsumoId.ShouldBeNull();
+                lineaMasa.Cantidad.ShouldBe(3m);
             }), Arg.Any<CancellationToken>());
         await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Create_SelfReferencingSubReceta_ReturnsValidationError()
+    {
+        var pan = new RecetaEntity { Id = Guid.NewGuid(), Nombre = "Pan francés", CodigoSku = "REC-PAN" };
+        pan.Insumos.Add(new RecetaInsumo { Id = Guid.NewGuid(), RecetaId = pan.Id, RecetaOrigenId = pan.Id, CantidadNecesaria = 1, UnidadMedidaId = UnidadBase.Id });
+
+        _recetaRepository.GetByIdWithDetallesAsync(pan.Id, Arg.Any<CancellationToken>()).Returns(pan);
+        _currentUser.UsuarioId.Returns(Guid.NewGuid());
+
+        var result = await new CreateProduccionCommandHandler(
+            _produccionRepository, _recetaRepository, _insumoRepository, _unitOfWork, _currentUser,
+            new CreateProduccionCommandValidator()).HandleAsync(new CreateProduccionCommand(pan.Id, null));
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe("BOM_SELF_REFERENCE");
+    }
+
+    [Fact]
+    public async Task Create_InvalidLineUnit_ReturnsBomUnitInvalidError()
+    {
+        var unidadLitro = Guid.NewGuid();
+        var harina = new Insumo
+        {
+            Id = Guid.NewGuid(), Nombre = "Harina", CodigoSku = "HAR-001",
+            CategoriaId = Guid.NewGuid(),
+            UnidadCompraId = Guid.NewGuid(), UnidadConsumoId = Guid.NewGuid(), FactorConversion = 1m,
+            StockActual = 100m, Activo = true, PrecioUltimaCompra = 10m
+        };
+
+        var pan = new RecetaEntity { Id = Guid.NewGuid(), Nombre = "Pan francés", CodigoSku = "REC-PAN" };
+        pan.Insumos.Add(new RecetaInsumo { Id = Guid.NewGuid(), RecetaId = pan.Id, InsumoId = harina.Id, CantidadNecesaria = 1, UnidadMedidaId = unidadLitro });
+
+        _recetaRepository.GetByIdWithDetallesAsync(pan.Id, Arg.Any<CancellationToken>()).Returns(pan);
+        _currentUser.UsuarioId.Returns(Guid.NewGuid());
+        _insumoRepository.GetByIdsAsync(Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(new[] { harina });
+
+        var result = await new CreateProduccionCommandHandler(
+            _produccionRepository, _recetaRepository, _insumoRepository, _unitOfWork, _currentUser,
+            new CreateProduccionCommandValidator()).HandleAsync(new CreateProduccionCommand(pan.Id, null));
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe("BOM_UNIT_INVALID");
     }
 
     [Fact]
@@ -153,11 +205,11 @@ public class ProduccionSimpleCommandHandlerTests
             .Returns(new[] { nuevoInsumo });
 
         var result = await new EditarInsumosProduccionCommandHandler(
-            _produccionRepository, _insumoRepository, _unitOfWork,
-            new EditarInsumosProduccionCommandValidator())
+                _produccionRepository, _insumoRepository, _recetaRepository, _unitOfWork,
+                new EditarInsumosProduccionCommandValidator())
             .HandleAsync(new EditarInsumosProduccionCommand(produccion.Id, new[]
             {
-                new LineaInsumoDto(nuevoInsumo.Id, 25m, "extra por prueba")
+                new LineaInsumoDto(nuevoInsumo.Id, null, 25m, "extra por prueba")
             }));
 
         result.IsSuccess.ShouldBeTrue();
@@ -171,6 +223,32 @@ public class ProduccionSimpleCommandHandlerTests
     }
 
     [Fact]
+    public async Task EditarInsumos_RecetaLine_ReplacesListWithSubRecetaConsumption()
+    {
+        var rowVersion = new byte[] { 1, 2, 3 };
+        var produccion = CreateProduccionBorrador(rowVersion);
+        _produccionRepository.GetByIdWithSalidasAsync(produccion.Id, Arg.Any<CancellationToken>()).Returns(produccion);
+
+        var subReceta = new RecetaEntity { Id = Guid.NewGuid(), Nombre = "Masa base", CodigoSku = "REC-MASA", Activo = true };
+        _recetaRepository.GetByIdAsync(subReceta.Id, Arg.Any<CancellationToken>()).Returns(subReceta);
+
+        var result = await new EditarInsumosProduccionCommandHandler(
+                _produccionRepository, _insumoRepository, _recetaRepository, _unitOfWork,
+                new EditarInsumosProduccionCommandValidator())
+            .HandleAsync(new EditarInsumosProduccionCommand(produccion.Id, new[]
+            {
+                new LineaInsumoDto(null, subReceta.Id, 2m, null)
+            }));
+
+        result.IsSuccess.ShouldBeTrue();
+        produccion.InsumosConsumidos.ShouldHaveSingleItem();
+        var linea = produccion.InsumosConsumidos.Single();
+        linea.InsumoId.ShouldBeNull();
+        linea.RecetaOrigenId.ShouldBe(subReceta.Id);
+        linea.Cantidad.ShouldBe(2m);
+    }
+
+    [Fact]
     public async Task EditarInsumos_NoBorradorGuard_ReturnsConflictError()
     {
         var produccion = CreateProduccionBorrador(new byte[] { 1 });
@@ -178,11 +256,11 @@ public class ProduccionSimpleCommandHandlerTests
         _produccionRepository.GetByIdWithSalidasAsync(produccion.Id, Arg.Any<CancellationToken>()).Returns(produccion);
 
         var result = await new EditarInsumosProduccionCommandHandler(
-            _produccionRepository, _insumoRepository, _unitOfWork,
-            new EditarInsumosProduccionCommandValidator())
+                _produccionRepository, _insumoRepository, _recetaRepository, _unitOfWork,
+                new EditarInsumosProduccionCommandValidator())
             .HandleAsync(new EditarInsumosProduccionCommand(produccion.Id, new[]
             {
-                new LineaInsumoDto(Guid.NewGuid(), 1m, null)
+                new LineaInsumoDto(Guid.NewGuid(), null, 1m, null)
             }));
 
         result.IsFailure.ShouldBeTrue();
@@ -201,15 +279,33 @@ public class ProduccionSimpleCommandHandlerTests
             .Returns(Array.Empty<Insumo>());
 
         var result = await new EditarInsumosProduccionCommandHandler(
-            _produccionRepository, _insumoRepository, _unitOfWork,
-            new EditarInsumosProduccionCommandValidator())
+                _produccionRepository, _insumoRepository, _recetaRepository, _unitOfWork,
+                new EditarInsumosProduccionCommandValidator())
             .HandleAsync(new EditarInsumosProduccionCommand(produccion.Id, new[]
             {
-                new LineaInsumoDto(missingId, 2m, null)
+                new LineaInsumoDto(missingId, null, 2m, null)
             }));
 
         result.IsFailure.ShouldBeTrue();
         result.Error.Code.ShouldBe("INSUMO_NOT_FOUND");
+    }
+
+    [Fact]
+    public async Task EditarInsumos_LineWithoutOrigin_ReturnsValidationError()
+    {
+        var produccion = CreateProduccionBorrador(new byte[] { 1 });
+        _produccionRepository.GetByIdWithSalidasAsync(produccion.Id, Arg.Any<CancellationToken>()).Returns(produccion);
+
+        var result = await new EditarInsumosProduccionCommandHandler(
+                _produccionRepository, _insumoRepository, _recetaRepository, _unitOfWork,
+                new EditarInsumosProduccionCommandValidator())
+            .HandleAsync(new EditarInsumosProduccionCommand(produccion.Id, new[]
+            {
+                new LineaInsumoDto(null, null, 2m, null)
+            }));
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Type.ShouldBe(ErrorType.Validation);
     }
 
     // ── Confirm: deducts EDITED quantities, find-or-create PT, lot + P.U., guards ──────────
@@ -226,7 +322,8 @@ public class ProduccionSimpleCommandHandlerTests
 
     private ConfirmProduccionCommandHandler CreateConfirmHandler() => new(
         _produccionRepository, _recetaRepository, _insumoRepository, _productoTerminadoRepository,
-        _movimientoStockRepository, _unidadMedidaRepository, _unitOfWork, _currentUser);
+        _movimientoStockRepository, _unidadMedidaRepository, CreateCostoResolver(),
+        _unitOfWork, _currentUser);
 
     [Fact]
     public async Task Confirm_ConsumesEditedQuantities_NotTemplate_And_CreatesPTDerivedFromReceta()
@@ -324,6 +421,131 @@ public class ProduccionSimpleCommandHandlerTests
         existente.StockActual.ShouldBe(12m); // 7 + 5
         await _productoTerminadoRepository.DidNotReceive().AddAsync(Arg.Any<ProductoTerminado>(), Arg.Any<CancellationToken>());
         produccion.Salidas.Single().ProductoTerminadoId.ShouldBe(existente.Id);
+    }
+
+    [Fact]
+    public async Task Confirm_SubRecetaLine_DeductsSubPtStock_LedgersIt_AndAddsItsCost()
+    {
+        var rowVersion = new byte[] { 6 };
+        var harina = CreateInsumo("Harina", Guid.NewGuid(), Guid.NewGuid(), stock: 100m, precio: 10m);
+
+        // Sub-recipe "Masa": 2 harina per batch → live standard cost 2×10 = 20 per lote.
+        var masa = new RecetaEntity { Id = Guid.NewGuid(), Nombre = "Masa base", CodigoSku = "REC-MASA", Activo = true };
+        masa.Insumos.Add(new RecetaInsumo { Id = Guid.NewGuid(), RecetaId = masa.Id, InsumoId = harina.Id, CantidadNecesaria = 2, UnidadMedidaId = harina.UnidadConsumoId });
+
+        var produccion = CreateEditableProduccion(rowVersion,
+            new ProduccionInsumo { Id = Guid.NewGuid(), RecetaOrigenId = masa.Id, Cantidad = 2m });
+
+        _produccionRepository.GetByIdWithSalidasAsync(produccion.Id, Arg.Any<CancellationToken>()).Returns(produccion);
+        _recetaRepository.GetByIdAsync(masa.Id, Arg.Any<CancellationToken>()).Returns(masa);
+        _recetaRepository.GetByIdWithDetallesAsync(masa.Id, Arg.Any<CancellationToken>()).Returns(masa);
+        _insumoRepository.GetByIdsAsync(Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(new[] { harina });
+        _currentUser.UsuarioId.Returns(Guid.NewGuid());
+        _unidadMedidaRepository.GetByNombreAsync("Unidad", Arg.Any<CancellationToken>()).Returns(UnidadBase);
+
+        var subPt = new ProductoTerminado
+        {
+            Id = Guid.NewGuid(), Nombre = "Masa base", CodigoSku = "PT-MASA",
+            CategoriaId = Guid.NewGuid(), UnidadMedidaId = UnidadBase.Id,
+            RecetaId = masa.Id, StockActual = 5m, Activo = true
+        };
+        _productoTerminadoRepository.GetTrackedActiveByRecetaIdAsync(masa.Id, Arg.Any<CancellationToken>()).Returns(subPt);
+
+        var recetaPan = new RecetaEntity
+        {
+            Id = produccion.RecetaId, Nombre = "Pan de Molde", CodigoSku = "REC-MOLDE",
+            CategoriaId = Guid.NewGuid()
+        };
+        _recetaRepository.GetByIdAsync(produccion.RecetaId, Arg.Any<CancellationToken>()).Returns(recetaPan);
+        _productoTerminadoRepository.GetByNombreAsync("Pan de Molde", Arg.Any<CancellationToken>())
+            .Returns(new ProductoTerminado
+            {
+                Id = Guid.NewGuid(), Nombre = "Pan de Molde", CodigoSku = "PT-MOLDE",
+                CategoriaId = Guid.NewGuid(), UnidadMedidaId = UnidadBase.Id,
+                StockActual = 0m, Activo = true
+            });
+
+        var result = await CreateConfirmHandler().HandleAsync(new ConfirmProduccionCommand(produccion.Id, 10m, rowVersion));
+
+        result.IsSuccess.ShouldBeTrue();
+
+        // Sub-PT stock deducted by the line's quantity.
+        subPt.StockActual.ShouldBe(5m - 2m);
+
+        // Cost: 2 batches × live unit cost 20 = 40 added to the run's cost.
+        produccion.CostoTotalInsumos.ShouldBe(40m);
+        produccion.Estado.ShouldBe(EstadoProduccion.Confirmada);
+
+        // Movements: 1 sub-PT outflow (VentaBar ledger type, like remito outflows)
+        // + 1 finished-product inflow (Produccion).
+        var movimientos = new List<MovimientoStock>();
+        await _movimientoStockRepository.Received(2).AddAsync(
+            Arg.Do<MovimientoStock>(m => movimientos.Add(m)), Arg.Any<CancellationToken>());
+
+        var consumo = movimientos.Single(m => m.ProductoTerminadoId == subPt.Id);
+        consumo.Tipo.ShouldBe(TipoMovimientoStock.VentaBar);
+        consumo.Cantidad.ShouldBe(-2m);
+        consumo.Motivo.ShouldStartWith("Consumo producción");
+        movimientos.Single(m => m.Tipo == TipoMovimientoStock.Produccion).Cantidad.ShouldBe(10m);
+    }
+
+    [Fact]
+    public async Task Confirm_SubRecetaWithoutActivePt_FailsConfirmation_WithoutMutating()
+    {
+        var rowVersion = new byte[] { 8 };
+        var masa = new RecetaEntity { Id = Guid.NewGuid(), Nombre = "Masa base", CodigoSku = "REC-MASA", Activo = true };
+
+        var produccion = CreateEditableProduccion(rowVersion,
+            new ProduccionInsumo { Id = Guid.NewGuid(), RecetaOrigenId = masa.Id, Cantidad = 2m });
+
+        _produccionRepository.GetByIdWithSalidasAsync(produccion.Id, Arg.Any<CancellationToken>()).Returns(produccion);
+        _recetaRepository.GetByIdAsync(masa.Id, Arg.Any<CancellationToken>()).Returns(masa);
+        _productoTerminadoRepository.GetTrackedActiveByRecetaIdAsync(masa.Id, Arg.Any<CancellationToken>())
+            .Returns((ProductoTerminado?)null); // no active PT → FAIL
+        _currentUser.UsuarioId.Returns(Guid.NewGuid());
+        _recetaRepository.GetByIdAsync(produccion.RecetaId, Arg.Any<CancellationToken>())
+            .Returns(new RecetaEntity { Id = produccion.RecetaId, Nombre = "R", CodigoSku = "SKU" });
+
+        var result = await CreateConfirmHandler().HandleAsync(new ConfirmProduccionCommand(produccion.Id, 10m, rowVersion));
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe("SUBRECETA_SIN_PT");
+        result.Error.Message.ShouldContain("Prodúzcala primero");
+
+        // Nothing mutated: still Borrador and no stock movement was written.
+        produccion.Estado.ShouldBe(EstadoProduccion.Borrador);
+        await _movimientoStockRepository.DidNotReceive().AddAsync(Arg.Any<MovimientoStock>(), Arg.Any<CancellationToken>());
+        await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Confirm_SubRecetaWithInsufficientStock_FailsConfirmation()
+    {
+        var rowVersion = new byte[] { 11 };
+        var masa = new RecetaEntity { Id = Guid.NewGuid(), Nombre = "Masa base", CodigoSku = "REC-MASA", Activo = true };
+
+        var produccion = CreateEditableProduccion(rowVersion,
+            new ProduccionInsumo { Id = Guid.NewGuid(), RecetaOrigenId = masa.Id, Cantidad = 4m });
+
+        _produccionRepository.GetByIdWithSalidasAsync(produccion.Id, Arg.Any<CancellationToken>()).Returns(produccion);
+        _recetaRepository.GetByIdAsync(masa.Id, Arg.Any<CancellationToken>()).Returns(masa);
+        _productoTerminadoRepository.GetTrackedActiveByRecetaIdAsync(masa.Id, Arg.Any<CancellationToken>())
+            .Returns(new ProductoTerminado
+            {
+                Id = Guid.NewGuid(), Nombre = "Masa base", CodigoSku = "PT-MASA",
+                CategoriaId = Guid.NewGuid(), UnidadMedidaId = UnidadBase.Id,
+                RecetaId = masa.Id, StockActual = 2m, Activo = true
+            });
+        _currentUser.UsuarioId.Returns(Guid.NewGuid());
+        _recetaRepository.GetByIdAsync(produccion.RecetaId, Arg.Any<CancellationToken>())
+            .Returns(new RecetaEntity { Id = produccion.RecetaId, Nombre = "R", CodigoSku = "SKU" });
+
+        var result = await CreateConfirmHandler().HandleAsync(new ConfirmProduccionCommand(produccion.Id, 10m, rowVersion));
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe("SUBRECETA_STOCK_INSUFICIENTE");
+        produccion.Estado.ShouldBe(EstadoProduccion.Borrador);
     }
 
     [Fact]

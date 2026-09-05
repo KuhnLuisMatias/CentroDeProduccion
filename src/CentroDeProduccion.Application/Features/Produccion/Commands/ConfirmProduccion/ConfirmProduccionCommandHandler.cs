@@ -9,12 +9,14 @@ namespace CentroDeProduccion.Application.Features.Produccion.Commands.ConfirmPro
 
 /// <summary>
 /// Confirms a Borrador production run (Producción simple): deducts exactly the edited
-/// <c>InsumosConsumidos</c> lines from insumo stock, find-or-creates the finished product
-/// derived from the recipe name, writes one internal ProduccionSalida row (report/report
-/// compatibility), computes cost as Σ real consumption ÷ declared output, and increments
-/// finished-product stock with lot and unit cost. All inside one UnitOfWork transaction.
-/// The declared <see cref="ConfirmProduccionCommand.CantidadProducida"/> is authoritative; no
-/// validation against theoretical yield.
+/// <c>InsumosConsumidos</c> lines — direct insumos from insumo stock, sub-recipe lines from the
+/// active finished product whose <c>RecetaId</c> matches the sub-recipe (missing/inactive PT or
+/// insufficient stock FAILS the confirmation; no lazy creation) —, find-or-creates the finished
+/// product derived from the recipe name, writes one internal ProduccionSalida row, computes cost
+/// as Σ real consumption (insumos at last purchase price + sub-PTs at their live standard cost)
+/// ÷ declared output, and increments finished-product stock with lot. All inside one UnitOfWork
+/// transaction. The declared <see cref="ConfirmProduccionCommand.CantidadProducida"/> is
+/// authoritative; no validation against theoretical yield.
 /// </summary>
 public class ConfirmProduccionCommandHandler
 {
@@ -24,6 +26,7 @@ public class ConfirmProduccionCommandHandler
     private readonly IProductoTerminadoRepository _productoTerminadoRepository;
     private readonly IMovimientoStockRepository _movimientoStockRepository;
     private readonly IUnidadMedidaRepository _unidadMedidaRepository;
+    private readonly ProductoTerminadoCostoResolver _productoTerminadoCostoResolver;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUser _currentUser;
 
@@ -34,6 +37,7 @@ public class ConfirmProduccionCommandHandler
         IProductoTerminadoRepository productoTerminadoRepository,
         IMovimientoStockRepository movimientoStockRepository,
         IUnidadMedidaRepository unidadMedidaRepository,
+        ProductoTerminadoCostoResolver productoTerminadoCostoResolver,
         IUnitOfWork unitOfWork,
         ICurrentUser currentUser)
     {
@@ -43,6 +47,7 @@ public class ConfirmProduccionCommandHandler
         _productoTerminadoRepository = productoTerminadoRepository;
         _movimientoStockRepository = movimientoStockRepository;
         _unidadMedidaRepository = unidadMedidaRepository;
+        _productoTerminadoCostoResolver = productoTerminadoCostoResolver;
         _unitOfWork = unitOfWork;
         _currentUser = currentUser;
     }
@@ -86,24 +91,58 @@ public class ConfirmProduccionCommandHandler
             return Result.Failure<ConfirmProduccionResponse>(Error.NotFound("RECETA_NOT_FOUND", "Receta no encontrada"));
         }
 
-        // Batch-load every consumed insumo up-front (tracked: StockActual mutates below).
         var lineas = produccion.InsumosConsumidos.ToList();
+        var lineasInsumo = lineas.Where(l => l.InsumoId.HasValue).ToList();
+        var lineasReceta = lineas.Where(l => l.RecetaOrigenId.HasValue).ToList();
+
+        // Batch-load every consumed insumo up-front (tracked: StockActual mutates below).
         var insumos = (await _insumoRepository.GetByIdsAsync(
-                lineas.Select(l => l.InsumoId).Distinct().ToList(), cancellationToken))
+                lineasInsumo.Select(l => l.InsumoId!.Value).Distinct().ToList(), cancellationToken))
             .ToDictionary(i => i.Id);
 
-        foreach (var linea in lineas)
+        foreach (var linea in lineasInsumo)
         {
-            if (!insumos.TryGetValue(linea.InsumoId, out var insumo))
+            if (!insumos.TryGetValue(linea.InsumoId!.Value, out var insumo))
             {
                 return Result.Failure<ConfirmProduccionResponse>(Error.NotFound("INSUMO_NOT_FOUND", $"Insumo {linea.InsumoId} no encontrado"));
             }
         }
 
-        // Stock is allowed to go negative: deduct and ledger each consumption regardless.
-        foreach (var linea in lineas)
+        // Sub-recipe lines: resolve the subreceta + its active finished product and validate
+        // stock BEFORE mutating anything. No lazy creation: the sub-recipe must be produced first.
+        var subPtPorReceta = new Dictionary<Guid, ProductoTerminado>();
+        foreach (var linea in lineasReceta)
         {
-            var insumo = insumos[linea.InsumoId];
+            var subRecetaId = linea.RecetaOrigenId!.Value;
+            var subReceta = await _recetaRepository.GetByIdAsync(subRecetaId, cancellationToken);
+            if (subReceta == null || !subReceta.Activo)
+            {
+                return Result.Failure<ConfirmProduccionResponse>(
+                    Error.NotFound("RECETA_NOT_FOUND", $"La subreceta {subRecetaId} no existe o está inactiva"));
+            }
+
+            var pt = await _productoTerminadoRepository.GetTrackedActiveByRecetaIdAsync(subRecetaId, cancellationToken);
+            if (pt == null)
+            {
+                return Result.Failure<ConfirmProduccionResponse>(Error.Validation(
+                    "SUBRECETA_SIN_PT",
+                    $"La subreceta {subReceta.Nombre} no tiene producto terminado activo. Prodúzcala primero."));
+            }
+
+            if (pt.StockActual < linea.Cantidad)
+            {
+                return Result.Failure<ConfirmProduccionResponse>(Error.Validation(
+                    "SUBRECETA_STOCK_INSUFICIENTE",
+                    $"La subreceta {subReceta.Nombre} no tiene producto terminado con stock suficiente (requiere {linea.Cantidad}, disponible {pt.StockActual}). Prodúzcala primero."));
+            }
+
+            subPtPorReceta[subRecetaId] = pt;
+        }
+
+        // Stock is allowed to go negative: deduct and ledger each consumption regardless.
+        foreach (var linea in lineasInsumo)
+        {
+            var insumo = insumos[linea.InsumoId!.Value];
             insumo.StockActual -= linea.Cantidad;
 
             await _movimientoStockRepository.AddAsync(new MovimientoStock
@@ -155,8 +194,38 @@ public class ConfirmProduccionCommandHandler
 
         var lote = $"{receta.CodigoSku}-{RelojDeNegocio.Ahora:yyyyMMddHHmmss}";
 
+        // Sub-recipe consumption: deduct each sub-PT's stock and ledger it (remito's PT-outflow
+        // movement type — no dedicated PT "consumo" type exists). Cost: the sub-PT's live
+        // standard cost (same source remitos price with), added to the run's insumo cost.
+        var costoSubPt = 0m;
+        foreach (var linea in lineasReceta)
+        {
+            var pt = subPtPorReceta[linea.RecetaOrigenId!.Value];
+            pt.StockActual -= linea.Cantidad;
+
+            var costoUnitario = await _productoTerminadoCostoResolver.CalcularPorRecetaAsync(
+                linea.RecetaOrigenId.Value, cancellationToken);
+            costoSubPt += costoUnitario * linea.Cantidad;
+
+            await _movimientoStockRepository.AddAsync(new MovimientoStock
+            {
+                Id = Guid.NewGuid(),
+                ProductoTerminadoId = pt.Id,
+                Tipo = TipoMovimientoStock.VentaBar,
+                Cantidad = -linea.Cantidad,
+                CantidadOriginal = linea.Cantidad,
+                UnidadOriginalId = pt.UnidadMedidaId,
+                FactorConversionAplicado = 1,
+                Motivo = $"Consumo producción {lote}",
+                DocumentoOrigen = produccion.Id.ToString(),
+                UsuarioId = _currentUser.UsuarioId!.Value,
+                Fecha = RelojDeNegocio.Ahora
+            }, cancellationToken);
+        }
+
         // Costeo over REAL consumption only (edited lines), not the template.
-        var costoTotalInsumos = lineas.Sum(l => insumos[l.InsumoId].PrecioUltimaCompra * l.Cantidad);
+        var costoTotalInsumos = lineasInsumo.Sum(l => insumos[l.InsumoId!.Value].PrecioUltimaCompra * l.Cantidad)
+            + costoSubPt;
 
         // Single internal salida row keeps rentabilidad/reports reading Salidas working.
         // No explicit Id: graph-discovered through the tracked parent (preset key would be

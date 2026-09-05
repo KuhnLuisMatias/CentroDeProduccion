@@ -1,5 +1,6 @@
 using CentroDeProduccion.Application.Abstractions.Persistence;
 using CentroDeProduccion.Api.Extensions;
+using CentroDeProduccion.Application.Common;
 using CentroDeProduccion.Application.Features.Produccion.Commands.CreateProduccion;
 using CentroDeProduccion.Application.Features.Produccion.Commands.ConfirmProduccion;
 using CentroDeProduccion.Application.Features.Produccion.Commands.CancelProduccion;
@@ -18,6 +19,7 @@ namespace CentroDeProduccion.Api.Controllers;
 public class ProduccionController : ControllerBase
 {
     private readonly IProduccionRepository _produccionRepository;
+    private readonly ProductoTerminadoCostoResolver _costoResolver;
     private readonly CreateProduccionCommandHandler _createHandler;
     private readonly ConfirmProduccionCommandHandler _confirmHandler;
     private readonly CancelProduccionCommandHandler _cancelHandler;
@@ -25,12 +27,14 @@ public class ProduccionController : ControllerBase
 
     public ProduccionController(
         IProduccionRepository produccionRepository,
+        ProductoTerminadoCostoResolver costoResolver,
         CreateProduccionCommandHandler createHandler,
         ConfirmProduccionCommandHandler confirmHandler,
         CancelProduccionCommandHandler cancelHandler,
         EditarInsumosProduccionCommandHandler editarInsumosHandler)
     {
         _produccionRepository = produccionRepository;
+        _costoResolver = costoResolver;
         _createHandler = createHandler;
         _confirmHandler = confirmHandler;
         _cancelHandler = cancelHandler;
@@ -42,21 +46,40 @@ public class ProduccionController : ControllerBase
     {
         var producciones = await _produccionRepository.GetAllAsync(cancellationToken);
 
+        // Batch the live sub-PT costs once for every sub-recipe line of Borrador runs.
+        var borradores = producciones.Where(p => p.Estado == EstadoProduccion.Borrador).ToList();
+        var costosSubPt = await _costoResolver.CalcularPorRecetasAsync(
+            borradores
+                .SelectMany(p => p.InsumosConsumidos)
+                .Where(pi => pi.RecetaOrigenId.HasValue)
+                .Select(pi => (Guid?)pi.RecetaOrigenId!.Value)
+                .Distinct(),
+            cancellationToken);
+
         // Explicit mapping: never serialize the entity graph (Usuario.PasswordHash leak via
         // Responsable navigation). Same field names as GetProduccionByIdResponse minus salidas.
         var response = producciones.Select(p =>
         {
             // Borrador runs don't persist costs (written only on confirm); compute the estimate
-            // on read so insumo quantity edits are reflected (same formula as ConfirmProduccionCommandHandler).
+            // on read so line edits are reflected (same formula as ConfirmProduccionCommandHandler:
+            // insumos at last purchase price + sub-recipe lines at the sub-PT's live cost).
             var esBorrador = p.Estado == EstadoProduccion.Borrador;
             var costoInsumos = esBorrador
-                ? p.InsumosConsumidos?.Sum(pi => (pi.Insumo?.PrecioUltimaCompra ?? 0m) * pi.Cantidad) ?? 0m
+                ? p.InsumosConsumidos?.Sum(pi => (pi.Insumo?.PrecioUltimaCompra ?? 0m) * pi.Cantidad
+                    + (pi.RecetaOrigenId.HasValue
+                        ? costosSubPt.GetValueOrDefault(pi.RecetaOrigenId.Value) * pi.Cantidad
+                        : 0m)) ?? 0m
                 : p.CostoTotalInsumos;
+
+            // Borrador shows quantity 1, so unit cost = the estimated batch total.
+            var costoUnitario = esBorrador
+                ? costoInsumos
+                : p.CantidadProducida > 0 ? p.CostoTotal / p.CantidadProducida : 0m;
 
             return new GetProduccionListItemResponse(
                 p.Id,
                 p.RecetaId,
-                p.Receta is null ? null : new ProduccionRecetaInfo(p.Receta.Id, p.Receta.Nombre, null),
+                p.Receta is null ? null : new ProduccionRecetaInfo(p.Receta.Id, p.Receta.Nombre, p.Receta.UnidadMedida?.Simbolo),
                 p.Lote,
                 p.Fecha,
                 p.ResponsableId,
@@ -69,7 +92,8 @@ public class ProduccionController : ControllerBase
                 p.FechaVencimiento,
                 costoInsumos,
                 esBorrador ? costoInsumos : p.CostoTotal,
-                p.RowVersion);
+                p.RowVersion,
+                costoUnitario);
         }).ToList();
 
         return Ok(response);
@@ -86,6 +110,14 @@ public class ProduccionController : ControllerBase
         // Produccion↔Salidas recursion). Shape matches frontend/src/lib/types.ts Produccion.
         // Display-only (same as GetAll): Borrador shows 1 unit without persisting it.
         var esBorrador = produccion.Estado == EstadoProduccion.Borrador;
+        // Live unit cost per line: insumo lines at last purchase price, sub-recipe lines at the
+        // sub-PT's live standard cost (same source remitos price with) so the frontend shows it.
+        var costosSubPt = await _costoResolver.CalcularPorRecetasAsync(
+            produccion.InsumosConsumidos
+                .Where(i => i.RecetaOrigenId.HasValue)
+                .Select(i => (Guid?)i.RecetaOrigenId!.Value)
+                .Distinct(),
+            cancellationToken);
         var response = new GetProduccionByIdResponse(
             produccion.Id,
             produccion.RecetaId,
@@ -119,7 +151,14 @@ public class ProduccionController : ControllerBase
                 i.Insumo is null
                     ? null
                     : new ProduccionInsumoInsumoInfo(i.Insumo.Id, i.Insumo.Nombre, i.Insumo.CodigoSku, i.Insumo.UnidadConsumoId),
+                i.RecetaOrigenId,
+                i.RecetaOrigen is null
+                    ? null
+                    : new ProduccionInsumoRecetaInfo(i.RecetaOrigen.Id, i.RecetaOrigen.Nombre, i.RecetaOrigen.UnidadMedida?.Simbolo),
                 i.Cantidad,
+                i.InsumoId.HasValue
+                    ? i.Insumo?.PrecioUltimaCompra ?? 0m
+                    : costosSubPt.GetValueOrDefault(i.RecetaOrigenId!.Value),
                 i.Observaciones)).ToList());
 
         return Ok(response);

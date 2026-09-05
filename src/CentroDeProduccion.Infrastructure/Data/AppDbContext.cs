@@ -251,7 +251,8 @@ public class AppDbContext : DbContext
              .OnDelete(DeleteBehavior.Restrict);
         });
 
-        // ProduccionInsumo (Fase 8, producción simple: editable consumption lines)
+        // ProduccionInsumo (Fase 8, producción simple: editable consumption lines; each line is
+        // a direct insumo OR a sub-recipe consumption, mirroring RecetaInsumo)
         modelBuilder.Entity<ProduccionInsumo>(e =>
         {
             e.Property(pi => pi.Cantidad).HasPrecision(18, 4);
@@ -264,7 +265,15 @@ public class AppDbContext : DbContext
              .WithMany()
              .HasForeignKey(pi => pi.InsumoId)
              .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(pi => pi.RecetaOrigen)
+             .WithMany()
+             .HasForeignKey(pi => pi.RecetaOrigenId)
+             .OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(pi => pi.ProduccionId);
+            e.HasIndex(pi => pi.RecetaOrigenId);
+            e.ToTable(t => t.HasCheckConstraint(
+                "CK_ProduccionInsumos_UnSoloOrigen",
+                "([InsumoId] IS NOT NULL AND [RecetaOrigenId] IS NULL) OR ([InsumoId] IS NULL AND [RecetaOrigenId] IS NOT NULL)"));
         });
 
         // PresentacionVenta (Phase 2)

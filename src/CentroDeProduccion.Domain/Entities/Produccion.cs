@@ -28,10 +28,11 @@ public class Produccion
     /// <summary>Expiration date of the produced lot (set on confirmation).</summary>
     public DateTime? FechaVencimiento { get; set; }
 
-    /// <summary>Total insumo cost of the run (set on confirmation).</summary>
+    /// <summary>Total cost of the run (set on confirmation): direct-insumo consumption at last
+    /// purchase price PLUS sub-recipe lines at the live unit cost of their finished product.</summary>
     public decimal CostoTotalInsumos { get; set; }
 
-    /// <summary>Total production cost = CostoTotalInsumos (costs are insumos-only since Fase9).</summary>
+    /// <summary>Total production cost = CostoTotalInsumos (insumos + sub-recipe finished products).</summary>
     public decimal CostoTotal { get; set; }
 
     /// <summary>Optimistic concurrency token guarding cost recompute.</summary>

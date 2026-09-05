@@ -65,7 +65,6 @@ const lineSchema = z.object({
   insumoId: z.string(),
   recetaOrigenId: z.string(),
   cantidadNecesaria: z.string(),
-  unidadMedidaId: z.string(),
 });
 
 const recetaSchema = z
@@ -80,15 +79,14 @@ const recetaSchema = z
   })
   .superRefine((values, ctx) => {
     const hasValidLine = values.lines.some(
-      (l) =>
-        (l.insumoId || l.recetaOrigenId) && l.unidadMedidaId && Number(l.cantidadNecesaria) > 0,
+      (l) => (l.insumoId || l.recetaOrigenId) && Number(l.cantidadNecesaria) > 0,
     );
     if (!hasValidLine) {
       ctx.addIssue({
         code: "custom",
         path: ["lines"],
         message:
-          "Agregá al menos una línea válida (insumo o sub-receta con cantidad y unidad).",
+          "Agregá al menos una línea válida (insumo o sub-receta con cantidad).",
       });
     }
   });
@@ -204,7 +202,6 @@ export default function RecetasPage() {
           insumoId: ri.insumoId ?? "",
           recetaOrigenId: ri.recetaOrigenId ?? "",
           cantidadNecesaria: String(ri.cantidadNecesaria),
-          unidadMedidaId: ri.unidadMedidaId,
         })),
       });
       setDialogOpen(true);
@@ -224,7 +221,6 @@ export default function RecetasPage() {
         insumoId: l.insumoId || null,
         recetaOrigenId: l.recetaOrigenId || null,
         cantidadNecesaria: parseFloat(l.cantidadNecesaria) || 0,
-        unidadMedidaId: l.unidadMedidaId,
       }));
     const base = {
       nombre: values.nombre.trim(),
@@ -458,9 +454,13 @@ export default function RecetasPage() {
               render={({ field }) => (
                 <RecipeLinesEditor
                   lines={field.value}
-                  insumos={insumos}
+                  insumos={insumos.map((i) => ({
+                    id: i.id,
+                    nombre: i.nombre,
+                    unidadConsumoId: i.unidadConsumoId,
+                    unidadConsumoSimbolo: i.unidadConsumo?.simbolo ?? null,
+                  }))}
                   recetas={rows}
-                  unidades={unidades}
                   onChange={field.onChange}
                 />
               )}

@@ -17,14 +17,14 @@ public class CreateRecetaCommandValidatorTests
     [Fact]
     public void Validate_InsumoDirecto_Passes()
     {
-        var command = BaseCommand(new RecetaInsumoDto(Guid.NewGuid(), null, 5m, Guid.NewGuid(), null));
+        var command = BaseCommand(new RecetaInsumoDto(Guid.NewGuid(), null, 5m, null));
         _validator.Validate(command).IsValid.ShouldBeTrue();
     }
 
     [Fact]
     public void Validate_SubReceta_Passes()
     {
-        var command = BaseCommand(new RecetaInsumoDto(null, Guid.NewGuid(), 2m, Guid.NewGuid(), null));
+        var command = BaseCommand(new RecetaInsumoDto(null, Guid.NewGuid(), 2m, null));
         _validator.Validate(command).IsValid.ShouldBeTrue();
     }
 
@@ -36,7 +36,7 @@ public class CreateRecetaCommandValidatorTests
         var command = BaseCommand(new RecetaInsumoDto(
             conInsumo ? Guid.NewGuid() : null,
             conSubReceta ? Guid.NewGuid() : null,
-            5m, Guid.NewGuid(), null));
+            5m, null));
 
         _validator.Validate(command).IsValid.ShouldBeFalse();
     }
