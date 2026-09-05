@@ -29,6 +29,9 @@ public class UpdateInsumoCommandValidator : AbstractValidator<UpdateInsumoComman
         RuleFor(x => x.FactorConversion)
             .GreaterThan(0).WithMessage("El factor de conversión debe ser mayor a 0");
 
+        RuleFor(x => x.Presentacion)
+            .GreaterThan(0).WithMessage("La presentación debe ser mayor a 0");
+
         RuleFor(x => x.StockMinimo)
             .GreaterThanOrEqualTo(0).WithMessage("El stock mínimo no puede ser negativo");
 

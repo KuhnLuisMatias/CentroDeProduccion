@@ -64,10 +64,15 @@ public class InsumoRepository : IInsumoRepository
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
             var term = searchTerm.Trim();
+            var isPresentacion = decimal.TryParse(term, System.Globalization.NumberStyles.Number,
+                    System.Globalization.CultureInfo.InvariantCulture, out var presentacionTerm) ||
+                decimal.TryParse(term, System.Globalization.NumberStyles.Number,
+                    System.Globalization.CultureInfo.CurrentCulture, out presentacionTerm);
             query = query.Where(i =>
                 i.Nombre.Contains(term) ||
                 i.CodigoSku.Contains(term) ||
-                i.Categoria!.Nombre.Contains(term));
+                i.Categoria!.Nombre.Contains(term) ||
+                (isPresentacion && i.Presentacion == presentacionTerm));
         }
 
         var totalCount = await query.CountAsync(cancellationToken);

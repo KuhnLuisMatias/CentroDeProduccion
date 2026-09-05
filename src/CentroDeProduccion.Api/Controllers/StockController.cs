@@ -53,6 +53,7 @@ public class StockController : ControllerBase
                 i.CodigoSku,
                 i.StockActual,
                 i.StockMinimo,
+                i.Presentacion,
                 i.UnidadConsumo?.Simbolo,
                 i.ProveedorPrincipal?.NombreRazonSocial,
                 i.ProveedorPrincipal?.Telefono,

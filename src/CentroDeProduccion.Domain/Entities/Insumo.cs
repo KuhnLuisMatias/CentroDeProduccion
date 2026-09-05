@@ -17,6 +17,12 @@ public class Insumo
     public UnidadMedida UnidadConsumo { get; set; } = null!;
     public decimal FactorConversion { get; set; } = 1;
 
+    /// <summary>Contenido de 1 unidad de compra expresado en la unidad de consumo
+    /// (ej. bidón de 5 litros: UnidadCompra=Bidón, UnidadConsumo=Litro, Presentacion=5).
+    /// Es el valor visible/editable; <see cref="FactorConversion"/> se sincroniza con él
+    /// al guardar para que la conversión de stock existente siga funcionando.</summary>
+    public decimal Presentacion { get; set; } = 1;
+
     public decimal StockMinimo { get; set; }
     public decimal StockActual { get; set; }
     public decimal PrecioUltimaCompra { get; set; }

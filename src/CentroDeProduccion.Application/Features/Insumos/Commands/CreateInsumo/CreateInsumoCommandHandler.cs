@@ -45,7 +45,8 @@ public class CreateInsumoCommandHandler
             CategoriaId = command.CategoriaId,
             UnidadCompraId = command.UnidadCompraId,
             UnidadConsumoId = command.UnidadConsumoId,
-            FactorConversion = command.FactorConversion,
+            FactorConversion = command.Presentacion,
+            Presentacion = command.Presentacion,
             StockMinimo = command.StockMinimo,
             StockActual = 0,
             PrecioUltimaCompra = command.PrecioUltimaCompra ?? 0,
@@ -69,6 +70,7 @@ public class CreateInsumoCommandHandler
             insumo.UnidadConsumoId,
             "", // Unidad consumo simbolo
             insumo.FactorConversion,
+            insumo.Presentacion,
             insumo.StockMinimo,
             insumo.StockActual,
             insumo.PrecioUltimaCompra,

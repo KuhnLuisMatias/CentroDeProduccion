@@ -191,6 +191,7 @@ async function main() {
               unidadCompraId: fresh.unidadCompraId,
               unidadConsumoId: fresh.unidadConsumoId,
               factorConversion: fresh.factorConversion,
+              presentacion: fresh.presentacion ?? 1,
               stockMinimo: targetMinimo(ins, qty),
               proveedorPrincipalId: fresh.proveedorPrincipalId,
               observaciones: fresh.observaciones,

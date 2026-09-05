@@ -210,6 +210,7 @@ for (const it of finalItems) {
     unidadCompraId: unidad.id,
     unidadConsumoId: unidad.id,
     factorConversion: 1,
+    presentacion: 1,
     stockMinimo: 0,
     proveedorPrincipalId: null,
     observaciones: obs,

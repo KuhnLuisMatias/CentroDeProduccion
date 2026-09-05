@@ -12,4 +12,5 @@ public sealed record UpdateInsumoCommand(
     Guid? ProveedorPrincipalId,
     string? Observaciones,
     byte[] RowVersion,
+    decimal Presentacion,
     decimal? PrecioUltimaCompra = null);

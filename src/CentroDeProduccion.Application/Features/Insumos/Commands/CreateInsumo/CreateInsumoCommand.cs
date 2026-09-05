@@ -10,4 +10,5 @@ public sealed record CreateInsumoCommand(
     decimal StockMinimo,
     Guid? ProveedorPrincipalId,
     string? Observaciones,
+    decimal Presentacion,
     decimal? PrecioUltimaCompra = null);

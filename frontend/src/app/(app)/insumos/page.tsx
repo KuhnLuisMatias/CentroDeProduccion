@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -57,7 +57,10 @@ const insumoSchema = z.object({
     .min(1, "El código SKU es obligatorio.")
     .max(50, "Máximo 50 caracteres."),
   categoriaId: z.string().min(1, "Seleccioná una categoría."),
-  unidadCompraId: z.string().min(1, "Seleccioná la unidad de compra."),
+  unidadConsumoId: z.string().min(1, "Seleccioná la unidad de medida."),
+  presentacion: z.coerce
+    .number({ message: "Ingresá un número válido." })
+    .positive("Debe ser mayor a 0."),
   stockMinimo: z.coerce
     .number({ message: "Ingresá un número válido." })
     .min(0, "No puede ser negativo."),
@@ -75,7 +78,8 @@ const EMPTY_FORM: InsumoFormValues = {
   nombre: "",
   codigoSku: "",
   categoriaId: "",
-  unidadCompraId: "",
+  unidadConsumoId: "",
+  presentacion: 1,
   stockMinimo: 0,
   precioUltimaCompra: 0,
   proveedorPrincipalId: "",
@@ -132,6 +136,7 @@ export default function InsumosPage() {
   }, [page, pageSize, search]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void load();
   }, [load]);
 
@@ -179,7 +184,8 @@ export default function InsumosPage() {
       nombre: row.nombre,
       codigoSku: row.codigoSku,
       categoriaId: row.categoriaId,
-      unidadCompraId: row.unidadCompraId,
+      unidadConsumoId: row.unidadConsumoId,
+      presentacion: row.presentacion,
       stockMinimo: row.stockMinimo,
       precioUltimaCompra: row.precioUltimaCompra,
       proveedorPrincipalId: row.proveedorPrincipalId ?? "",
@@ -194,9 +200,10 @@ export default function InsumosPage() {
       nombre: values.nombre.trim(),
       codigoSku: values.codigoSku.trim(),
       categoriaId: values.categoriaId,
-      unidadCompraId: values.unidadCompraId,
-      unidadConsumoId: values.unidadCompraId,
-      factorConversion: 1,
+      unidadCompraId: values.unidadConsumoId,
+      unidadConsumoId: values.unidadConsumoId,
+      factorConversion: values.presentacion,
+      presentacion: values.presentacion,
       stockMinimo: values.stockMinimo,
       precioUltimaCompra: values.precioUltimaCompra || null,
       proveedorPrincipalId: values.proveedorPrincipalId || null,
@@ -235,6 +242,14 @@ export default function InsumosPage() {
 
   const columns: ColumnDef<Insumo, unknown>[] = [
     { accessorKey: "nombre", header: "Nombre" },
+    {
+      id: "presentacion",
+      header: "Presentación",
+      cell: ({ row }) => {
+        const u = row.original.unidadConsumo;
+        return `${row.original.presentacion} ${u?.simbolo ?? ""}`.trim();
+      },
+    },
     { accessorKey: "codigoSku", header: "SKU" },
     {
       id: "categoria",
@@ -285,7 +300,9 @@ export default function InsumosPage() {
     },
   ];
 
-  const { register, watch, setValue, control, formState: { errors } } = form;
+  const { register, setValue, control, formState: { errors } } = form;
+  const unidadConsumoId = useWatch({ control, name: "unidadConsumoId" });
+  const precioUltimaCompra = useWatch({ control, name: "precioUltimaCompra" });
 
   return (
     <div>
@@ -404,17 +421,23 @@ export default function InsumosPage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="insumo-unidadCompra">Unidad de compra</Label>
+              <Label htmlFor="insumo-presentacion">Presentación</Label>
               <p className="text-xs text-muted-foreground">
-                Se usa también como unidad de consumo (1:1).
+                Cantidad que trae cada bulto, en {unidades.find((u) => u.id === unidadConsumoId)?.nombre ?? "la unidad de medida"} (ej. bidón de 5 litros → 5).
               </p>
+              <Input id="insumo-presentacion" type="number" step="any" min="0" {...register("presentacion")} />
+              <FieldError message={errors.presentacion?.message} />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="insumo-unidadConsumo">Unidad de medida</Label>
               <Controller
                 control={control}
-                name="unidadCompraId"
+                name="unidadConsumoId"
                 render={({ field }) =>
                   refsLoaded ? (
                     <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger id="insumo-unidadCompra" className="w-full">
+                      <SelectTrigger id="insumo-unidadConsumo" className="w-full">
                         <SelectValue placeholder="Seleccionar…" />
                       </SelectTrigger>
                       <SelectContent>
@@ -430,7 +453,7 @@ export default function InsumosPage() {
                   )
                 }
               />
-              <FieldError message={errors.unidadCompraId?.message} />
+              <FieldError message={errors.unidadConsumoId?.message} />
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -455,9 +478,9 @@ export default function InsumosPage() {
             )}
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="insumo-precioUltimaCompra">Precio última compra</Label>
+              <Label htmlFor="insumo-precioUltimaCompra">Precio última compra (por bulto)</Label>
               <CurrencyInput
-                value={String(watch("precioUltimaCompra") ?? "")}
+                value={String(precioUltimaCompra ?? "")}
                 onChange={(v) => setValue("precioUltimaCompra", v)}
               />
               <FieldError message={errors.precioUltimaCompra?.message} />

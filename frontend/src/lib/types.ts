@@ -119,6 +119,7 @@ export interface Insumo {
   unidadConsumoId: string;
   unidadConsumo: { id: string; nombre: string; simbolo: string } | null;
   factorConversion: number;
+  presentacion: number;
   stockMinimo: number;
   stockActual: number;
   precioUltimaCompra: number;
@@ -136,6 +137,7 @@ export interface CreateInsumoCommand {
   unidadCompraId: string;
   unidadConsumoId: string;
   factorConversion: number;
+  presentacion: number;
   stockMinimo: number;
   precioUltimaCompra?: number | null;
   proveedorPrincipalId: string | null;
@@ -598,6 +600,7 @@ export interface StockAlert {
   codigoSku: string;
   stockActual: number;
   stockMinimo: number;
+  presentacion: number;
   unidadConsumoSimbolo: string | null;
   proveedorPrincipalNombreRazonSocial: string | null;
   proveedorPrincipalTelefono: string | null;

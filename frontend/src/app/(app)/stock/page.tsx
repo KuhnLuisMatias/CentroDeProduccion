@@ -232,6 +232,12 @@ export default function StockPage() {
 
   const alertColumns: ColumnDef<StockAlert, unknown>[] = [
     { accessorKey: "nombre", header: "Insumo" },
+    {
+      id: "presentacion",
+      header: "Presentación",
+      cell: ({ row }) =>
+        `${row.original.presentacion} ${row.original.unidadConsumoSimbolo ?? ""}`.trim(),
+    },
     { accessorKey: "codigoSku", header: "SKU" },
     {
       id: "stockActual",

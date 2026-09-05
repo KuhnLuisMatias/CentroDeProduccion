@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm, Controller, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Plus, RefreshCw, Search, Trash2 } from "lucide-react";
+import { Plus, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient, ApiError, fetchAllPages } from "@/lib/api";
 import { MONEY } from "@/lib/utils";
@@ -22,9 +22,9 @@ import { ESTADO_ORDEN_COMPRA_LABELS } from "@/lib/types";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
+import LineasInsumosEditor from "@/components/shared/LineasInsumosEditor";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CurrencyInput } from "@/components/ui/currency-input";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -92,83 +92,6 @@ function estadoBadgeClass(estado: EstadoOrdenCompra) {
   if (estado === 6)
     return "border-red-600/30 bg-red-500/10 text-red-700 dark:text-red-400";
   return undefined;
-}
-
-// Type-ahead insumo search (input + filtered dropdown, NOT a Radix Select): typing
-// filters by nombre/SKU; selecting fills the item row. Mirrors the receta search
-// pattern used in produccion.
-function InsumoTypeahead({
-  insumos,
-  value,
-  onChange,
-}: {
-  insumos: Insumo[];
-  value: string;
-  onChange: (insumoId: string) => void;
-}) {
-  const [query, setQuery] = useState("");
-  const [open, setOpen] = useState(false);
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return insumos;
-    return insumos.filter(
-      (i) => i.nombre.toLowerCase().includes(q) || i.codigoSku.toLowerCase().includes(q),
-    );
-  }, [insumos, query]);
-
-  const selected = insumos.find((i) => i.id === value) ?? null;
-
-  return (
-    <div className="relative">
-      <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-      <Input
-        className="pl-8"
-        placeholder="Buscar insumo por nombre o SKU…"
-        value={open ? query : (selected?.nombre ?? "")}
-        onFocus={() => {
-          setOpen(true);
-          setQuery("");
-        }}
-        onChange={(e) => {
-          setOpen(true);
-          setQuery(e.target.value);
-        }}
-        onBlur={() => setOpen(false)}
-        autoComplete="off"
-        aria-label="Buscar insumo"
-      />
-      {open && (
-        <div className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-md border border-border bg-popover shadow-md">
-          {filtered.length === 0 ? (
-            <p className="px-3 py-4 text-center text-sm text-muted-foreground">Sin resultados.</p>
-          ) : (
-            filtered.map((i) => (
-              <button
-                key={i.id}
-                type="button"
-                onMouseDown={(e) => {
-                  // preventDefault so the input's onBlur does not close the list first.
-                  e.preventDefault();
-                  onChange(i.id);
-                  setOpen(false);
-                  setQuery("");
-                }}
-                className={`flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-muted/60 ${
-                  i.id === value ? "bg-accent text-accent-foreground" : ""
-                }`}
-              >
-                <span className="truncate">{i.nombre}</span>
-                <span className="shrink-0 text-xs text-muted-foreground">
-                  {i.unidadCompra?.simbolo ?? ""}
-                </span>
-              </button>
-            ))
-          )}
-        </div>
-      )}
-    </div>
-  );
 }
 
 export default function ComprasPage() {
@@ -400,18 +323,12 @@ export default function ComprasPage() {
 
   const {
     register,
-    watch,
     setValue,
     control,
     formState: { errors, isSubmitting },
   } = form;
 
   const watchedItems = useWatch({ control, name: "items" });
-  const formTotal = (watchedItems ?? []).reduce((sum, it) => {
-    const cant = parseFloat(String(it?.cantidadPedida)) || 0;
-    const precio = parseFloat(String(it?.precioUnitario)) || 0;
-    return sum + cant * precio;
-  }, 0);
 
   return (
     <div>
@@ -505,7 +422,7 @@ export default function ComprasPage() {
       />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
           <DialogHeader>
             <DialogTitle>{editing ? `Editar orden N° ${editing.numero}` : "Nueva orden de compra"}</DialogTitle>
             <DialogDescription>
@@ -539,83 +456,38 @@ export default function ComprasPage() {
               <FieldError message={errors.proveedorId?.message} />
             </div>
 
+            <div className="flex flex-col gap-2 sm:col-span-2">
+              <LineasInsumosEditor
+                insumos={insumos}
+                lines={fields.map((field, idx) => ({
+                  key: field.id,
+                  insumoId: String(watchedItems?.[idx]?.insumoId ?? ""),
+                  cantidad: String(watchedItems?.[idx]?.cantidadPedida ?? ""),
+                  precioUnitario: String(watchedItems?.[idx]?.precioUnitario ?? ""),
+                }))}
+                onInsumoChange={(index, id) =>
+                  setValue(`items.${index}.insumoId`, id, { shouldValidate: true })
+                }
+                onCantidadChange={(index, v) => setValue(`items.${index}.cantidadPedida`, v)}
+                onPrecioChange={(index, v) => setValue(`items.${index}.precioUnitario`, v)}
+                onAdd={() =>
+                  append({ id: "", insumoId: "", cantidadPedida: "1", precioUnitario: "" })
+                }
+                onRemove={(index) => remove(index)}
+                fieldErrors={fields.map((_, idx) => ({
+                  insumoId: errors.items?.[idx]?.insumoId?.message,
+                  cantidad: errors.items?.[idx]?.cantidadPedida?.message,
+                  precioUnitario: errors.items?.[idx]?.precioUnitario?.message,
+                }))}
+                rootError={errors.items?.root?.message ?? errors.items?.message}
+                addLabel="Agregar ítem"
+              />
+            </div>
+
             <div className="flex flex-col gap-1.5 sm:col-span-2">
               <Label htmlFor="compra-observaciones">Observaciones</Label>
               <Input id="compra-observaciones" {...register("observaciones")} />
               <FieldError message={errors.observaciones?.message} />
-            </div>
-
-            <div className="flex flex-col gap-2 sm:col-span-2">
-              <Label>Ítems</Label>
-              {fields.map((field, index) => (
-                <div key={field.id} className="grid grid-cols-[1.6fr_0.8fr_0.9fr_auto] items-end gap-2">
-                  <div className="flex flex-col gap-1">
-                    <Label className="text-xs text-muted-foreground">Insumo</Label>
-                    <Controller
-                      control={control}
-                      name={`items.${index}.insumoId`}
-                      render={({ field: f }) => (
-                        <InsumoTypeahead
-                          insumos={insumos}
-                          value={f.value ?? ""}
-                          onChange={f.onChange}
-                        />
-                      )}
-                    />
-                    <FieldError message={errors.items?.[index]?.insumoId?.message} />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <Label className="text-xs text-muted-foreground">Cantidad</Label>
-                    <div className="flex items-center gap-1.5">
-                      <Input
-                        type="number"
-                        step="any"
-                        min="0"
-                        {...register(`items.${index}.cantidadPedida`)}
-                      />
-                      <span className="shrink-0 text-sm text-muted-foreground">
-                        {insumos.find(
-                          (i) => i.id === watch(`items.${index}.insumoId`),
-                        )?.unidadCompra?.simbolo ?? ""}
-                      </span>
-                    </div>
-                    <FieldError message={errors.items?.[index]?.cantidadPedida?.message} />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <Label className="text-xs text-muted-foreground">Precio unit.</Label>
-                    <CurrencyInput
-                      value={String(watch(`items.${index}.precioUnitario`) ?? "")}
-                      onChange={(v) => setValue(`items.${index}.precioUnitario`, v)}
-                    />
-                    <FieldError message={errors.items?.[index]?.precioUnitario?.message} />
-                  </div>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    className="mb-0.5"
-                    onClick={() => remove(index)}
-                    aria-label="Eliminar ítem"
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </div>
-              ))}
-              <div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    append({ id: "", insumoId: "", cantidadPedida: "1", precioUnitario: "" })
-                  }
-                >
-                  <Plus className="size-4" />
-                  Agregar ítem
-                </Button>
-              </div>
-              <FieldError message={errors.items?.root?.message ?? errors.items?.message} />
-              <p className="text-sm font-medium">Total: {MONEY.format(formTotal)}</p>
             </div>
 
             <DialogFooter className="sm:col-span-2">
@@ -668,9 +540,9 @@ export default function ComprasPage() {
 
               <Table>
                 <TableHeader>
-                  <TableRow>
+                  <TableRow className="hover:bg-transparent">
                     <TableHead>Insumo</TableHead>
-                    <TableHead className="text-right">Pedido</TableHead>
+                    <TableHead className="text-right">Cantidad</TableHead>
                     <TableHead className="text-left">Precio unit.</TableHead>
                     <TableHead className="text-left">Subtotal</TableHead>
                   </TableRow>
@@ -686,7 +558,7 @@ export default function ComprasPage() {
                   ))}
                 </TableBody>
               </Table>
-              <p className="text-right text-sm font-medium">Total: {MONEY.format(detail.total)}</p>
+              <p className="text-right text-base font-semibold">Total: {MONEY.format(detail.total)}</p>
             </div>
           ) : null}
 

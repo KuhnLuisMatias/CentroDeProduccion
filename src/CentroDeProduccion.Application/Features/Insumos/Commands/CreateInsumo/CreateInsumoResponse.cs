@@ -11,6 +11,7 @@ public sealed record CreateInsumoResponse(
     Guid UnidadConsumoId,
     string UnidadConsumoSimbolo,
     decimal FactorConversion,
+    decimal Presentacion,
     decimal StockMinimo,
     decimal StockActual,
     decimal PrecioUltimaCompra,

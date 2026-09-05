@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm, Controller, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Plus, RefreshCw, Trash2 } from "lucide-react";
+import { Plus, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient, ApiError, fetchAllPages } from "@/lib/api";
 import { MONEY } from "@/lib/utils";
@@ -17,9 +17,8 @@ import type {
 } from "@/lib/types";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
-import { Badge } from "@/components/ui/badge";
+import LineasInsumosEditor from "@/components/shared/LineasInsumosEditor";
 import { Button } from "@/components/ui/button";
-import { CurrencyInput } from "@/components/ui/currency-input";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -234,20 +233,12 @@ export default function PagosPage() {
 
   const {
     register,
-    watch,
     setValue,
     control,
     formState: { errors, isSubmitting },
   } = form;
 
   const watchedInsumos = useWatch({ control, name: "insumos" }) ?? [];
-  const sumInsumos = watchedInsumos.reduce(
-    (s, i) =>
-      s + (parseFloat(String(i?.cantidad)) || 0) * (parseFloat(String(i?.precioUnitario)) || 0),
-    0,
-  );
-
-  const insumoById = useMemo(() => new Map(insumos.map((i) => [i.id, i])), [insumos]);
 
   return (
     <div>
@@ -347,116 +338,35 @@ export default function PagosPage() {
               <FieldError message={errors.fechaPago?.message} />
             </div>
 
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-2 sm:col-span-2">
+              <LineasInsumosEditor
+                insumos={insumos}
+                lines={insumosArray.fields.map((field, idx) => ({
+                  key: field.id,
+                  insumoId: String(watchedInsumos[idx]?.insumoId ?? ""),
+                  cantidad: String(watchedInsumos[idx]?.cantidad ?? ""),
+                  precioUnitario: String(watchedInsumos[idx]?.precioUnitario ?? ""),
+                }))}
+                onInsumoChange={(index, id) =>
+                  setValue(`insumos.${index}.insumoId`, id, { shouldValidate: true })
+                }
+                onCantidadChange={(index, v) => setValue(`insumos.${index}.cantidad`, v)}
+                onPrecioChange={(index, v) => setValue(`insumos.${index}.precioUnitario`, v)}
+                onAdd={() => insumosArray.append(emptyInsumo())}
+                onRemove={(index) => insumosArray.remove(index)}
+                fieldErrors={insumosArray.fields.map((_, idx) => ({
+                  insumoId: errors.insumos?.[idx]?.insumoId?.message,
+                  cantidad: errors.insumos?.[idx]?.cantidad?.message,
+                  precioUnitario: errors.insumos?.[idx]?.precioUnitario?.message,
+                }))}
+                rootError={errors.insumos?.root?.message ?? errors.insumos?.message}
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5 sm:col-span-2">
               <Label htmlFor="factura-observaciones">Observaciones</Label>
               <Input id="factura-observaciones" {...register("observaciones")} />
               <FieldError message={errors.observaciones?.message} />
-            </div>
-
-            <div className="flex flex-col gap-2 sm:col-span-2">
-              <Label>Insumos</Label>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[40%]">Insumo</TableHead>
-                    <TableHead>Cantidad</TableHead>
-                    <TableHead>Precio unitario</TableHead>
-                    <TableHead className="text-right">Subtotal</TableHead>
-                    <TableHead className="w-10" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {insumosArray.fields.map((field, index) => {
-                    const insumo = insumoById.get(
-                      String(watchedInsumos[index]?.insumoId ?? ""),
-                    );
-                    const subtotal =
-                      (parseFloat(String(watchedInsumos[index]?.cantidad)) || 0) *
-                      (parseFloat(String(watchedInsumos[index]?.precioUnitario)) || 0);
-                    return (
-                      <TableRow key={field.id}>
-                        <TableCell>
-                          <Controller
-                            control={control}
-                            name={`insumos.${index}.insumoId`}
-                            render={({ field: f }) => (
-                              <Select value={f.value || undefined} onValueChange={f.onChange}>
-                                <SelectTrigger className="w-full">
-                                  <SelectValue placeholder="Seleccionar insumo…" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {insumos.map((i) => (
-                                    <SelectItem key={i.id} value={i.id}>
-                                      {i.nombre} ({i.unidadCompra?.simbolo ?? "u"})
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            )}
-                          />
-                          <FieldError
-                            message={errors.insumos?.[index]?.insumoId?.message}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Input
-                            type="number"
-                            step="any"
-                            min="0"
-                            className="w-28"
-                            placeholder={insumo ? `en ${insumo.unidadCompra?.simbolo ?? "compra"}` : "Cantidad"}
-                            {...register(`insumos.${index}.cantidad`)}
-                          />
-                          <FieldError
-                            message={errors.insumos?.[index]?.cantidad?.message}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <CurrencyInput
-                            value={String(watch(`insumos.${index}.precioUnitario`) ?? "")}
-                            onChange={(v) =>
-                              setValue(`insumos.${index}.precioUnitario`, v)
-                            }
-                          />
-                          <FieldError
-                            message={errors.insumos?.[index]?.precioUnitario?.message}
-                          />
-                        </TableCell>
-                        <TableCell className="text-right align-top">
-                          {MONEY.format(subtotal)}
-                        </TableCell>
-                        <TableCell className="align-top">
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="icon"
-                            onClick={() => insumosArray.remove(index)}
-                            aria-label="Eliminar insumo"
-                          >
-                            <Trash2 className="size-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-              <div className="flex items-center justify-between rounded-md border bg-muted/50 px-3 py-2">
-                <span className="text-sm font-medium">Total de la factura</span>
-                <span className="text-sm font-semibold">{MONEY.format(sumInsumos)}</span>
-              </div>
-              <div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => insumosArray.append(emptyInsumo())}
-                >
-                  <Plus className="size-4" />
-                  Agregar insumo
-                </Button>
-              </div>
-              <FieldError message={errors.insumos?.root?.message ?? errors.insumos?.message} />
             </div>
 
             <DialogFooter className="sm:col-span-2">
@@ -490,9 +400,6 @@ export default function PagosPage() {
                   <span className="font-medium">Fecha:</span>{" "}
                   {new Date(detail.fechaPago).toLocaleDateString("es-AR")}
                 </div>
-                <div>
-                  <span className="font-medium">Monto total:</span> {MONEY.format(detail.montoTotal)}
-                </div>
                 {detail.observaciones && (
                   <div className="sm:col-span-2">
                     <span className="font-medium">Observaciones:</span> {detail.observaciones}
@@ -501,12 +408,9 @@ export default function PagosPage() {
               </div>
 
               <div>
-                <Badge variant="outline" className="mb-2">
-                  Insumos
-                </Badge>
                 <Table>
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="hover:bg-transparent">
                       <TableHead>Insumo</TableHead>
                       <TableHead>Cantidad</TableHead>
                       <TableHead className="text-left">Precio unitario</TableHead>
@@ -526,6 +430,9 @@ export default function PagosPage() {
                     ))}
                   </TableBody>
                 </Table>
+                <p className="mt-2 text-right text-base font-semibold">
+                  Total: {MONEY.format(detail.montoTotal)}
+                </p>
               </div>
             </div>
           ) : null}

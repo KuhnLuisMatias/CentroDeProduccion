@@ -51,7 +51,8 @@ public class UpdateInsumoCommandHandler
         insumo.CategoriaId = command.CategoriaId;
         insumo.UnidadCompraId = command.UnidadCompraId;
         insumo.UnidadConsumoId = command.UnidadConsumoId;
-        insumo.FactorConversion = command.FactorConversion;
+        insumo.FactorConversion = command.Presentacion;
+        insumo.Presentacion = command.Presentacion;
         insumo.StockMinimo = command.StockMinimo;
         insumo.ProveedorPrincipalId = command.ProveedorPrincipalId;
         insumo.Observaciones = command.Observaciones;

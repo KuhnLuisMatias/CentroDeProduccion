@@ -85,6 +85,7 @@ public class AppDbContext : DbContext
             e.Property(i => i.StockActual).HasPrecision(18, 4);
             e.Property(i => i.PrecioUltimaCompra).HasPrecision(18, 4);
             e.Property(i => i.FactorConversion).HasPrecision(18, 6);
+            e.Property(i => i.Presentacion).HasPrecision(18, 4);
             e.Property(i => i.RowVersion).IsRowVersion();
             e.HasOne(i => i.Categoria)
              .WithMany(c => c.Insumos)
