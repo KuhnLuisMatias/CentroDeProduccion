@@ -5,7 +5,7 @@ import { useForm, Controller, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Plus, RefreshCw } from "lucide-react";
+import { Plus, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient, ApiError, fetchAllPages } from "@/lib/api";
 import { MONEY } from "@/lib/utils";
@@ -13,11 +13,16 @@ import type {
   PagoProveedor,
   Proveedor,
   Insumo,
+  MetodoPago,
+  EstadoPago,
   CreatePagoProveedorCommand,
+  RegistrarPagoProveedorCommand,
 } from "@/lib/types";
+import { METODO_PAGO_LABELS } from "@/lib/types";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
 import LineasInsumosEditor from "@/components/shared/LineasInsumosEditor";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -73,6 +78,50 @@ const emptyInsumo = () => ({
   precioUnitario: "",
 });
 
+const pagoSchema = z.object({
+  fecha: z.string().min(1, "La fecha del pago es obligatoria."),
+  observaciones: z.string().max(500, "Máximo 500 caracteres."),
+  medios: z
+    .array(
+      z.object({
+        id: z.string(),
+        tipo: z.coerce
+          .number({ message: "Seleccioná un medio de pago." })
+          .refine((v) => [1, 2, 3, 4, 5].includes(v), "Seleccioná un medio de pago."),
+        monto: z.coerce
+          .number({ message: "Ingresá un número válido." })
+          .positive("Debe ser mayor a 0."),
+        referencia: z.string().max(100, "Máximo 100 caracteres."),
+      }),
+    )
+    .min(1, "Agregá al menos un medio de pago."),
+});
+
+type PagoFormInput = z.input<typeof pagoSchema>;
+type PagoFormValues = z.output<typeof pagoSchema>;
+
+const emptyMedio = () => ({
+  id: crypto.randomUUID(),
+  tipo: "",
+  monto: "",
+  referencia: "",
+});
+
+const METODO_PAGO_OPTIONS: { value: string; label: string }[] = (
+  [1, 2, 3, 4, 5] as MetodoPago[]
+).map((v) => ({ value: String(v), label: METODO_PAGO_LABELS[v] }));
+
+function estadoPagoBadgeClass(estado: EstadoPago) {
+  switch (estado) {
+    case "Pagada":
+      return "border-emerald-600/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400";
+    case "Pendiente":
+      return "border-muted-foreground/30 bg-muted/50 text-muted-foreground";
+    default:
+      return "";
+  }
+}
+
 interface FieldErrorProps {
   message?: string;
 }
@@ -99,6 +148,64 @@ export default function PagosPage() {
 
   const [detail, setDetail] = useState<PagoProveedor | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+
+  const [pagoTarget, setPagoTarget] = useState<PagoProveedor | null>(null);
+  const [dialogPagoOpen, setDialogPagoOpen] = useState(false);
+
+  const pagoForm = useForm<PagoFormInput, unknown, PagoFormValues>({
+    resolver: zodResolver(pagoSchema),
+    defaultValues: {
+      fecha: new Date().toISOString().slice(0, 10),
+      observaciones: "",
+      medios: [],
+    },
+  });
+  const mediosArray = useFieldArray({ control: pagoForm.control, name: "medios" });
+
+  const openPago = (row: PagoProveedor) => {
+    setPagoTarget(row);
+    pagoForm.reset({
+      fecha: new Date().toISOString().slice(0, 10),
+      observaciones: "",
+      medios: [emptyMedio()],
+    });
+    setDialogPagoOpen(true);
+  };
+
+  const watchedMedios = useWatch({ control: pagoForm.control, name: "medios" }) ?? [];
+  const mediosTotal = watchedMedios.reduce(
+    (s, m) => s + (Number(m?.monto) || 0),
+    0,
+  );
+
+  const handlePagoSave = pagoForm.handleSubmit(async (values) => {
+    if (!pagoTarget) return;
+    const payload: RegistrarPagoProveedorCommand = {
+      proveedorId: pagoTarget.proveedorId,
+      fecha: values.fecha,
+      facturaId: pagoTarget.id,
+      observaciones: values.observaciones.trim() || null,
+      medios: values.medios.map((m) => ({
+        tipo: m.tipo as MetodoPago,
+        monto: m.monto,
+        referencia: m.referencia.trim() || null,
+      })),
+    };
+    try {
+      await apiClient<unknown>(`/proveedores/${pagoTarget.proveedorId}/pagos`, {
+        method: "POST",
+        body: payload,
+      });
+      toast.success("Pago registrado.");
+      setDialogPagoOpen(false);
+      setPagoTarget(null);
+      await load();
+    } catch (err) {
+      toast.error(
+        err instanceof ApiError ? err.message : "No se pudo registrar el pago.",
+      );
+    }
+  });
 
   const buildQuery = useCallback(() => {
     const params = new URLSearchParams();
@@ -229,6 +336,20 @@ export default function PagosPage() {
       header: "Monto",
       cell: ({ getValue }) => MONEY.format(getValue<number>()),
     },
+    {
+      accessorKey: "montoPagado",
+      header: "Pagado",
+      cell: ({ getValue }) => MONEY.format(getValue<number>()),
+    },
+    {
+      accessorKey: "estadoPago",
+      header: "Estado pago",
+      cell: ({ row }) => (
+        <Badge variant="outline" className={estadoPagoBadgeClass(row.original.estadoPago)}>
+          {row.original.estadoPago}
+        </Badge>
+      ),
+    },
   ];
 
   const {
@@ -292,11 +413,149 @@ export default function PagosPage() {
         error={error}
         emptyMessage="No hay facturas de compra."
         actions={(row) => (
-          <Button variant="outline" size="sm" onClick={() => void openDetail(row)}>
-            Ver
-          </Button>
+          <>
+            <Button variant="outline" size="sm" onClick={() => void openDetail(row)}>
+              Ver
+            </Button>
+            {row.estadoPago !== "Pagada" && (
+              <Button variant="outline" size="sm" onClick={() => openPago(row)}>
+                Pagar
+              </Button>
+            )}
+          </>
         )}
       />
+
+      <Dialog open={dialogPagoOpen} onOpenChange={setDialogPagoOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Registrar pago — Factura N° {pagoTarget?.numero}</DialogTitle>
+            <DialogDescription>
+              El pago se registra en cuenta corriente. Permite pagos parciales; no puede
+              exceder el pendiente.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handlePagoSave} className="flex flex-col gap-3" noValidate>
+            <div className="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="pago-fecha">Fecha del pago</Label>
+                <Input id="pago-fecha" type="date" {...pagoForm.register("fecha")} />
+                <FieldError message={pagoForm.formState.errors.fecha?.message} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label>Pendiente</Label>
+                <Input
+                  readOnly
+                  value={MONEY.format(pagoTarget?.montoPendiente ?? 0)}
+                  className="bg-muted"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label>Medios de pago</Label>
+              {mediosArray.fields.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  {mediosArray.fields.map((field, idx) => {
+                    const medioError = pagoForm.formState.errors.medios?.[idx];
+                    return (
+                      <div key={field.id} className="grid grid-cols-[130px_1fr_1fr_36px] items-start gap-2">
+                        <div className="flex flex-col gap-1">
+                          <Controller
+                            control={pagoForm.control}
+                            name={`medios.${idx}.tipo`}
+                            render={({ field: f }) => (
+                              <Select
+                                value={f.value ? String(f.value) : undefined}
+                                onValueChange={(v) => f.onChange(Number(v))}
+                              >
+                                <SelectTrigger aria-label="Medio de pago">
+                                  <SelectValue placeholder="Medio…" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {METODO_PAGO_OPTIONS.map((o) => (
+                                    <SelectItem key={o.value} value={o.value}>
+                                      {o.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            )}
+                          />
+                          <FieldError message={medioError?.tipo?.message} />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <Input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            placeholder="Monto"
+                            {...pagoForm.register(`medios.${idx}.monto`)}
+                          />
+                          <FieldError message={medioError?.monto?.message} />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <Input
+                            placeholder="Referencia (opcional)"
+                            {...pagoForm.register(`medios.${idx}.referencia`)}
+                          />
+                          <FieldError message={medioError?.referencia?.message} />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => mediosArray.remove(idx)}
+                          disabled={mediosArray.fields.length <= 1}
+                          aria-label="Quitar medio de pago"
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              <FieldError
+                message={
+                  pagoForm.formState.errors.medios?.root?.message ??
+                  pagoForm.formState.errors.medios?.message
+                }
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-fit"
+                onClick={() => mediosArray.append(emptyMedio())}
+              >
+                <Plus className="size-4" />
+                Agregar medio
+              </Button>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="pago-observaciones">Observaciones</Label>
+              <Input id="pago-observaciones" {...pagoForm.register("observaciones")} />
+              <FieldError message={pagoForm.formState.errors.observaciones?.message} />
+            </div>
+
+            <p className="text-sm font-medium">
+              Total del pago: {MONEY.format(mediosTotal)}
+            </p>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setDialogPagoOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={pagoForm.formState.isSubmitting}>
+                {pagoForm.formState.isSubmitting ? "Registrando…" : "Registrar pago"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
@@ -399,6 +658,14 @@ export default function PagosPage() {
                 <div>
                   <span className="font-medium">Fecha:</span>{" "}
                   {new Date(detail.fechaPago).toLocaleDateString("es-AR")}
+                </div>
+                <div>
+                  <span className="font-medium">Pagado:</span>{" "}
+                  {MONEY.format(detail.montoPagado)}
+                </div>
+                <div>
+                  <span className="font-medium">Pendiente:</span>{" "}
+                  {MONEY.format(detail.montoPendiente)}
                 </div>
                 {detail.observaciones && (
                   <div className="sm:col-span-2">

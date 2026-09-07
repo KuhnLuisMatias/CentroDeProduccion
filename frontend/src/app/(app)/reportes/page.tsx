@@ -232,6 +232,22 @@ const GROUPS: GroupDef[] = [
         ],
         total: { label: "Saldo final", field: "saldo", kind: "currency", envelope: "saldoFinal" },
       },
+      {
+        id: "compras-pagos-proveedores",
+        label: "Pagos a proveedores",
+        title: "Pagos a proveedores",
+        endpoint: "/reports/compras/pagos-proveedores",
+        filters: { from: true, to: true, proveedor: true },
+        columns: [
+          { key: "fecha", header: "Fecha", kind: "dateOnly" },
+          { key: "proveedorNombre", header: "Proveedor" },
+          { key: "monto", header: "Monto", kind: "currency" },
+          { key: "medios", header: "Medios de pago" },
+          { key: "referencia", header: "Referencia" },
+          { key: "observaciones", header: "Observaciones" },
+        ],
+        total: { label: "Total pagado", field: "monto", kind: "currency" },
+      },
     ],
   },
   {

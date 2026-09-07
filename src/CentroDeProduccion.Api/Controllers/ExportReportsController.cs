@@ -31,6 +31,7 @@ public class ExportReportsController : ControllerBase
     private readonly GetEvolucionPreciosReportQueryHandler _evolucionPrecios;
     private readonly GetCtaCteProveedorReportQueryHandler _ctaCteProveedor;
     private readonly GetResumenProveedoresReportQueryHandler _resumenProveedores;
+    private readonly GetPagosProveedoresReportQueryHandler _pagosProveedores;
     private readonly GetVentasPorBarReportQueryHandler _ventasPorBar;
     private readonly GetVentasPeriodoReportQueryHandler _ventasPeriodo;
     private readonly GetDevolucionesReportQueryHandler _devoluciones;
@@ -60,6 +61,7 @@ public class ExportReportsController : ControllerBase
         GetEvolucionPreciosReportQueryHandler evolucionPrecios,
         GetCtaCteProveedorReportQueryHandler ctaCteProveedor,
         GetResumenProveedoresReportQueryHandler resumenProveedores,
+        GetPagosProveedoresReportQueryHandler pagosProveedores,
         GetVentasPorBarReportQueryHandler ventasPorBar,
         GetVentasPeriodoReportQueryHandler ventasPeriodo,
         GetDevolucionesReportQueryHandler devoluciones,
@@ -87,6 +89,7 @@ public class ExportReportsController : ControllerBase
         _evolucionPrecios = evolucionPrecios;
         _ctaCteProveedor = ctaCteProveedor;
         _resumenProveedores = resumenProveedores;
+        _pagosProveedores = pagosProveedores;
         _ventasPorBar = ventasPorBar;
         _ventasPeriodo = ventasPeriodo;
         _devoluciones = devoluciones;
@@ -178,7 +181,7 @@ public class ExportReportsController : ControllerBase
         "produccion-periodo" or "produccion-producto" => AuthorizationPolicies.CanViewProduccion,
         "stock-insumos-valorado" or "stock-insumos-bajo-minimo" or "stock-insumos-movimientos"
             or "stock-pt-valorado" or "stock-pt-proximos-vencer" or "stock-pt-movimientos" => AuthorizationPolicies.CanViewStock,
-        "compras-proveedor" or "compras-precios" or "compras-proveedores-resumen" => AuthorizationPolicies.CanViewCompras,
+        "compras-proveedor" or "compras-precios" or "compras-proveedores-resumen" or "compras-pagos-proveedores" => AuthorizationPolicies.CanViewCompras,
         "compras-cta-cte-proveedor" => AuthorizationPolicies.CanViewCtaCteProveedor,
         "ventas-bar" or "ventas-periodo" or "ventas-devoluciones" => AuthorizationPolicies.CanViewVentas,
         "ventas-cta-cte-bar" => AuthorizationPolicies.CanViewCtaCteBar,
@@ -220,6 +223,8 @@ public class ExportReportsController : ControllerBase
                 return ToReportTable(await _evolucionPrecios.HandleAsync(new GetEvolucionPreciosReportQuery(insumoId, from, to), ct), d => d.ToReportTable());
             case "compras-proveedores-resumen":
                 return ToReportTable(await _resumenProveedores.HandleAsync(new GetResumenProveedoresReportQuery(from, to), ct), d => d.ToReportTable());
+            case "compras-pagos-proveedores":
+                return ToReportTable(await _pagosProveedores.HandleAsync(new GetPagosProveedoresReportQuery(proveedorId, from, to), ct), d => d.ToReportTable());
             case "compras-cta-cte-proveedor":
                 return ToReportTable(await _ctaCteProveedor.HandleAsync(new GetCtaCteProveedorReportQuery(proveedorId ?? Guid.Empty, from, to), ct), d => d.ToReportTable());
             case "ventas-bar":

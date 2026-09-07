@@ -20,4 +20,7 @@ public sealed record PagoProveedorResponse(
     decimal MontoTotal,
     string? Observaciones,
     IReadOnlyList<PagoMetodoResponse> Metodos,
-    IReadOnlyList<PagoInsumoResponse> Insumos);
+    IReadOnlyList<PagoInsumoResponse> Insumos,
+    decimal MontoPagado = 0m,
+    decimal MontoPendiente = 0m,
+    string EstadoPago = "Pendiente");

@@ -27,6 +27,7 @@ public class ReportsController : ControllerBase
     private readonly GetEvolucionPreciosReportQueryHandler _getEvolucionPreciosReportHandler;
     private readonly GetCtaCteProveedorReportQueryHandler _getCtaCteProveedorReportHandler;
     private readonly GetResumenProveedoresReportQueryHandler _getResumenProveedoresReportHandler;
+    private readonly GetPagosProveedoresReportQueryHandler _getPagosProveedoresReportHandler;
     private readonly GetVentasPorBarReportQueryHandler _getVentasPorBarReportHandler;
     private readonly GetVentasPeriodoReportQueryHandler _getVentasPeriodoReportHandler;
     private readonly GetDevolucionesReportQueryHandler _getDevolucionesReportHandler;
@@ -51,6 +52,7 @@ public class ReportsController : ControllerBase
         GetEvolucionPreciosReportQueryHandler getEvolucionPreciosReportHandler,
         GetCtaCteProveedorReportQueryHandler getCtaCteProveedorReportHandler,
         GetResumenProveedoresReportQueryHandler getResumenProveedoresReportHandler,
+        GetPagosProveedoresReportQueryHandler getPagosProveedoresReportHandler,
         GetVentasPorBarReportQueryHandler getVentasPorBarReportHandler,
         GetVentasPeriodoReportQueryHandler getVentasPeriodoReportHandler,
         GetDevolucionesReportQueryHandler getDevolucionesReportHandler,
@@ -74,6 +76,7 @@ public class ReportsController : ControllerBase
         _getEvolucionPreciosReportHandler = getEvolucionPreciosReportHandler;
         _getCtaCteProveedorReportHandler = getCtaCteProveedorReportHandler;
         _getResumenProveedoresReportHandler = getResumenProveedoresReportHandler;
+        _getPagosProveedoresReportHandler = getPagosProveedoresReportHandler;
         _getVentasPorBarReportHandler = getVentasPorBarReportHandler;
         _getVentasPeriodoReportHandler = getVentasPeriodoReportHandler;
         _getDevolucionesReportHandler = getDevolucionesReportHandler;
@@ -225,6 +228,20 @@ public class ReportsController : ControllerBase
     {
         var result = await _getResumenProveedoresReportHandler.HandleAsync(
             new GetResumenProveedoresReportQuery(from, to), cancellationToken);
+        if (result.IsSuccess) Response.SetNoCache();
+        return result.ToActionResult(this);
+    }
+
+    [HttpGet("compras/pagos-proveedores")]
+    [Authorize(Policy = AuthorizationPolicies.CanViewCompras)]
+    public async Task<IActionResult> GetPagosProveedores(
+        [FromQuery] Guid? proveedorId,
+        [FromQuery] DateTime? from,
+        [FromQuery] DateTime? to,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _getPagosProveedoresReportHandler.HandleAsync(
+            new GetPagosProveedoresReportQuery(proveedorId, from, to), cancellationToken);
         if (result.IsSuccess) Response.SetNoCache();
         return result.ToActionResult(this);
     }

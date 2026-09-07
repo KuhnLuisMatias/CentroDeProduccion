@@ -27,6 +27,7 @@ public class AppDbContext : DbContext
     public DbSet<OrdenCompraItem> OrdenCompraItems => Set<OrdenCompraItem>();
     public DbSet<CuentaCorrienteProveedor> CuentasCorrientesProveedores => Set<CuentaCorrienteProveedor>();
     public DbSet<PagoProveedor> PagosProveedor => Set<PagoProveedor>();
+    public DbSet<PagoAProveedor> PagosAProveedores => Set<PagoAProveedor>();
 
     public DbSet<Bar> Bares => Set<Bar>();
     public DbSet<Remito> Remitos => Set<Remito>();
@@ -378,6 +379,28 @@ public class AppDbContext : DbContext
                  .WithMany()
                  .HasForeignKey(pi => pi.InsumoId)
                  .OnDelete(DeleteBehavior.Restrict);
+            });
+        });
+
+        // PagoAProveedor (pagos a proveedores: settle factura debt or pay on account, append-only)
+        modelBuilder.Entity<PagoAProveedor>(e =>
+        {
+            e.Property(pa => pa.MontoTotal).HasPrecision(18, 4);
+            e.HasOne(pa => pa.Proveedor)
+             .WithMany()
+             .HasForeignKey(pa => pa.ProveedorId)
+             .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(pa => pa.Factura)
+             .WithMany()
+             .HasForeignKey(pa => pa.FacturaId)
+             .OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(pa => pa.ProveedorId);
+            e.OwnsMany(pa => pa.Medios, metodo =>
+            {
+                metodo.ToTable("PagosAProveedoresMetodos");
+                metodo.Property(m => m.Tipo).HasConversion<int>();
+                metodo.Property(m => m.Monto).HasPrecision(18, 4);
+                metodo.Property(m => m.Referencia).HasMaxLength(100);
             });
         });
 

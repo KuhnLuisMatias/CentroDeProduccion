@@ -721,6 +721,9 @@ export interface PagoInsumo {
   subtotal: number;
 }
 
+// Payment settlement state, derived from cuenta corriente (never stored).
+export type EstadoPago = "Pagada" | "Parcial" | "Pendiente";
+
 export interface PagoProveedor {
   id: string;
   numero: number;
@@ -731,6 +734,41 @@ export interface PagoProveedor {
   observaciones: string | null;
   metodos: PagoMetodo[];
   insumos: PagoInsumo[];
+  montoPagado: number;
+  montoPendiente: number;
+  estadoPago: EstadoPago;
+}
+
+// Pago a proveedor: settles factura debt or pays on account (ledger append).
+export interface PagoAProveedorMetodo {
+  tipo: MetodoPago;
+  monto: number;
+  referencia: string | null;
+}
+
+export interface PagoAProveedor {
+  id: string;
+  proveedorId: string;
+  proveedorNombre: string;
+  fecha: string;
+  montoTotal: number;
+  observaciones: string | null;
+  facturaId: string | null;
+  medios: PagoAProveedorMetodo[];
+}
+
+export interface RegistrarPagoMetodoCommand {
+  tipo: MetodoPago;
+  monto: number;
+  referencia: string | null;
+}
+
+export interface RegistrarPagoProveedorCommand {
+  proveedorId: string;
+  fecha: string;
+  facturaId: string | null;
+  observaciones: string | null;
+  medios: RegistrarPagoMetodoCommand[];
 }
 
 export interface PagoInsumoCommand {
