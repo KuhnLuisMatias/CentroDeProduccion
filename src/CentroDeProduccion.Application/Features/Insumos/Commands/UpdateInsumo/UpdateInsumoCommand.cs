@@ -13,4 +13,5 @@ public sealed record UpdateInsumoCommand(
     string? Observaciones,
     byte[] RowVersion,
     decimal Presentacion,
-    decimal? PrecioUltimaCompra = null);
+    decimal? PrecioUltimaCompra = null,
+    decimal? StockActual = null);

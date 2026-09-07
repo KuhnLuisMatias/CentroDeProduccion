@@ -48,7 +48,7 @@ public class CreateInsumoCommandHandler
             FactorConversion = command.Presentacion,
             Presentacion = command.Presentacion,
             StockMinimo = command.StockMinimo,
-            StockActual = 0,
+            StockActual = command.StockInicial,
             PrecioUltimaCompra = command.PrecioUltimaCompra ?? 0,
             ProveedorPrincipalId = command.ProveedorPrincipalId,
             Observaciones = command.Observaciones,

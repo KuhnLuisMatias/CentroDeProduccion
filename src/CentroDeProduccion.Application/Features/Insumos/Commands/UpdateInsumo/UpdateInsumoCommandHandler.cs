@@ -1,5 +1,9 @@
 using CentroDeProduccion.Application.Abstractions.Persistence;
+using CentroDeProduccion.Application.Abstractions.Security;
 using CentroDeProduccion.Application.Common;
+using CentroDeProduccion.Domain.Entities;
+using CentroDeProduccion.Domain.Enums;
+using CentroDeProduccion.Domain.Services;
 using FluentValidation;
 
 namespace CentroDeProduccion.Application.Features.Insumos.Commands.UpdateInsumo;
@@ -7,16 +11,22 @@ namespace CentroDeProduccion.Application.Features.Insumos.Commands.UpdateInsumo;
 public class UpdateInsumoCommandHandler
 {
     private readonly IInsumoRepository _insumoRepository;
+    private readonly IMovimientoStockRepository _movimientoStockRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICurrentUser _currentUser;
     private readonly IValidator<UpdateInsumoCommand> _validator;
 
     public UpdateInsumoCommandHandler(
         IInsumoRepository insumoRepository,
+        IMovimientoStockRepository movimientoStockRepository,
         IUnitOfWork unitOfWork,
+        ICurrentUser currentUser,
         IValidator<UpdateInsumoCommand> validator)
     {
         _insumoRepository = insumoRepository;
+        _movimientoStockRepository = movimientoStockRepository;
         _unitOfWork = unitOfWork;
+        _currentUser = currentUser;
         _validator = validator;
     }
 
@@ -60,6 +70,36 @@ public class UpdateInsumoCommandHandler
         if (command.PrecioUltimaCompra.HasValue)
         {
             insumo.PrecioUltimaCompra = command.PrecioUltimaCompra.Value;
+        }
+
+        // Ajuste de stock con historial: registra un movimiento por la diferencia.
+        // El stock resultante nunca puede quedar en negativo.
+        if (command.StockActual.HasValue && command.StockActual.Value != insumo.StockActual)
+        {
+            var diferencia = command.StockActual.Value - insumo.StockActual;
+            if (insumo.StockActual + diferencia < 0)
+            {
+                return Result.Failure(Error.Validation(
+                    "INSUFFICIENT_STOCK",
+                    $"Stock insuficiente de {insumo.Nombre}. Disponible: {insumo.StockActual}"));
+            }
+
+            insumo.StockActual += diferencia;
+
+            await _movimientoStockRepository.AddAsync(new MovimientoStock
+            {
+                Id = Guid.NewGuid(),
+                InsumoId = insumo.Id,
+                Tipo = diferencia > 0 ? TipoMovimientoStock.AjustePositivo : TipoMovimientoStock.AjusteNegativo,
+                Cantidad = diferencia,
+                CantidadOriginal = Math.Abs(diferencia),
+                UnidadOriginalId = insumo.UnidadConsumoId,
+                FactorConversionAplicado = insumo.FactorConversion,
+                Motivo = "Ajuste desde edición de insumo",
+                DocumentoOrigen = insumo.Id.ToString(),
+                UsuarioId = _currentUser.UsuarioId!.Value,
+                Fecha = RelojDeNegocio.Ahora
+            }, cancellationToken);
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);

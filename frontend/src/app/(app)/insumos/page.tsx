@@ -67,6 +67,9 @@ const insumoSchema = z.object({
   precioUltimaCompra: z.coerce
     .number({ message: "Ingresá un número válido." })
     .min(0, "No puede ser negativo."),
+  stockActual: z.coerce
+    .number({ message: "Ingresá un número válido." })
+    .min(0, "No puede ser negativo."),
   proveedorPrincipalId: z.string(),
   observaciones: z.string().max(1000, "Máximo 1000 caracteres."),
 });
@@ -82,6 +85,7 @@ const EMPTY_FORM: InsumoFormValues = {
   presentacion: 1,
   stockMinimo: 0,
   precioUltimaCompra: 0,
+  stockActual: 0,
   proveedorPrincipalId: "",
   observaciones: "",
 };
@@ -188,6 +192,7 @@ export default function InsumosPage() {
       presentacion: row.presentacion,
       stockMinimo: row.stockMinimo,
       precioUltimaCompra: row.precioUltimaCompra,
+      stockActual: row.stockActual,
       proveedorPrincipalId: row.proveedorPrincipalId ?? "",
       observaciones: row.observaciones ?? "",
     });
@@ -208,10 +213,11 @@ export default function InsumosPage() {
       precioUltimaCompra: values.precioUltimaCompra || null,
       proveedorPrincipalId: values.proveedorPrincipalId || null,
       observaciones: values.observaciones.trim() || null,
+      stockInicial: values.stockActual,
     };
     try {
       if (editing) {
-        const payload: UpdateInsumoCommand = { ...base, id: editing.id, rowVersion: editing.rowVersion };
+        const payload: UpdateInsumoCommand = { ...base, id: editing.id, rowVersion: editing.rowVersion, stockActual: values.stockActual };
         await apiClient<void>(`/insumos/${editing.id}`, { method: "PUT", body: payload });
         if (estado === "inactivo" && editing.activo) {
           await apiClient<void>(`/insumos/${editing.id}`, { method: "DELETE" });
@@ -241,7 +247,13 @@ export default function InsumosPage() {
   };
 
   const columns: ColumnDef<Insumo, unknown>[] = [
+    { accessorKey: "codigoSku", header: "SKU" },
     { accessorKey: "nombre", header: "Nombre" },
+    {
+      id: "categoria",
+      header: "Categoría",
+      cell: ({ row }) => row.original.categoria?.nombre ?? "—",
+    },
     {
       id: "presentacion",
       header: "Presentación",
@@ -250,11 +262,10 @@ export default function InsumosPage() {
         return `${row.original.presentacion} ${u?.simbolo ?? ""}`.trim();
       },
     },
-    { accessorKey: "codigoSku", header: "SKU" },
     {
-      id: "categoria",
-      header: "Categoría",
-      cell: ({ row }) => row.original.categoria?.nombre ?? "—",
+      accessorKey: "precioUltimaCompra",
+      header: "Precio últ. compra",
+      cell: ({ getValue }) => MONEY.format(getValue<number>()),
     },
     {
       accessorKey: "stockActual",
@@ -280,11 +291,6 @@ export default function InsumosPage() {
       },
     },
     {
-      accessorKey: "precioUltimaCompra",
-      header: "Precio últ. compra",
-      cell: ({ getValue }) => MONEY.format(getValue<number>()),
-    },
-    {
       accessorKey: "activo",
       header: "Estado",
       cell: ({ row }) =>
@@ -301,7 +307,6 @@ export default function InsumosPage() {
   ];
 
   const { register, setValue, control, formState: { errors } } = form;
-  const unidadConsumoId = useWatch({ control, name: "unidadConsumoId" });
   const precioUltimaCompra = useWatch({ control, name: "precioUltimaCompra" });
 
   return (
@@ -422,9 +427,6 @@ export default function InsumosPage() {
 
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="insumo-presentacion">Presentación</Label>
-              <p className="text-xs text-muted-foreground">
-                Cantidad que trae cada bulto, en {unidades.find((u) => u.id === unidadConsumoId)?.nombre ?? "la unidad de medida"} (ej. bidón de 5 litros → 5).
-              </p>
               <Input id="insumo-presentacion" type="number" step="any" min="0" {...register("presentacion")} />
               <FieldError message={errors.presentacion?.message} />
             </div>
@@ -457,6 +459,21 @@ export default function InsumosPage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
+              <Label htmlFor="insumo-precioUltimaCompra">Precio última compra (por bulto)</Label>
+              <CurrencyInput
+                value={String(precioUltimaCompra ?? "")}
+                onChange={(v) => setValue("precioUltimaCompra", v)}
+              />
+              <FieldError message={errors.precioUltimaCompra?.message} />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="insumo-stockActual">Cantidad en stock</Label>
+              <Input id="insumo-stockActual" type="number" step="any" min="0" {...register("stockActual")} />
+              <FieldError message={errors.stockActual?.message} />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
               <Label htmlFor="insumo-stockMinimo">Stock mínimo</Label>
               <Input id="insumo-stockMinimo" type="number" step="any" min="0" {...register("stockMinimo")} />
               <FieldError message={errors.stockMinimo?.message} />
@@ -476,15 +493,6 @@ export default function InsumosPage() {
                 </Select>
               </div>
             )}
-
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="insumo-precioUltimaCompra">Precio última compra (por bulto)</Label>
-              <CurrencyInput
-                value={String(precioUltimaCompra ?? "")}
-                onChange={(v) => setValue("precioUltimaCompra", v)}
-              />
-              <FieldError message={errors.precioUltimaCompra?.message} />
-            </div>
 
             <div className="flex flex-col gap-1.5 sm:col-span-2">
               <Label htmlFor="insumo-observaciones">Observaciones</Label>

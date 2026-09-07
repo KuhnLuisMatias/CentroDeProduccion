@@ -35,5 +35,8 @@ public class CreateInsumoCommandValidator : AbstractValidator<CreateInsumoComman
         RuleFor(x => x.PrecioUltimaCompra)
             .GreaterThanOrEqualTo(0).WithMessage("El precio de última compra no puede ser negativo")
             .When(x => x.PrecioUltimaCompra.HasValue);
+
+        RuleFor(x => x.StockInicial)
+            .GreaterThanOrEqualTo(0).WithMessage("El stock inicial no puede ser negativo");
     }
 }

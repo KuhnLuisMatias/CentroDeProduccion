@@ -41,5 +41,9 @@ public class UpdateInsumoCommandValidator : AbstractValidator<UpdateInsumoComman
 
         RuleFor(x => x.RowVersion)
             .NotEmpty().WithMessage("El RowVersion es requerido para concurrencia optimista");
+
+        RuleFor(x => x.StockActual)
+            .GreaterThanOrEqualTo(0).WithMessage("La cantidad en stock no puede ser negativa")
+            .When(x => x.StockActual.HasValue);
     }
 }

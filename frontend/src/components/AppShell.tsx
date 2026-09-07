@@ -544,7 +544,7 @@ function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
         >
           <Menu className="size-4.5" />
         </Button>
-        <span className="hidden truncate text-sm font-bold text-slate-700 dark:text-slate-300 sm:inline">
+        <span className="hidden truncate text-[15px] font-semibold tracking-tight text-slate-900 md:text-base dark:text-slate-100 sm:inline">
           {activeLabel ?? "Centro de Producción"}
         </span>
       </div>

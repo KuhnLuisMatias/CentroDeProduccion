@@ -142,11 +142,13 @@ export interface CreateInsumoCommand {
   precioUltimaCompra?: number | null;
   proveedorPrincipalId: string | null;
   observaciones: string | null;
+  stockInicial: number;
 }
 
 export interface UpdateInsumoCommand extends CreateInsumoCommand {
   id: string;
   rowVersion: string;
+  stockActual: number;
 }
 
 // ---------------------------------------------------------------------------
