@@ -2,8 +2,10 @@ using CentroDeProduccion.Application.Abstractions.Persistence;
 using CentroDeProduccion.Api.Extensions;
 using CentroDeProduccion.Application.Features.CuentaCorriente.Commands.RegisterNotaCredito;
 using CentroDeProduccion.Application.Features.CuentaCorriente.Commands.RegisterNotaDebito;
+using CentroDeProduccion.Application.Features.CuentaCorriente.Commands.RegistrarPagoProveedor;
 using CentroDeProduccion.Application.Features.CuentaCorriente.Queries.GetEstadoCuenta;
 using CentroDeProduccion.Application.Features.CuentaCorriente.Queries.GetMovimientos;
+using CentroDeProduccion.Application.Features.CuentaCorriente.Queries.GetPagosProveedorList;
 using CentroDeProduccion.Application.Features.CuentaCorriente.Queries.GetSaldo;
 using CentroDeProduccion.Application.Features.Proveedores.Commands.CreateProveedor;
 using CentroDeProduccion.Application.Features.Proveedores.Commands.UpdateProveedor;
@@ -27,6 +29,8 @@ public class ProveedoresController : ControllerBase
     private readonly GetSaldoQueryHandler _saldoHandler;
     private readonly RegisterNotaDebitoCommandHandler _notaDebitoHandler;
     private readonly RegisterNotaCreditoCommandHandler _notaCreditoHandler;
+    private readonly RegistrarPagoProveedorCommandHandler _registrarPagoHandler;
+    private readonly GetPagosProveedorListQueryHandler _pagosListHandler;
 
     public ProveedoresController(
         IProveedorRepository proveedorRepository,
@@ -37,7 +41,9 @@ public class ProveedoresController : ControllerBase
         GetMovimientosQueryHandler movimientosHandler,
         GetSaldoQueryHandler saldoHandler,
         RegisterNotaDebitoCommandHandler notaDebitoHandler,
-        RegisterNotaCreditoCommandHandler notaCreditoHandler)
+        RegisterNotaCreditoCommandHandler notaCreditoHandler,
+        RegistrarPagoProveedorCommandHandler registrarPagoHandler,
+        GetPagosProveedorListQueryHandler pagosListHandler)
     {
         _proveedorRepository = proveedorRepository;
         _unitOfWork = unitOfWork;
@@ -48,6 +54,8 @@ public class ProveedoresController : ControllerBase
         _saldoHandler = saldoHandler;
         _notaDebitoHandler = notaDebitoHandler;
         _notaCreditoHandler = notaCreditoHandler;
+        _registrarPagoHandler = registrarPagoHandler;
+        _pagosListHandler = pagosListHandler;
     }
 
     [HttpGet]
@@ -153,6 +161,33 @@ public class ProveedoresController : ControllerBase
             return BadRequest("El ID de la URL no coincide con el ID del cuerpo");
 
         var result = await _notaCreditoHandler.HandleAsync(command, cancellationToken);
+        return result.ToActionResult(this, response => Ok(response));
+    }
+
+    /// <summary>Registers a payment to the supplier (ledger append: one negative Pago row),
+    /// optionally settling a factura de compra (partial allowed, overpayment rejected).</summary>
+    [HttpPost("{id:guid}/pagos")]
+    [Authorize(Roles = "Administrador,EncargadoCompras")]
+    public async Task<IActionResult> RegistrarPago(
+        Guid id, [FromBody] RegistrarPagoProveedorCommand command, CancellationToken cancellationToken)
+    {
+        if (id != command.ProveedorId)
+            return BadRequest("El ID de la URL no coincide con el ID del cuerpo");
+
+        var result = await _registrarPagoHandler.HandleAsync(command, cancellationToken);
+        return result.ToActionResult(this, response => Ok(response));
+    }
+
+    /// <summary>Lists the supplier's registered payments with optional date filters.</summary>
+    [HttpGet("{id:guid}/pagos")]
+    public async Task<IActionResult> GetPagos(
+        Guid id,
+        [FromQuery] DateTime? fechaDesde,
+        [FromQuery] DateTime? fechaHasta,
+        CancellationToken cancellationToken)
+    {
+        var result = await _pagosListHandler.HandleAsync(
+            new GetPagosProveedorListQuery(id, fechaDesde, fechaHasta), cancellationToken);
         return result.ToActionResult(this, response => Ok(response));
     }
 }

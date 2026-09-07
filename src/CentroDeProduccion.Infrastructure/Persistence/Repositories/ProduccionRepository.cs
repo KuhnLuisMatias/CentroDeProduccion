@@ -110,6 +110,39 @@ public class ProduccionRepository : IProduccionRepository
         return costos;
     }
 
+    public async Task<IReadOnlyDictionary<Guid, decimal>> GetLastConfirmedUnitCostsByRecetaAsync(
+        IReadOnlyCollection<Guid> recetaIds,
+        CancellationToken ct = default)
+    {
+        var ids = recetaIds.Distinct().ToList();
+        if (ids.Count == 0)
+            return new Dictionary<Guid, decimal>();
+
+        var filas = await _context.Producciones
+            .AsNoTracking()
+            .Where(p => p.Estado == EstadoProduccion.Confirmada &&
+                        p.CantidadProducida > 0 &&
+                        ids.Contains(p.RecetaId))
+            .Select(p => new
+            {
+                p.RecetaId,
+                p.Fecha,
+                p.Id,
+                p.CostoTotal,
+                p.CantidadProducida
+            })
+            .ToListAsync(ct);
+
+        var costos = new Dictionary<Guid, decimal>();
+        foreach (var grupo in filas.GroupBy(x => x.RecetaId))
+        {
+            var ultima = grupo.OrderByDescending(x => x.Fecha).ThenByDescending(x => x.Id).First();
+            costos[grupo.Key] = ultima.CostoTotal / ultima.CantidadProducida;
+        }
+
+        return costos;
+    }
+
     public async Task<IReadOnlyList<Produccion>> GetByDateRangeAsync(DateTime from, DateTime to, CancellationToken ct = default)
         => await _context.Producciones
             .Where(p => p.Fecha >= from && p.Fecha < to.Date.AddDays(1))

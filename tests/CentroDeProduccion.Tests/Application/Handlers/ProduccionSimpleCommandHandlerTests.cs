@@ -56,7 +56,7 @@ public class ProduccionSimpleCommandHandlerTests
         };
 
     private ProductoTerminadoCostoResolver CreateCostoResolver()
-        => new(_recetaRepository, new RecetaCostoResolver(_recetaRepository, _insumoRepository));
+        => new(_recetaRepository, _produccionRepository, new RecetaCostoResolver(_recetaRepository, _insumoRepository, _produccionRepository));
 
     // ── CreateProduccion: seeds InsumosConsumidos from the recipe's own BOM ────────────────
 

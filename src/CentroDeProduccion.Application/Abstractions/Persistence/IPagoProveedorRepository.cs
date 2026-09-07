@@ -6,6 +6,7 @@ public interface IPagoProveedorRepository
 {
     Task<PagoProveedor?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<PagoProveedor?> GetByIdWithDetailsAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<PagoProveedor>> GetByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<PagoProveedor>> GetByFiltersAsync(
         Guid? proveedorId,
         DateTime? fechaDesde,

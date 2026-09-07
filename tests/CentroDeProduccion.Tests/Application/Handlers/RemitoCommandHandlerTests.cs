@@ -50,6 +50,7 @@ public class CreateRemitoCommandHandlerTests
     internal static (ProductoTerminadoCostoResolver Resolver, Guid? RecetaId) CrearCostoResolver(decimal? costoUnitario)
     {
         var recetaRepo = Substitute.For<IRecetaRepository>();        var insumoRepo = Substitute.For<IInsumoRepository>();
+        var produccionRepo = Substitute.For<IProduccionRepository>();
         if (costoUnitario.HasValue)
         {
             var insumo = new Insumo
@@ -69,10 +70,10 @@ public class CreateRemitoCommandHandlerTests
             recetaRepo.GetByIdWithDetallesAsync(receta.Id, Arg.Any<CancellationToken>()).Returns(receta);
             insumoRepo.GetByIdsAsync(Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
                 .Returns(new[] { insumo });
-            return (new ProductoTerminadoCostoResolver(recetaRepo, new RecetaCostoResolver(recetaRepo, insumoRepo)), receta.Id);
+            return (new ProductoTerminadoCostoResolver(recetaRepo, produccionRepo, new RecetaCostoResolver(recetaRepo, insumoRepo, produccionRepo)), receta.Id);
         }
 
-        return (new ProductoTerminadoCostoResolver(recetaRepo, new RecetaCostoResolver(recetaRepo, insumoRepo)), null);
+        return (new ProductoTerminadoCostoResolver(recetaRepo, produccionRepo, new RecetaCostoResolver(recetaRepo, insumoRepo, produccionRepo)), null);
     }
 
     private ProductoTerminado CrearProducto(decimal costoUnitario)

@@ -6,28 +6,43 @@ namespace CentroDeProduccion.Application.Features.Reports.Costos;
 
 /// <summary>
 /// Resolves a recipe's standard cost (its "CostoReceta") for reports that need a fallback when no
-/// production cost is available. Uses <see cref="CostoService"/> over the recipe BOM, mirroring the
-/// canonical <c>CalcularCostoRecetaHandler</c>.
+/// production cost is available. Sub-recipe lines are priced at the REAL unit cost of their last
+/// confirmed production (<see cref="IProduccionRepository.GetLastConfirmedUnitCostsByRecetaAsync"/>);
+/// sub-recipes never confirmed fall back to live BOM recursion via <see cref="CostoService"/>.
 /// </summary>
 public class RecetaCostoResolver
 {
     private readonly IRecetaRepository _recetaRepository;
     private readonly IInsumoRepository _insumoRepository;
+    private readonly IProduccionRepository _produccionRepository;
 
-    public RecetaCostoResolver(IRecetaRepository recetaRepository, IInsumoRepository insumoRepository)
+    public RecetaCostoResolver(
+        IRecetaRepository recetaRepository,
+        IInsumoRepository insumoRepository,
+        IProduccionRepository produccionRepository)
     {
         _recetaRepository = recetaRepository;
         _insumoRepository = insumoRepository;
+        _produccionRepository = produccionRepository;
     }
 
     /// <summary>
-    /// Computes the standard cost of <paramref name="receta"/> (recursively expanding sub-recipes).
+    /// Computes the standard cost of <paramref name="receta"/>: sub-recipes with a confirmed
+    /// production use that real unit cost; the rest expand their BOM recursively.
     /// </summary>
     public async Task<CostoService.CostoResult> CalcularAsync(Receta receta, CancellationToken ct = default)
     {
         var recetas = new Dictionary<Guid, Receta>();
         var insumoIds = new HashSet<Guid>();
-        await CargarArbolAsync(receta, recetas, insumoIds, new HashSet<Guid>(), ct);
+        var subrecetaIds = new HashSet<Guid>();
+        await CargarArbolAsync(receta, recetas, insumoIds, subrecetaIds, ct);
+
+        // ?? : NSubstitute defaults an unconfigured call to null; null simply means
+        // "no known real costs" → full BOM fallback, which is the correct semantic.
+        var costosReales = subrecetaIds.Count == 0
+            ? new Dictionary<Guid, decimal>()
+            : await _produccionRepository.GetLastConfirmedUnitCostsByRecetaAsync(subrecetaIds, ct) ??
+              new Dictionary<Guid, decimal>();
 
         var insumos = await _insumoRepository.GetByIdsAsync(insumoIds, ct);
         var precios = insumos.ToDictionary(i => i.Id, i => i.PrecioUltimaCompra);
@@ -35,14 +50,15 @@ public class RecetaCostoResolver
         return CostoService.Calcular(
             receta,
             id => recetas.TryGetValue(id, out var r) ? r : null,
-            id => precios.TryGetValue(id, out var p) ? p : 0);
+            id => precios.TryGetValue(id, out var p) ? p : 0,
+            costosSubreceta: costosReales);
     }
 
     private async Task CargarArbolAsync(
         Receta receta,
         Dictionary<Guid, Receta> recetas,
         HashSet<Guid> insumoIds,
-        HashSet<Guid> visitados,
+        HashSet<Guid> subrecetaIds,
         CancellationToken ct)
     {
         recetas[receta.Id] = receta;
@@ -53,12 +69,12 @@ public class RecetaCostoResolver
             {
                 insumoIds.Add(detalle.InsumoId.Value);
             }
-            else if (detalle.RecetaOrigenId.HasValue && visitados.Add(detalle.RecetaOrigenId.Value))
+            else if (detalle.RecetaOrigenId.HasValue && subrecetaIds.Add(detalle.RecetaOrigenId.Value))
             {
                 var subReceta = await _recetaRepository.GetByIdWithDetallesAsync(detalle.RecetaOrigenId.Value, ct);
                 if (subReceta is not null)
                 {
-                    await CargarArbolAsync(subReceta, recetas, insumoIds, visitados, ct);
+                    await CargarArbolAsync(subReceta, recetas, insumoIds, subrecetaIds, ct);
                 }
             }
         }

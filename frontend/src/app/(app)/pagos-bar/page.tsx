@@ -340,20 +340,26 @@ export default function PagosBarPage() {
             ))}
           </SelectContent>
         </Select>
-        <Input
-          type="date"
-          className="w-[150px]"
-          value={filtroDesde}
-          onChange={(e) => setFiltroDesde(e.target.value)}
-          aria-label="Fecha desde"
-        />
-        <Input
-          type="date"
-          className="w-[150px]"
-          value={filtroHasta}
-          onChange={(e) => setFiltroHasta(e.target.value)}
-          aria-label="Fecha hasta"
-        />
+        <div className="flex flex-col gap-1">
+          <Label className="text-xs text-muted-foreground">Desde</Label>
+          <Input
+            type="date"
+            className="w-[150px]"
+            value={filtroDesde}
+            onChange={(e) => setFiltroDesde(e.target.value)}
+            aria-label="Fecha desde"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <Label className="text-xs text-muted-foreground">Hasta</Label>
+          <Input
+            type="date"
+            className="w-[150px]"
+            value={filtroHasta}
+            onChange={(e) => setFiltroHasta(e.target.value)}
+            aria-label="Fecha hasta"
+          />
+        </div>
       </div>
 
       <DataTable

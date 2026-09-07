@@ -13,10 +13,14 @@ public sealed record GetPagoListQuery(
 public class GetPagoListQueryHandler
 {
     private readonly IPagoProveedorRepository _pagoProveedorRepository;
+    private readonly ICuentaCorrienteProveedorRepository _cuentaCorrienteRepository;
 
-    public GetPagoListQueryHandler(IPagoProveedorRepository pagoProveedorRepository)
+    public GetPagoListQueryHandler(
+        IPagoProveedorRepository pagoProveedorRepository,
+        ICuentaCorrienteProveedorRepository cuentaCorrienteRepository)
     {
         _pagoProveedorRepository = pagoProveedorRepository;
+        _cuentaCorrienteRepository = cuentaCorrienteRepository;
     }
 
     public async Task<Result<IReadOnlyList<PagoProveedorResponse>>> HandleAsync(
@@ -25,7 +29,14 @@ public class GetPagoListQueryHandler
         var pagos = await _pagoProveedorRepository.GetByFiltersAsync(
             query.ProveedorId, query.FechaDesde, query.FechaHasta, cancellationToken);
 
-        var response = pagos.Select(GetPagoByIdQueryHandler.Map).ToList();
+        // Batched derivation of settled amounts — one grouped query, no N+1.
+        var facturaIds = pagos.Select(p => p.Id).ToList();
+        var pagadosPorFactura = await _cuentaCorrienteRepository.GetPagosAplicadosPorFacturaAsync(
+            facturaIds, cancellationToken);
+
+        var response = pagos
+            .Select(pago => GetPagoByIdQueryHandler.Map(pago, pagadosPorFactura.GetValueOrDefault(pago.Id)))
+            .ToList();
         return Result.Success<IReadOnlyList<PagoProveedorResponse>>(response);
     }
 }

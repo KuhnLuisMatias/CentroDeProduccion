@@ -22,6 +22,12 @@ public class PagoProveedorRepository : IPagoProveedorRepository
             .ThenInclude(pi => pi.Insumo)
             .FirstOrDefaultAsync(pp => pp.Id == id, cancellationToken);
 
+    public async Task<IReadOnlyList<PagoProveedor>> GetByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default)
+        => await _context.PagosProveedor
+            .Where(pp => ids.Contains(pp.Id))
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
     public async Task<IReadOnlyList<PagoProveedor>> GetByFiltersAsync(
         Guid? proveedorId,
         DateTime? fechaDesde,

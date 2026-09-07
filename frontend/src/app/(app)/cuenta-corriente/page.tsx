@@ -380,20 +380,26 @@ export default function CuentaCorrientePage() {
                 ))}
               </SelectContent>
             </Select>
-            <Input
-              type="date"
-              className="w-[150px]"
-              value={provDesde}
-              onChange={(e) => setProvDesde(e.target.value)}
-              aria-label="Fecha desde"
-            />
-            <Input
-              type="date"
-              className="w-[150px]"
-              value={provHasta}
-              onChange={(e) => setProvHasta(e.target.value)}
-              aria-label="Fecha hasta"
-            />
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs text-muted-foreground">Desde</Label>
+              <Input
+                type="date"
+                className="w-[150px]"
+                value={provDesde}
+                onChange={(e) => setProvDesde(e.target.value)}
+                aria-label="Fecha desde"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs text-muted-foreground">Hasta</Label>
+              <Input
+                type="date"
+                className="w-[150px]"
+                value={provHasta}
+                onChange={(e) => setProvHasta(e.target.value)}
+                aria-label="Fecha hasta"
+              />
+            </div>
             {provId && (
               <>
                 <Button variant="outline" size="sm" onClick={() => openNota("debito")}>
@@ -466,20 +472,26 @@ export default function CuentaCorrientePage() {
                 ))}
               </SelectContent>
             </Select>
-            <Input
-              type="date"
-              className="w-[150px]"
-              value={barDesde}
-              onChange={(e) => setBarDesde(e.target.value)}
-              aria-label="Fecha desde"
-            />
-            <Input
-              type="date"
-              className="w-[150px]"
-              value={barHasta}
-              onChange={(e) => setBarHasta(e.target.value)}
-              aria-label="Fecha hasta"
-            />
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs text-muted-foreground">Desde</Label>
+              <Input
+                type="date"
+                className="w-[150px]"
+                value={barDesde}
+                onChange={(e) => setBarDesde(e.target.value)}
+                aria-label="Fecha desde"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs text-muted-foreground">Hasta</Label>
+              <Input
+                type="date"
+                className="w-[150px]"
+                value={barHasta}
+                onChange={(e) => setBarHasta(e.target.value)}
+                aria-label="Fecha hasta"
+              />
+            </div>
             {barId && (
               <>
                 <Button variant="outline" size="sm" onClick={() => openNota("debito")}>

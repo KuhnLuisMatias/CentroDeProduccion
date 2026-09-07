@@ -55,4 +55,27 @@ public class CuentaCorrienteProveedorRepository : ICuentaCorrienteProveedorRepos
             .GroupBy(cc => cc.ProveedorId)
             .Select(g => new { ProveedorId = g.Key, Saldo = g.Sum(cc => (decimal?)cc.Monto) ?? 0m })
             .ToDictionaryAsync(x => x.ProveedorId, x => x.Saldo, ct);
+
+    /// <returns>The settled amount as a POSITIVE decimal (Σ of the negated CC row amounts).</returns>
+    public async Task<decimal> GetPagosAplicadosAFacturaAsync(Guid facturaId, CancellationToken cancellationToken = default)
+        => await _context.CuentasCorrientesProveedores
+            .Where(cc => cc.PagoProveedorId == facturaId &&
+                (cc.TipoMovimiento == TipoMovimientoCtaCte.Pago || cc.Monto < 0))
+            .SumAsync(cc => (decimal?)-cc.Monto, cancellationToken) ?? 0m;
+
+    public async Task<Dictionary<Guid, decimal>> GetPagosAplicadosPorFacturaAsync(
+        IReadOnlyCollection<Guid> facturaIds, CancellationToken cancellationToken = default)
+    {
+        if (facturaIds.Count == 0)
+            return new Dictionary<Guid, decimal>();
+
+        var saldos = await _context.CuentasCorrientesProveedores
+            .Where(cc => cc.PagoProveedorId != null && facturaIds.Contains(cc.PagoProveedorId.Value) &&
+                (cc.TipoMovimiento == TipoMovimientoCtaCte.Pago || cc.Monto < 0))
+            .GroupBy(cc => cc.PagoProveedorId!.Value)
+            .Select(g => new { FacturaId = g.Key, Pagado = g.Sum(cc => (decimal?)-cc.Monto) ?? 0m })
+            .ToListAsync(cancellationToken);
+
+        return saldos.ToDictionary(x => x.FacturaId, x => x.Pagado);
+    }
 }

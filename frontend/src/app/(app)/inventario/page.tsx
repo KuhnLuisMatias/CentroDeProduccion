@@ -324,20 +324,26 @@ export default function InventarioPage() {
             ))}
           </SelectContent>
         </Select>
-        <Input
-          type="date"
-          className="w-[150px]"
-          aria-label="Desde"
-          value={filtroDesde}
-          onChange={(e) => setFiltroDesde(e.target.value)}
-        />
-        <Input
-          type="date"
-          className="w-[150px]"
-          aria-label="Hasta"
-          value={filtroHasta}
-          onChange={(e) => setFiltroHasta(e.target.value)}
-        />
+        <div className="flex flex-col gap-1">
+          <Label className="text-xs text-muted-foreground">Desde</Label>
+          <Input
+            type="date"
+            className="w-[150px]"
+            aria-label="Desde"
+            value={filtroDesde}
+            onChange={(e) => setFiltroDesde(e.target.value)}
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <Label className="text-xs text-muted-foreground">Hasta</Label>
+          <Input
+            type="date"
+            className="w-[150px]"
+            aria-label="Hasta"
+            value={filtroHasta}
+            onChange={(e) => setFiltroHasta(e.target.value)}
+          />
+        </div>
         <Button variant="outline" size="sm" onClick={() => void load()} disabled={loading}>
           <Search className="size-4" aria-hidden="true" />
           Filtrar

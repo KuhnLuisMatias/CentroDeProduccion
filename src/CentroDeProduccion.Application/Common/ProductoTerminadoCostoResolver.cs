@@ -4,22 +4,27 @@ using CentroDeProduccion.Application.Features.Reports.Costos;
 namespace CentroDeProduccion.Application.Common;
 
 /// <summary>
-/// Resolves a finished product's unit cost on the fly from its recipe's BOM at current
-/// insumo prices (<see cref="RecetaCostoResolver"/>). ProductoTerminado no longer stores
-/// CostoUnitario: the cost always reflects the latest purchase prices and can never go stale.
+/// PT cost policy: last confirmed production unit cost (real) when available; live recipe-BOM
+/// estimate otherwise. All PT-cost consumers route through here.
 /// </summary>
 public class ProductoTerminadoCostoResolver
 {
     private readonly IRecetaRepository _recetaRepository;
+    private readonly IProduccionRepository _produccionRepository;
     private readonly RecetaCostoResolver _recetaCostoResolver;
 
-    public ProductoTerminadoCostoResolver(IRecetaRepository recetaRepository, RecetaCostoResolver recetaCostoResolver)
+    public ProductoTerminadoCostoResolver(
+        IRecetaRepository recetaRepository,
+        IProduccionRepository produccionRepository,
+        RecetaCostoResolver recetaCostoResolver)
     {
         _recetaRepository = recetaRepository;
+        _produccionRepository = produccionRepository;
         _recetaCostoResolver = recetaCostoResolver;
     }
 
-    /// <summary>Cost per lote of the recipe behind <paramref name="recetaId"/>; 0 when the
+    /// <summary>Unit cost of the product behind <paramref name="recetaId"/>: its last confirmed
+    /// production's real unit cost when available, else the recipe BOM estimate; 0 when the
     /// product has no recipe (manually created) or the recipe is missing/cyclic.</summary>
     public async Task<decimal> CalcularPorRecetaAsync(Guid? recetaId, CancellationToken ct = default)
     {
@@ -28,26 +33,49 @@ public class ProductoTerminadoCostoResolver
             return 0m;
         }
 
-        var receta = await _recetaRepository.GetByIdWithDetallesAsync(recetaId.Value, ct);
+        var costosReales = await _produccionRepository.GetLastConfirmedUnitCostsByRecetaAsync(
+            new[] { recetaId.Value }, ct) ?? new Dictionary<Guid, decimal>();
+        return await ResolverConCostosAsync(recetaId.Value, costosReales, ct);
+    }
+
+    /// <summary>Batch variant keyed by receta id (skips nulls). One real-cost lookup for the
+    /// whole set; ids missing from it fall back to the live BOM estimate.</summary>
+    public async Task<IReadOnlyDictionary<Guid, decimal>> CalcularPorRecetasAsync(
+        IEnumerable<Guid?> recetaIds, CancellationToken ct = default)
+    {
+        var ids = recetaIds.Where(id => id.HasValue).Select(id => id!.Value).Distinct().ToList();
+
+        // ?? : NSubstitute defaults an unconfigured call to null; null simply means
+        // "no known real costs" → full BOM fallback, which is the correct semantic.
+        var costosReales = ids.Count == 0
+            ? new Dictionary<Guid, decimal>()
+            : await _produccionRepository.GetLastConfirmedUnitCostsByRecetaAsync(ids, ct) ??
+              new Dictionary<Guid, decimal>();
+
+        var costos = new Dictionary<Guid, decimal>();
+        foreach (var recetaId in ids)
+        {
+            costos[recetaId] = await ResolverConCostosAsync(recetaId, costosReales, ct);
+        }
+
+        return costos;
+    }
+
+    private async Task<decimal> ResolverConCostosAsync(
+        Guid recetaId, IReadOnlyDictionary<Guid, decimal> costosReales, CancellationToken ct)
+    {
+        var receta = await _recetaRepository.GetByIdWithDetallesAsync(recetaId, ct);
         if (receta is null)
         {
             return 0m;
         }
 
-        var resultado = await _recetaCostoResolver.CalcularAsync(receta, ct);
-        return resultado.CicloDetectado ? 0m : resultado.CostoUnitario;
-    }
-
-    /// <summary>Batch variant keyed by receta id (skips nulls).</summary>
-    public async Task<IReadOnlyDictionary<Guid, decimal>> CalcularPorRecetasAsync(
-        IEnumerable<Guid?> recetaIds, CancellationToken ct = default)
-    {
-        var costos = new Dictionary<Guid, decimal>();
-        foreach (var recetaId in recetaIds.Where(id => id.HasValue).Select(id => id!.Value).Distinct())
+        if (costosReales.TryGetValue(recetaId, out var costoReal))
         {
-            costos[recetaId] = await CalcularPorRecetaAsync(recetaId, ct);
+            return costoReal;
         }
 
-        return costos;
+        var resultado = await _recetaCostoResolver.CalcularAsync(receta, ct);
+        return resultado.CicloDetectado ? 0m : resultado.CostoUnitario;
     }
 }
