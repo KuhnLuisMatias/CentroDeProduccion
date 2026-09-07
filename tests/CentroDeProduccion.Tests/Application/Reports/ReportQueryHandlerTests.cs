@@ -400,7 +400,7 @@ public class GetCostoProductoReportQueryHandlerTests
     {
         _insumoRepository.GetByIdsAsync(Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
             .Returns(Array.Empty<Insumo>());
-        _recetaCostoResolver = new RecetaCostoResolver(_recetaRepository, _insumoRepository);
+        _recetaCostoResolver = new RecetaCostoResolver(_recetaRepository, _insumoRepository, _produccionRepository);
     }
 
     private GetCostoProductoReportQueryHandler CreateHandler() => new(
@@ -468,7 +468,7 @@ public class GetRentabilidadProductoReportQueryHandlerTests
     private readonly IProduccionRepository _produccionRepository = Substitute.For<IProduccionRepository>();
     private readonly IRecetaRepository _recetaRepository = Substitute.For<IRecetaRepository>();
     private readonly RecetaCostoResolver _recetaCostoResolver = new(
-        Substitute.For<IRecetaRepository>(), Substitute.For<IInsumoRepository>());
+        Substitute.For<IRecetaRepository>(), Substitute.For<IInsumoRepository>(), Substitute.For<IProduccionRepository>());
 
     private GetRentabilidadProductoReportQueryHandler CreateHandler() => new(
         _remitoRepository, _productoTerminadoRepository, _produccionRepository, _recetaRepository, _recetaCostoResolver);
@@ -571,7 +571,7 @@ public class GetRentabilidadBarReportQueryHandlerTests
     private readonly IProduccionRepository _produccionRepository = Substitute.For<IProduccionRepository>();
     private readonly IRecetaRepository _recetaRepository = Substitute.For<IRecetaRepository>();
     private readonly RecetaCostoResolver _recetaCostoResolver = new(
-        Substitute.For<IRecetaRepository>(), Substitute.For<IInsumoRepository>());
+        Substitute.For<IRecetaRepository>(), Substitute.For<IInsumoRepository>(), Substitute.For<IProduccionRepository>());
 
     private GetRentabilidadBarReportQueryHandler CreateHandler() => new(
         _remitoRepository, _productoTerminadoRepository, _produccionRepository, _recetaRepository, _recetaCostoResolver);

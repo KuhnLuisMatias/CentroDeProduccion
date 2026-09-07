@@ -12,6 +12,7 @@ import { useAuth } from "@/context/AuthContext";
 import DataTable from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -118,7 +119,7 @@ const GROUPS: GroupDef[] = [
         filters: {},
         columns: [
           { key: "nombre", header: "Insumo" },
-          { key: "unidadMedida", header: "Unidad" },
+          { key: "unidadMedida", header: "Unidad de medida" },
           { key: "stockActual", header: "Stock actual" },
           { key: "precioUltimaCompra", header: "Precio última compra", kind: "currency" },
           { key: "valorTotal", header: "Valor total", kind: "currency" },
@@ -325,7 +326,7 @@ const GROUPS: GroupDef[] = [
           { key: "producto", header: "Producto" },
           { key: "tipoLinea", header: "Tipo" },
           { key: "cantidad", header: "Cantidad", kind: "number" },
-          { key: "unidad", header: "Unidad" },
+          { key: "unidad", header: "Unidad de medida" },
           { key: "precioUnitario", header: "Precio", kind: "currency" },
           { key: "subtotal", header: "Subtotal", kind: "currency" },
           { key: "proveedor", header: "Proveedor" },
@@ -385,7 +386,7 @@ const GROUPS: GroupDef[] = [
           { key: "referencia", header: "Referencia" },
           { key: "tipoLinea", header: "Tipo" },
           { key: "cantidadNecesaria", header: "Cantidad", kind: "number" },
-          { key: "unidadMedida", header: "Unidad" },
+          { key: "unidadMedida", header: "Unidad de medida" },
           { key: "precioUnitario", header: "Precio unitario", kind: "currency" },
           { key: "subtotal", header: "Subtotal", kind: "currency" },
         ],
@@ -742,22 +743,28 @@ export default function ReportesPage() {
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
         {activeReport.filters.from && (
-          <Input
-            type="date"
-            className="w-[150px]"
-            aria-label="Fecha desde"
-            value={filters.from}
-            onChange={(e) => setFilters((f) => ({ ...f, from: e.target.value }))}
-          />
+          <div className="flex flex-col gap-1">
+            <Label className="text-xs text-muted-foreground">Desde</Label>
+            <Input
+              type="date"
+              className="w-[150px]"
+              aria-label="Fecha desde"
+              value={filters.from}
+              onChange={(e) => setFilters((f) => ({ ...f, from: e.target.value }))}
+            />
+          </div>
         )}
         {activeReport.filters.to && (
-          <Input
-            type="date"
-            className="w-[150px]"
-            aria-label="Fecha hasta"
-            value={filters.to}
-            onChange={(e) => setFilters((f) => ({ ...f, to: e.target.value }))}
-          />
+          <div className="flex flex-col gap-1">
+            <Label className="text-xs text-muted-foreground">Hasta</Label>
+            <Input
+              type="date"
+              className="w-[150px]"
+              aria-label="Fecha hasta"
+              value={filters.to}
+              onChange={(e) => setFilters((f) => ({ ...f, to: e.target.value }))}
+            />
+          </div>
         )}
         {activeReport.filters.agrupacion && (
           <Select

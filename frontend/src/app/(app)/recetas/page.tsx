@@ -8,11 +8,9 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Plus, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient, ApiError, fetchAllPages } from "@/lib/api";
-import { MONEY } from "@/lib/utils";
 import type {
   Receta,
   RecetaInsumo,
-  CosteoReceta,
   RecetaVersion,
   Categoria,
   Insumo,
@@ -127,7 +125,6 @@ export default function RecetasPage() {
   const [editLoading, setEditLoading] = useState<string | null>(null);
 
   const [detail, setDetail] = useState<Receta | null>(null);
-  const [costeo, setCosteo] = useState<CosteoReceta | null>(null);
   const [versiones, setVersiones] = useState<RecetaVersion[]>([]);
   const [detailLoading, setDetailLoading] = useState(false);
 
@@ -254,17 +251,14 @@ export default function RecetasPage() {
 
   const openDetail = async (row: Receta) => {
     setDetail(row);
-    setCosteo(null);
     setVersiones([]);
     setDetailLoading(true);
     try {
-      const [det, cost, vers] = await Promise.all([
+      const [det, vers] = await Promise.all([
         apiClient<Receta>(`/recetas/${row.id}`),
-        apiClient<CosteoReceta>(`/recetas/${row.id}/costeo`).catch(() => null),
         apiClient<RecetaVersion[]>(`/recetas/${row.id}/versions`).catch(() => []),
       ]);
       setDetail(det);
-      setCosteo(cost);
       setVersiones(vers);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "No se pudo cargar el detalle.");
@@ -283,7 +277,7 @@ export default function RecetasPage() {
     },
     {
       id: "unidad",
-      header: "Unidad",
+      header: "Unidad de medida",
       cell: ({ row }) =>
         row.original.unidadMedida?.simbolo ??
         unidades.find((u) => u.id === row.original.unidadMedidaId)?.simbolo ??
@@ -483,7 +477,7 @@ export default function RecetasPage() {
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Receta: {detail?.nombre}</DialogTitle>
-            <DialogDescription>Detalle, costeo e historial de versiones.</DialogDescription>
+            <DialogDescription>Detalle e historial de versiones.</DialogDescription>
           </DialogHeader>
 
           {detailLoading ? (
@@ -509,31 +503,6 @@ export default function RecetasPage() {
                   </div>
                 </CardContent>
               </Card>
-
-              {costeo && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm">Costeo</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableBody>
-                        <TableRow>
-                          <TableCell>Costo unitario</TableCell>
-                          <TableCell className="text-left">{MONEY.format(costeo.costoUnitario)}</TableCell>
-                        </TableRow>
-                        {costeo.cicloDetectado && (
-                          <TableRow>
-                            <TableCell colSpan={2} className="text-destructive">
-                              Se detectó un ciclo en la BOM
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-              )}
 
               <Card>
                 <CardHeader>

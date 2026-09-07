@@ -178,4 +178,73 @@ public class CostoServiceTests
 
         resultado.CicloDetectado.ShouldBeTrue();
     }
+
+    [Fact]
+    public void Calcular_SubRecetaConCostoReal_UsaEseCostoSinExpandirBom()
+    {
+        // "Masa" (sub): BOM estimate would be 2 harina x $10 = $20 per batch.
+        var harina = Guid.NewGuid();
+        var masa = CrearReceta(Guid.NewGuid());
+        masa.Insumos.Add(Insumo(harina, 2m));
+
+        // "Pizza": 3 batches of masa + 1 queso x $30.
+        var queso = Guid.NewGuid();
+        var pizza = CrearReceta(Guid.NewGuid());
+        pizza.Insumos.Add(SubReceta(masa.Id, 3m));
+        pizza.Insumos.Add(Insumo(queso, 1m));
+
+        var precios = new Dictionary<Guid, decimal> { [harina] = 10m, [queso] = 30m };
+        var recetas = new Dictionary<Guid, Receta> { [masa.Id] = masa };
+        var costosReales = new Dictionary<Guid, decimal> { [masa.Id] = 100m };
+        var resultado = CostoService.Calcular(
+            pizza, id => recetas.GetValueOrDefault(id), id => precios[id], costosSubreceta: costosReales);
+
+        // Real cost wins: 3 x 100 + 30 = 330 (BOM estimate would be 90). No cycle flagged.
+        resultado.CostoInsumos.ShouldBe(330m);
+        resultado.CostoUnitario.ShouldBe(330m);
+        resultado.CicloDetectado.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Calcular_SubRecetaSinCostoReal_CaeAlBom()
+    {
+        // Same pizza/masa setup, but masa has NO confirmed production → BOM recursion.
+        var harina = Guid.NewGuid();
+        var masa = CrearReceta(Guid.NewGuid());
+        masa.Insumos.Add(Insumo(harina, 2m));
+
+        var queso = Guid.NewGuid();
+        var pizza = CrearReceta(Guid.NewGuid());
+        pizza.Insumos.Add(SubReceta(masa.Id, 3m));
+        pizza.Insumos.Add(Insumo(queso, 1m));
+
+        var precios = new Dictionary<Guid, decimal> { [harina] = 10m, [queso] = 30m };
+        var recetas = new Dictionary<Guid, Receta> { [masa.Id] = masa };
+        var costosReales = new Dictionary<Guid, decimal>(); // masa absent
+        var resultado = CostoService.Calcular(
+            pizza, id => recetas.GetValueOrDefault(id), id => precios[id], costosSubreceta: costosReales);
+
+        // Fallback BOM: 3 x 20 + 30 = 90
+        resultado.CostoInsumos.ShouldBe(90m);
+        resultado.CicloDetectado.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Calcular_CicloConCostoRealEnSubReceta_NoDetectaCiclo()
+    {
+        // a -> b -> a cycle, but b's cost is known: the known-cost branch is not expanded,
+        // so the cycle through it cannot propagate.
+        var a = CrearReceta(Guid.NewGuid());
+        var b = CrearReceta(Guid.NewGuid());
+        a.Insumos.Add(SubReceta(b.Id, 2m));
+        b.Insumos.Add(SubReceta(a.Id, 1m));
+
+        var recetas = new Dictionary<Guid, Receta> { [a.Id] = a, [b.Id] = b };
+        var costosReales = new Dictionary<Guid, decimal> { [b.Id] = 100m };
+        var resultado = CostoService.Calcular(
+            a, id => recetas.GetValueOrDefault(id), _ => 10m, costosSubreceta: costosReales);
+
+        resultado.CicloDetectado.ShouldBeFalse();
+        resultado.CostoUnitario.ShouldBe(200m); // 2 x real cost of b
+    }
 }

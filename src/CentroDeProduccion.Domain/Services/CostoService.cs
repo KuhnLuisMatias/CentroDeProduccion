@@ -21,16 +21,19 @@ public static class CostoService
     /// Computes a recipe's cost. Cost is always the batch total of insumos at their last
     /// purchase price (no yield, no waste). <paramref name="obtenerReceta"/> resolves
     /// sub-recipes by id and <paramref name="obtenerPrecioInsumo"/> resolves a direct insumo's
-    /// unit price.
+    /// unit price. When <paramref name="costosSubreceta"/> carries a real unit cost for a
+    /// sub-recipe (its last confirmed production), that cost is used directly and the BOM is
+    /// not expanded for it; sub-recipes absent from the dictionary fall back to recursion.
     /// </summary>
     public static CostoResult Calcular(
         Receta receta,
         Func<Guid, Receta?> obtenerReceta,
         Func<Guid, decimal> obtenerPrecioInsumo,
-        int maxProfundidad = MaxProfundidadDefault)
+        int maxProfundidad = MaxProfundidadDefault,
+        IReadOnlyDictionary<Guid, decimal>? costosSubreceta = null)
     {
         var (costoInsumos, ciclo) = ResolverReceta(
-            receta, obtenerReceta, obtenerPrecioInsumo, new HashSet<Guid>(), 0, maxProfundidad);
+            receta, obtenerReceta, obtenerPrecioInsumo, new HashSet<Guid>(), 0, maxProfundidad, costosSubreceta);
 
         return new CostoResult(costoInsumos, costoInsumos, ciclo);
     }
@@ -41,7 +44,8 @@ public static class CostoService
         Func<Guid, decimal> obtenerPrecioInsumo,
         HashSet<Guid> enProceso,
         int profundidad,
-        int maxProfundidad)
+        int maxProfundidad,
+        IReadOnlyDictionary<Guid, decimal>? costosSubreceta)
     {
         if (profundidad >= maxProfundidad || !enProceso.Add(receta.Id))
         {
@@ -57,11 +61,20 @@ public static class CostoService
             }
             else if (detalle.RecetaOrigenId.HasValue)
             {
+                // A sub-recipe with a known real cost (last confirmed production) is priced
+                // directly: no BOM expansion, so no cycle can propagate through it.
+                if (costosSubreceta is not null &&
+                    costosSubreceta.TryGetValue(detalle.RecetaOrigenId.Value, out var costoReal))
+                {
+                    costo += costoReal * detalle.CantidadNecesaria;
+                    continue;
+                }
+
                 var subReceta = obtenerReceta(detalle.RecetaOrigenId.Value);
                 if (subReceta is not null)
                 {
                     var (subCosto, subCiclo) = ResolverReceta(
-                        subReceta, obtenerReceta, obtenerPrecioInsumo, enProceso, profundidad + 1, maxProfundidad);
+                        subReceta, obtenerReceta, obtenerPrecioInsumo, enProceso, profundidad + 1, maxProfundidad, costosSubreceta);
 
                     if (subCiclo)
                     {

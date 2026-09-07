@@ -45,7 +45,8 @@ public class InventarioCommandHandlerTests
     {
         var recetaRepo = Substitute.For<IRecetaRepository>();
         var insumoRepo = Substitute.For<IInsumoRepository>();
-        return new ProductoTerminadoCostoResolver(recetaRepo, new RecetaCostoResolver(recetaRepo, insumoRepo));
+        var produccionRepo = Substitute.For<IProduccionRepository>();
+        return new ProductoTerminadoCostoResolver(recetaRepo, produccionRepo, new RecetaCostoResolver(recetaRepo, insumoRepo, produccionRepo));
     }
 
     private static Insumo CrearInsumo(decimal stock) => new()

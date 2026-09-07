@@ -141,22 +141,6 @@ export default function ProductosTerminadosPage() {
         ),
     },
     {
-      id: "receta",
-      header: "Receta",
-      cell: ({ row }) =>
-        row.original.recetaId && row.original.receta ? (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void openReceta(row.original.recetaId!)}
-          >
-            Ver
-          </Button>
-        ) : (
-          "—"
-        ),
-    },
-    {
       accessorKey: "stockActual",
       header: "Cantidad",
       cell: ({ row }) => (

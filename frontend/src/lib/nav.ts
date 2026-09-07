@@ -16,7 +16,6 @@ import {
   Tag,
   Truck,
   Undo2,
-  Users,
 } from "lucide-react";
 
 export type Rol =
@@ -71,7 +70,6 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Compras",
     icon: ShoppingCart,
     items: [
-      { href: "/compras", label: "Órdenes de Compra", icon: ShoppingCart },
       { href: "/pagos", label: "Facturas y Pagos", icon: Receipt },
     ],
   },
@@ -124,7 +122,6 @@ export const NAV_GROUPS: NavGroup[] = [
         roles: ["EncargadoProduccion", "EncargadoCompras"],
       },
       { href: "/bares", label: "Bares", icon: Store, roles: ["EncargadoVentas"] },
-      { href: "/empleados", label: "Empleados", icon: Users, roles: ["EncargadoProduccion"] },
     ],
   },
 ];

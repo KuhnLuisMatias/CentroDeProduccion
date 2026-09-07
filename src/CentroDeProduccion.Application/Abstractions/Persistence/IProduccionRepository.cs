@@ -31,4 +31,14 @@ public interface IProduccionRepository
     Task<IReadOnlyDictionary<Guid, decimal>> GetLastConfirmedUnitCostsAsync(
         IEnumerable<Guid> productoTerminadoIds,
         CancellationToken ct = default);
+
+    /// <summary>
+    /// For each recipe id, returns the unit cost (CostoTotal / CantidadProducida) of its most
+    /// recent CONFIRMED production run with positive output — the real cost of that recipe's
+    /// finished product. Recipes without any confirmed production are absent from the
+    /// dictionary.
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, decimal>> GetLastConfirmedUnitCostsByRecetaAsync(
+        IReadOnlyCollection<Guid> recetaIds,
+        CancellationToken ct = default);
 }
