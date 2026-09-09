@@ -38,7 +38,9 @@ public class RemitoRepository : IRemitoRepository
                 (!estado.HasValue || r.Estado == estado.Value) &&
                 (!fechaDesde.HasValue || r.Fecha >= fechaDesde.Value) &&
                 (!fechaHasta.HasValue || r.Fecha < fechaHasta.Value.Date.AddDays(1)))
-            .OrderByDescending(r => r.Fecha)
+            // El último creado va arriba: se ordena por número secuencial de
+            // creación, no por fecha del remito (editable).
+            .OrderByDescending(r => r.NumeroRemito)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 

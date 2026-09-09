@@ -61,7 +61,10 @@ public class GetDevolucionesReportQueryHandler
         var remitoLineas = devolucion.Remito?.Lineas ?? new List<RemitoLinea>();
         return devolucion.Lineas.Sum(l =>
         {
-            var remitoLinea = remitoLineas.FirstOrDefault(rl => rl.ProductoTerminadoId == l.ProductoTerminadoId);
+            var remitoLinea = remitoLineas.FirstOrDefault(rl =>
+                l.ProductoTerminadoId.HasValue
+                    ? rl.ProductoTerminadoId == l.ProductoTerminadoId
+                    : rl.InsumoId == l.InsumoId);
             return l.Cantidad * (remitoLinea?.PrecioUnitario ?? 0m);
         });
     }

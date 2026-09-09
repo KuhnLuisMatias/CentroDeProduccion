@@ -497,13 +497,17 @@ public class AppDbContext : DbContext
              .OnDelete(DeleteBehavior.Cascade);
         });
 
-        // DevolucionLinea (Phase 5)
+        // DevolucionLinea (Phase 5; InsumoId + Destino agregados para devolución de insumos)
         modelBuilder.Entity<DevolucionLinea>(e =>
         {
             e.Property(dl => dl.Cantidad).HasPrecision(18, 4);
             e.HasOne(dl => dl.ProductoTerminado)
              .WithMany()
              .HasForeignKey(dl => dl.ProductoTerminadoId)
+             .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(dl => dl.Insumo)
+             .WithMany()
+             .HasForeignKey(dl => dl.InsumoId)
              .OnDelete(DeleteBehavior.Restrict);
         });
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useForm, Controller, useFieldArray } from "react-hook-form";
+import { useForm, Controller, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -12,13 +12,19 @@ import { MONEY } from "@/lib/utils";
 import type {
   Devolucion,
   DevolucionListItem,
+  Remito,
   RemitoListItem,
   BarListItem,
-  ProductoTerminado,
+  Insumo,
   CreateDevolucionCommand,
+  DestinoDevolucion,
 } from "@/lib/types";
+import { DESTINO_DEVOLUCION_LABELS } from "@/lib/types";
+import { fetchAllPages } from "@/lib/api";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
+import SearchCombobox from "@/components/shared/SearchCombobox";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,11 +54,16 @@ import {
 
 const lineaSchema = z.object({
   id: z.string(),
-  productoTerminadoId: z.string().min(1, "Seleccioná un producto terminado."),
+  tipoLinea: z.string(),
+  productoTerminadoId: z.string(),
+  insumoId: z.string(),
+  nombre: z.string(),
   cantidad: z.coerce
     .number({ message: "Ingresá un número válido." })
     .positive("Debe ser mayor a 0."),
   lote: z.string().max(50, "Máximo 50 caracteres."),
+  destino: z.string(),
+  maximo: z.string(),
 });
 
 const devolucionSchema = z.object({
@@ -64,13 +75,6 @@ const devolucionSchema = z.object({
 
 type DevolucionFormInput = z.input<typeof devolucionSchema>;
 type DevolucionFormValues = z.output<typeof devolucionSchema>;
-
-const EMPTY_LINE: DevolucionFormInput["lineas"][number] = {
-  id: "",
-  productoTerminadoId: "",
-  cantidad: "1",
-  lote: "",
-};
 
 const EMPTY_FORM: DevolucionFormInput = {
   remitoId: "",
@@ -95,7 +99,6 @@ export default function DevolucionesPage() {
 
   const [remitos, setRemitos] = useState<RemitoListItem[]>([]);
   const [bares, setBares] = useState<BarListItem[]>([]);
-  const [productos, setProductos] = useState<ProductoTerminado[]>([]);
 
   // Filters
   const [filtroRemito, setFiltroRemito] = useState("all");
@@ -134,17 +137,15 @@ export default function DevolucionesPage() {
     let cancelled = false;
     async function run() {
       try {
-        const [devoluciones, remitoList, barList, prodList] = await Promise.all([
+        const [devoluciones, remitoList, barList] = await Promise.all([
           apiClient<DevolucionListItem[]>(buildQuery()),
           apiClient<RemitoListItem[]>("/remitos"),
           apiClient<BarListItem[]>("/bares"),
-          apiClient<ProductoTerminado[]>("/productoterminado"),
         ]);
         if (cancelled) return;
         setRows(devoluciones);
         setRemitos(remitoList);
         setBares(barList);
-        setProductos(prodList);
         setError(null);
       } catch (err) {
         if (cancelled) return;
@@ -166,22 +167,64 @@ export default function DevolucionesPage() {
     defaultValues: EMPTY_FORM,
   });
 
-  const { fields, append, remove } = useFieldArray({ control: form.control, name: "lineas" });
+  const { fields, remove } = useFieldArray({ control: form.control, name: "lineas" });
 
   const openCreate = () => {
-    form.reset({ ...EMPTY_FORM, lineas: [{ ...EMPTY_LINE, id: `line-${Date.now()}` }] });
+    form.reset({ ...EMPTY_FORM, lineas: [] });
     setDialogOpen(true);
   };
 
+  // Al elegir remito se precargan todas sus líneas con la cantidad original
+  // (editable hacia abajo). Cambiar de remito reemplaza las líneas.
+  const onRemitoChange = async (id: string) => {
+    form.setValue("remitoId", id);
+    if (!id) {
+      form.setValue("lineas", []);
+      return;
+    }
+    try {
+      const det = await apiClient<Remito>(`/remitos/${id}`);
+      form.setValue(
+        "lineas",
+        (det.lineas ?? []).map((l) => ({
+          id: `line-${l.id}`,
+          tipoLinea: String(l.tipoLinea),
+          productoTerminadoId: l.productoTerminadoId ?? "",
+          insumoId: l.insumoId ?? "",
+          nombre:
+            Number(l.tipoLinea) === 1 ? l.productoTerminadoNombre : l.insumoNombre,
+          cantidad: String(l.cantidad),
+          lote: l.lote ?? "",
+          destino: "1",
+          maximo: String(l.cantidad),
+        })),
+      );
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "No se pudo cargar el remito.");
+    }
+  };
+
   const handleSave = form.handleSubmit(async (values) => {
+    for (const l of values.lineas) {
+      const cantidad = Number(l.cantidad) || 0;
+      const maximo = Number(l.maximo);
+      if (Number.isFinite(maximo) && cantidad > maximo) {
+        toast.error(
+          `No permite guardar: "${l.nombre || "la línea"}" supera lo entregado en el remito (máx ${l.maximo}).`,
+        );
+        return;
+      }
+    }
     const payload: CreateDevolucionCommand = {
       remitoId: values.remitoId,
       observaciones: values.observaciones.trim() || null,
       recibidoPor: values.recibidoPor.trim() || null,
       lineas: values.lineas.map((l) => ({
-        productoTerminadoId: l.productoTerminadoId,
+        productoTerminadoId: Number(l.tipoLinea) === 1 ? l.productoTerminadoId : null,
+        insumoId: Number(l.tipoLinea) === 2 ? l.insumoId : null,
         cantidad: l.cantidad,
         lote: l.lote.trim() || null,
+        destino: Number(l.destino) as DestinoDevolucion,
       })),
     };
     try {
@@ -236,6 +279,9 @@ export default function DevolucionesPage() {
     control,
     formState: { errors, isSubmitting },
   } = form;
+
+  const watchedLineas = useWatch({ control, name: "lineas" });
+  const watchedRemitoId = useWatch({ control, name: "remitoId" });
 
   return (
     <div>
@@ -326,23 +372,18 @@ export default function DevolucionesPage() {
           <form onSubmit={handleSave} className="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2" noValidate>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="devolucion-remito">Remito</Label>
-              <Controller
-                control={control}
-                name="remitoId"
-                render={({ field }) => (
-                  <Select value={field.value || undefined} onValueChange={field.onChange}>
-                    <SelectTrigger id="devolucion-remito" className="w-full">
-                      <SelectValue placeholder="Seleccionar…" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {remitosEnviados.map((r) => (
-                        <SelectItem key={r.id} value={r.id}>
-                          N° {r.numeroRemito} — {r.barNombre}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
+              <SearchCombobox
+                options={remitosEnviados.map((r) => ({
+                  id: r.id,
+                  label: `N° ${r.numeroRemito} — ${r.barNombre}`,
+                  sublabel: new Date(r.fecha).toLocaleDateString("es-AR"),
+                  meta: null,
+                  keywords: String(r.numeroRemito),
+                }))}
+                value={watchedRemitoId ?? ""}
+                onChange={(id) => void onRemitoChange(id)}
+                placeholder="Buscar remito…"
+                ariaLabel="Buscar remito"
               />
               <FieldError message={errors.remitoId?.message} />
             </div>
@@ -353,71 +394,79 @@ export default function DevolucionesPage() {
               <FieldError message={errors.recibidoPor?.message} />
             </div>
 
+            <div className="flex flex-col gap-2 sm:col-span-2">
+              <Label>Líneas del remito</Label>
+              {fields.length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Elegí un remito para cargar sus productos e insumos.
+                </p>
+              )}
+              {fields.map((field, index) => {
+                const tipoLinea = Number(watchedLineas?.[index]?.tipoLinea);
+                const maximo = watchedLineas?.[index]?.maximo;
+                return (
+                  <div key={field.id} className="grid grid-cols-[1.5fr_0.7fr_1fr_0.8fr_auto] items-end gap-2">
+                    <div className="flex min-w-0 flex-col gap-1">
+                      <Label className="text-xs text-muted-foreground">
+                        {tipoLinea === 2 ? "Insumo" : "Producto terminado"}
+                      </Label>
+                      <p className="truncate text-sm">
+                        {watchedLineas?.[index]?.nombre || "—"}
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-xs text-muted-foreground">Cantidad</Label>
+                      <Input type="number" step="any" min="0" {...register(`lineas.${index}.cantidad`)} />
+                      <FieldError message={errors.lineas?.[index]?.cantidad?.message} />
+                      {maximo ? (
+                        <span className="text-[11px] text-muted-foreground">máx {maximo}</span>
+                      ) : null}
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-xs text-muted-foreground">Destino</Label>
+                      <Controller
+                        control={control}
+                        name={`lineas.${index}.destino`}
+                        render={({ field: f }) => (
+                          <Select value={f.value || "1"} onValueChange={f.onChange}>
+                            <SelectTrigger className="w-full">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {(Object.keys(DESTINO_DEVOLUCION_LABELS) as unknown as string[]).map((v) => (
+                                <SelectItem key={v} value={v}>
+                                  {DESTINO_DEVOLUCION_LABELS[Number(v) as DestinoDevolucion]}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <Label className="text-xs text-muted-foreground">Lote</Label>
+                      <Input placeholder="Opcional" {...register(`lineas.${index}.lote`)} />
+                      <FieldError message={errors.lineas?.[index]?.lote?.message} />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => remove(index)}
+                      aria-label="Eliminar línea"
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
+                );
+              })}
+              <FieldError message={errors.lineas?.root?.message ?? errors.lineas?.message} />
+            </div>
+
             <div className="flex flex-col gap-1.5 sm:col-span-2">
               <Label htmlFor="devolucion-observaciones">Observaciones</Label>
               <Input id="devolucion-observaciones" {...register("observaciones")} />
               <FieldError message={errors.observaciones?.message} />
-            </div>
-
-            <div className="flex flex-col gap-2 sm:col-span-2">
-              <Label>Líneas</Label>
-              {fields.map((field, index) => (
-                <div key={field.id} className="grid grid-cols-[1.6fr_0.8fr_0.8fr_auto] items-start gap-2">
-                  <div className="flex flex-col gap-1">
-                    <Label className="text-xs text-muted-foreground">Producto terminado</Label>
-                    <Controller
-                      control={control}
-                      name={`lineas.${index}.productoTerminadoId`}
-                      render={({ field: f }) => (
-                        <Select value={f.value || undefined} onValueChange={f.onChange}>
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Seleccionar…" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {productos.map((p) => (
-                              <SelectItem key={p.id} value={p.id}>
-                                {p.nombre}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                    <FieldError message={errors.lineas?.[index]?.productoTerminadoId?.message} />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <Label className="text-xs text-muted-foreground">Cantidad</Label>
-                    <Input type="number" step="any" min="0" {...register(`lineas.${index}.cantidad`)} />
-                    <FieldError message={errors.lineas?.[index]?.cantidad?.message} />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <Label className="text-xs text-muted-foreground">Lote</Label>
-                    <Input placeholder="Opcional" {...register(`lineas.${index}.lote`)} />
-                    <FieldError message={errors.lineas?.[index]?.lote?.message} />
-                  </div>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => remove(index)}
-                    aria-label="Eliminar línea"
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </div>
-              ))}
-              <div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => append({ ...EMPTY_LINE, id: `line-${Date.now()}` })}
-                >
-                  <Plus className="size-4" />
-                  Agregar línea
-                </Button>
-              </div>
-              <FieldError message={errors.lineas?.root?.message ?? errors.lineas?.message} />
             </div>
 
             <DialogFooter className="sm:col-span-2">
@@ -472,7 +521,9 @@ export default function DevolucionesPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Producto</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Detalle</TableHead>
+                    <TableHead>Destino</TableHead>
                     <TableHead className="text-right">Cantidad</TableHead>
                     <TableHead className="text-left">P. unitario original</TableHead>
                     <TableHead className="text-left">Subtotal</TableHead>
@@ -481,7 +532,15 @@ export default function DevolucionesPage() {
                 <TableBody>
                   {detail.lineas.map((l) => (
                     <TableRow key={l.id}>
-                      <TableCell>{l.productoTerminadoNombre}</TableCell>
+                      <TableCell>{Number(l.tipoLinea) === 2 ? "Insumo" : "Producto terminado"}</TableCell>
+                      <TableCell>
+                        {Number(l.tipoLinea) === 2 ? l.insumoNombre : l.productoTerminadoNombre}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {DESTINO_DEVOLUCION_LABELS[l.destino] ?? l.destino}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="text-right">{l.cantidad}</TableCell>
                       <TableCell className="text-left">
                         {l.precioUnitarioOriginal ? MONEY.format(l.precioUnitarioOriginal) : "—"}

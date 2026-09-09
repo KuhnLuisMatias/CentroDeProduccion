@@ -858,6 +858,7 @@ export interface CreateRemitoCommand {
   entregadoPor: string | null;
   recibidoPor: string | null;
   lineas: CreateRemitoLineaCommand[];
+  fecha: string | null;
 }
 
 export interface UpdateRemitoCommand extends CreateRemitoCommand {
@@ -885,11 +886,24 @@ export interface ConfirmRemitoCommand {
 // Devoluciones
 // ---------------------------------------------------------------------------
 
+export type DestinoDevolucion = 1 | 2 | 3; // ReingresoStock=1, Cuarentena=2, MalEstado=3
+
+export const DESTINO_DEVOLUCION_LABELS: Record<DestinoDevolucion, string> = {
+  1: "Vuelve a stock",
+  2: "Cuarentena",
+  3: "Devolución en mal estado",
+};
+
 export interface DevolucionLinea {
   id: string;
+  tipoLinea: TipoLineaRemito;
+  productoTerminadoId: string | null;
   productoTerminadoNombre: string;
+  insumoId: string | null;
+  insumoNombre: string;
   cantidad: number;
   lote: string | null;
+  destino: DestinoDevolucion;
   precioUnitarioOriginal: number;
   subtotal: number;
 }
@@ -920,9 +934,11 @@ export interface DevolucionListItem {
 }
 
 export interface CreateDevolucionLineaCommand {
-  productoTerminadoId: string;
+  productoTerminadoId: string | null;
+  insumoId: string | null;
   cantidad: number;
   lote: string | null;
+  destino: DestinoDevolucion;
 }
 
 export interface CreateDevolucionCommand {

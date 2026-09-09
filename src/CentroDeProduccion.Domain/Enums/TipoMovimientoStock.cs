@@ -17,5 +17,9 @@ public enum TipoMovimientoStock
     Produccion = 7,
     VentaBar = 8,
     DevolucionBar = 9,
-    BajaPorVencimiento = 10
+    BajaPorVencimiento = 10,
+    /// <summary>Auditoría de devolución en cuarentena: no mueve stock (Cantidad 0).</summary>
+    DevolucionCuarentena = 11,
+    /// <summary>Auditoría de devolución en mal estado: no mueve stock (Cantidad 0).</summary>
+    DevolucionMalEstado = 12
 }
