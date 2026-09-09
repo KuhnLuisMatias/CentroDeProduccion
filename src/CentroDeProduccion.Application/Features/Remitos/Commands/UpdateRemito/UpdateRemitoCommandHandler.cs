@@ -18,6 +18,7 @@ public class UpdateRemitoCommandHandler
     private readonly IBarRepository _barRepository;
     private readonly IProductoTerminadoRepository _productoTerminadoRepository;
     private readonly IInsumoRepository _insumoRepository;
+    private readonly IProduccionRepository _produccionRepository;
     private readonly ProductoTerminadoCostoResolver _costoResolver;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IValidator<UpdateRemitoCommand> _validator;
@@ -27,6 +28,7 @@ public class UpdateRemitoCommandHandler
         IBarRepository barRepository,
         IProductoTerminadoRepository productoTerminadoRepository,
         IInsumoRepository insumoRepository,
+        IProduccionRepository produccionRepository,
         ProductoTerminadoCostoResolver costoResolver,
         IUnitOfWork unitOfWork,
         IValidator<UpdateRemitoCommand> validator)
@@ -35,6 +37,7 @@ public class UpdateRemitoCommandHandler
         _barRepository = barRepository;
         _productoTerminadoRepository = productoTerminadoRepository;
         _insumoRepository = insumoRepository;
+        _produccionRepository = produccionRepository;
         _costoResolver = costoResolver;
         _unitOfWork = unitOfWork;
         _validator = validator;
@@ -95,6 +98,10 @@ public class UpdateRemitoCommandHandler
         remito.Observaciones = command.Observaciones;
         remito.EntregadoPor = command.EntregadoPor;
         remito.RecibidoPor = command.RecibidoPor;
+        if (command.Fecha.HasValue)
+        {
+            remito.Fecha = command.Fecha.Value;
+        }
 
         remito.Lineas.Clear();
         foreach (var linea in lineasResult.Value)
@@ -137,6 +144,9 @@ public class UpdateRemitoCommandHandler
             .ToDictionary(p => p.Id);
         var insumosDict = (await _insumoRepository.GetByIdsAsync(insumoIds, cancellationToken))
             .ToDictionary(i => i.Id);
+        // Precio de la sección Productos Terminados: costo unitario de la última
+        // producción confirmada de cada fila/lote.
+        var costosConfirmados = await _produccionRepository.GetLastConfirmedUnitCostsAsync(productoIds, cancellationToken);
 
         foreach (var item in items)
         {
@@ -150,7 +160,12 @@ public class UpdateRemitoCommandHandler
                         Error.NotFound("PRODUCTO_TERMINADO_NOT_FOUND", $"Producto terminado {item.ProductoTerminadoId} no encontrado"));
                 }
 
-                precioUnitario = await _costoResolver.CalcularPorRecetaAsync(productoTerminado.RecetaId, cancellationToken);
+                precioUnitario = costosConfirmados.GetValueOrDefault(item.ProductoTerminadoId!.Value);
+                if (precioUnitario <= 0)
+                {
+                    // Sin producción confirmada: fallback al costo de receta en vivo.
+                    precioUnitario = await _costoResolver.CalcularPorRecetaAsync(productoTerminado.RecetaId, cancellationToken);
+                }
             }
             else
             {
@@ -160,8 +175,13 @@ public class UpdateRemitoCommandHandler
                         Error.NotFound("INSUMO_NOT_FOUND", $"Insumo {item.InsumoId} no encontrado"));
                 }
 
+                // Precio unitario en unidad de medida: última compra (por bulto)
+                // dividida por la presentación, más el margen de reventa del bar.
+                var precioBase = insumo.Presentacion > 0
+                    ? insumo.PrecioUltimaCompra / insumo.Presentacion
+                    : insumo.PrecioUltimaCompra;
                 precioUnitario = Math.Round(
-                    insumo.PrecioUltimaCompra * (1 + bar.MargenReventaPorcentaje / 100), 4);
+                    precioBase * (1 + bar.MargenReventaPorcentaje / 100), 4);
             }
 
             lineas.Add(new RemitoLinea

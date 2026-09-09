@@ -15,4 +15,5 @@ public sealed record CreateRemitoCommand(
     string? Observaciones,
     string? EntregadoPor,
     string? RecibidoPor,
-    IReadOnlyList<CreateRemitoLineaCommand> Lineas);
+    IReadOnlyList<CreateRemitoLineaCommand> Lineas,
+    DateTime? Fecha = null);

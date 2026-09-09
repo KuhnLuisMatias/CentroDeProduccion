@@ -15,9 +15,9 @@ using Shouldly;
 namespace CentroDeProduccion.Tests.Application.Handlers;
 
 /// <summary>
-/// Verifies remito creation: the Pendiente state, the PT-line price snapshot (recipe BOM cost
-/// computed on the fly) and the insumo-line price snapshot (PAP marked up by the bar's resale
-/// margin), plus the active-bar and non-empty-lines guards.
+/// Verifies remito creation: the Pendiente state, the PT-line price snapshot (last confirmed
+/// production unit cost, recipe BOM cost as fallback) and the insumo-line price snapshot
+/// (PAP/unit marked up by the bar's resale margin), plus the active-bar and non-empty-lines guards.
 /// </summary>
 public class CreateRemitoCommandHandlerTests
 {
@@ -25,6 +25,7 @@ public class CreateRemitoCommandHandlerTests
     private readonly IBarRepository _barRepository = Substitute.For<IBarRepository>();
     private readonly IProductoTerminadoRepository _productoTerminadoRepository = Substitute.For<IProductoTerminadoRepository>();
     private readonly IInsumoRepository _insumoRepository = Substitute.For<IInsumoRepository>();
+    private readonly IProduccionRepository _produccionRepository = Substitute.For<IProduccionRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly ICurrentUser _currentUser = Substitute.For<ICurrentUser>();
     private readonly IValidator<CreateRemitoCommand> _validator = new CreateRemitoCommandValidator();
@@ -33,7 +34,7 @@ public class CreateRemitoCommandHandlerTests
 
     private CreateRemitoCommandHandler CreateHandler() => new(
         _remitoRepository, _barRepository, _productoTerminadoRepository, _insumoRepository,
-        _costoResolver, _unitOfWork, _currentUser, _validator);
+        _produccionRepository, _costoResolver, _unitOfWork, _currentUser, _validator);
 
     private static Bar CrearBar(bool activo = true, decimal margen = 0m) => new()
     {
@@ -134,6 +135,34 @@ public class CreateRemitoCommandHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_LineaProductoTerminado_PrecioEsUltimoCostoConfirmado()
+    {
+        var bar = CrearBar();
+        var producto = CrearProducto(100m); // BOM daría 100, pero manda el costo confirmado
+        _barRepository.GetByIdAsync(bar.Id).Returns(bar);
+        _productoTerminadoRepository.GetByIdsAsync(Arg.Any<IReadOnlyCollection<Guid>>()).Returns(new[] { producto });
+        _produccionRepository.GetLastConfirmedUnitCostsAsync(Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<Guid, decimal> { [producto.Id] = 120m });
+        _remitoRepository.GetNextNumeroAsync().Returns(8);
+        _currentUser.UsuarioId.Returns(Guid.NewGuid());
+
+        Remito? creado = null;
+        _remitoRepository.When(r => r.AddAsync(Arg.Any<Remito>(), Arg.Any<CancellationToken>()))
+            .Do(ci => creado = ci.Arg<Remito>());
+
+        var result = await CreateHandler().HandleAsync(new CreateRemitoCommand(bar.Id, null, null, null, new[]
+        {
+            new CreateRemitoLineaCommand(TipoLineaRemito.ProductoTerminado, producto.Id, null, 2m, null, null)
+        }));
+
+        result.IsSuccess.ShouldBeTrue();
+        var linea = creado!.Lineas.ShouldHaveSingleItem();
+        linea.PrecioUnitario.ShouldBe(120m);
+        linea.Subtotal.ShouldBe(240m);
+        result.Value.Total.ShouldBe(240m);
+    }
+
+    [Fact]
     public async Task HandleAsync_LineaInsumoMargenCero_PrecioEsPAP()
     {
         var bar = CrearBar(margen: 0m);
@@ -186,6 +215,33 @@ public class CreateRemitoCommandHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_LineaInsumo_DividePrecioPorPresentacion()
+    {
+        var bar = CrearBar(margen: 0m);
+        var insumo = CrearInsumo(100m);
+        insumo.Presentacion = 5m;
+        _barRepository.GetByIdAsync(bar.Id).Returns(bar);
+        _insumoRepository.GetByIdsAsync(Arg.Any<IReadOnlyCollection<Guid>>()).Returns(new[] { insumo });
+        _remitoRepository.GetNextNumeroAsync().Returns(1);
+        _currentUser.UsuarioId.Returns(Guid.NewGuid());
+
+        Remito? creado = null;
+        _remitoRepository.When(r => r.AddAsync(Arg.Any<Remito>(), Arg.Any<CancellationToken>()))
+            .Do(ci => creado = ci.Arg<Remito>());
+
+        var result = await CreateHandler().HandleAsync(new CreateRemitoCommand(bar.Id, null, null, null, new[]
+        {
+            new CreateRemitoLineaCommand(TipoLineaRemito.Insumo, null, insumo.Id, 2m, null, null)
+        }));
+
+        result.IsSuccess.ShouldBeTrue();
+        var linea = creado!.Lineas.ShouldHaveSingleItem();
+        linea.PrecioUnitario.ShouldBe(20m); // 100 ÷ 5 en unidad de medida
+        linea.Subtotal.ShouldBe(40m); // 2 × 20
+        result.Value.Total.ShouldBe(40m);
+    }
+
+    [Fact]
     public async Task HandleAsync_BarInactivo_ReturnsBarInactivo()
     {
         var bar = CrearBar(activo: false);
@@ -226,6 +282,7 @@ public class UpdateRemitoCommandHandlerTests
     private readonly IBarRepository _barRepository = Substitute.For<IBarRepository>();
     private readonly IProductoTerminadoRepository _productoTerminadoRepository = Substitute.For<IProductoTerminadoRepository>();
     private readonly IInsumoRepository _insumoRepository = Substitute.For<IInsumoRepository>();
+    private readonly IProduccionRepository _produccionRepository = Substitute.For<IProduccionRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
     private readonly IValidator<UpdateRemitoCommand> _validator = new UpdateRemitoCommandValidator();
 
@@ -234,7 +291,7 @@ public class UpdateRemitoCommandHandlerTests
 
     private UpdateRemitoCommandHandler CreateHandler() => new(
         _remitoRepository, _barRepository, _productoTerminadoRepository, _insumoRepository,
-        _costoResolver, _unitOfWork, _validator);
+        _produccionRepository, _costoResolver, _unitOfWork, _validator);
 
     private static Bar CrearBar() => new()
     {

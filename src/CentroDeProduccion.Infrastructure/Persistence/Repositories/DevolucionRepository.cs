@@ -18,6 +18,8 @@ public class DevolucionRepository : IDevolucionRepository
         => await _context.Set<Devolucion>()
             .Include(d => d.Lineas)
                 .ThenInclude(l => l.ProductoTerminado)
+            .Include(d => d.Lineas)
+                .ThenInclude(l => l.Insumo)
             .Include(d => d.Remito)
                 .ThenInclude(r => r.Bar)
             .Include(d => d.Remito)
@@ -59,9 +61,19 @@ public class DevolucionRepository : IDevolucionRepository
         => await _context.Set<Devolucion>()
             .Where(d => d.RemitoId == remitoId)
             .SelectMany(d => d.Lineas)
-            .GroupBy(l => l.ProductoTerminadoId)
+            .Where(l => l.ProductoTerminadoId.HasValue)
+            .GroupBy(l => l.ProductoTerminadoId!.Value)
             .Select(g => new { ProductoTerminadoId = g.Key, Total = g.Sum(l => l.Cantidad) })
             .ToDictionaryAsync(x => x.ProductoTerminadoId, x => x.Total, cancellationToken);
+
+    public async Task<Dictionary<Guid, decimal>> GetTotalesDevueltosInsumosPorRemitoAsync(Guid remitoId, CancellationToken cancellationToken = default)
+        => await _context.Set<Devolucion>()
+            .Where(d => d.RemitoId == remitoId)
+            .SelectMany(d => d.Lineas)
+            .Where(l => l.InsumoId.HasValue)
+            .GroupBy(l => l.InsumoId!.Value)
+            .Select(g => new { InsumoId = g.Key, Total = g.Sum(l => l.Cantidad) })
+            .ToDictionaryAsync(x => x.InsumoId, x => x.Total, cancellationToken);
 
     public async Task AddAsync(Devolucion devolucion, CancellationToken cancellationToken = default)
         => await _context.Set<Devolucion>().AddAsync(devolucion, cancellationToken);

@@ -22,8 +22,12 @@ public class CreateDevolucionCommandValidator : AbstractValidator<CreateDevoluci
 
         RuleForEach(x => x.Lineas).ChildRules(line =>
         {
-            line.RuleFor(l => l.ProductoTerminadoId)
-                .NotEmpty().WithMessage("El producto terminado es requerido");
+            line.RuleFor(l => l)
+                .Must(l => l.ProductoTerminadoId.HasValue != l.InsumoId.HasValue)
+                .WithMessage("Debe indicar exactamente un producto terminado O un insumo, no ambos ni ninguno");
+
+            line.RuleFor(l => l.Destino)
+                .IsInEnum().WithMessage("El destino no es válido");
 
             line.RuleFor(l => l.Cantidad)
                 .GreaterThan(0).WithMessage("La cantidad debe ser mayor a cero");

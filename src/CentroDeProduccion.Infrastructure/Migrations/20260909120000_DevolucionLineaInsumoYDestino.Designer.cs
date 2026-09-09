@@ -4,6 +4,7 @@ using CentroDeProduccion.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CentroDeProduccion.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260909120000_DevolucionLineaInsumoYDestino")]
+    partial class DevolucionLineaInsumoYDestino
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -603,43 +606,6 @@ namespace CentroDeProduccion.Infrastructure.Migrations
                     b.HasIndex("OrdenCompraId");
 
                     b.ToTable("OrdenCompraItems");
-                });
-
-            modelBuilder.Entity("CentroDeProduccion.Domain.Entities.PagoAProveedor", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CreadoPor")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("FacturaId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("Fecha")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("FechaCreacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal>("MontoTotal")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<string>("Observaciones")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("ProveedorId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FacturaId");
-
-                    b.HasIndex("ProveedorId");
-
-                    b.ToTable("PagosAProveedores");
                 });
 
             modelBuilder.Entity("CentroDeProduccion.Domain.Entities.PagoBar", b =>
@@ -1601,54 +1567,6 @@ namespace CentroDeProduccion.Infrastructure.Migrations
                     b.Navigation("Insumo");
 
                     b.Navigation("OrdenCompra");
-                });
-
-            modelBuilder.Entity("CentroDeProduccion.Domain.Entities.PagoAProveedor", b =>
-                {
-                    b.HasOne("CentroDeProduccion.Domain.Entities.PagoProveedor", "Factura")
-                        .WithMany()
-                        .HasForeignKey("FacturaId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("CentroDeProduccion.Domain.Entities.Proveedor", "Proveedor")
-                        .WithMany()
-                        .HasForeignKey("ProveedorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.OwnsMany("CentroDeProduccion.Domain.Entities.PagoAProveedorMetodo", "Medios", b1 =>
-                        {
-                            b1.Property<Guid>("PagoAProveedorId")
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<Guid>("Id")
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("uniqueidentifier");
-
-                            b1.Property<decimal>("Monto")
-                                .HasPrecision(18, 4)
-                                .HasColumnType("decimal(18,4)");
-
-                            b1.Property<string>("Referencia")
-                                .HasMaxLength(100)
-                                .HasColumnType("nvarchar(100)");
-
-                            b1.Property<int>("Tipo")
-                                .HasColumnType("int");
-
-                            b1.HasKey("PagoAProveedorId", "Id");
-
-                            b1.ToTable("PagosAProveedoresMetodos", (string)null);
-
-                            b1.WithOwner()
-                                .HasForeignKey("PagoAProveedorId");
-                        });
-
-                    b.Navigation("Factura");
-
-                    b.Navigation("Medios");
-
-                    b.Navigation("Proveedor");
                 });
 
             modelBuilder.Entity("CentroDeProduccion.Domain.Entities.PagoBar", b =>

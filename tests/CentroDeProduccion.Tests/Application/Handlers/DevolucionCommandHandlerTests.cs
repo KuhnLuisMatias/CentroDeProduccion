@@ -23,6 +23,7 @@ public class DevolucionCommandHandlerTests
     private readonly IRemitoRepository _remitoRepository = Substitute.For<IRemitoRepository>();
     private readonly IBarRepository _barRepository = Substitute.For<IBarRepository>();
     private readonly IProductoTerminadoRepository _productoTerminadoRepository = Substitute.For<IProductoTerminadoRepository>();
+    private readonly IInsumoRepository _insumoRepository = Substitute.For<IInsumoRepository>();
     private readonly IMovimientoStockRepository _movimientoStockRepository = Substitute.For<IMovimientoStockRepository>();
     private readonly ICuentaCorrienteBarRepository _cuentaCorrienteBarRepository = Substitute.For<ICuentaCorrienteBarRepository>();
     private readonly IUnitOfWork _unitOfWork = Substitute.For<IUnitOfWork>();
@@ -31,7 +32,7 @@ public class DevolucionCommandHandlerTests
 
     private CreateDevolucionCommandHandler CreateHandler() => new(
         _devolucionRepository, _remitoRepository, _barRepository, _productoTerminadoRepository,
-        _movimientoStockRepository, _cuentaCorrienteBarRepository, _unitOfWork, _currentUser, _validator);
+        _insumoRepository, _movimientoStockRepository, _cuentaCorrienteBarRepository, _unitOfWork, _currentUser, _validator);
 
     private static Bar CrearBar(bool activo = true) => new()
     {
@@ -72,7 +73,40 @@ public class DevolucionCommandHandlerTests
         new(remitoId, null, null, lineas);
 
     private static CreateDevolucionLineaCommand Linea(Guid productoId, decimal cantidad) =>
-        new(productoId, cantidad, null);
+        new(productoId, null, cantidad, null);
+
+    private static CreateDevolucionLineaCommand LineaInsumo(Guid insumoId, decimal cantidad, DestinoDevolucion destino = DestinoDevolucion.ReingresoStock) =>
+        new(null, insumoId, cantidad, null, destino);
+
+    private static RemitoLinea LineaRemitoInsumo(Guid insumoId, decimal cantidad, decimal precioUnitario) => new()
+    {
+        Id = Guid.NewGuid(),
+        TipoLinea = TipoLineaRemito.Insumo,
+        InsumoId = insumoId,
+        Cantidad = cantidad,
+        PrecioUnitario = precioUnitario,
+        Subtotal = cantidad * precioUnitario
+    };
+
+    private static Insumo CrearInsumo(decimal stock) => new()
+    {
+        Id = Guid.NewGuid(),
+        Nombre = "Aceite",
+        CodigoSku = "ACE-001",
+        StockActual = stock,
+        UnidadConsumoId = Guid.NewGuid(),
+        FactorConversion = 1,
+        Activo = true,
+        PrecioUltimaCompra = 50m
+    };
+
+    private void MockearDevueltosVacios(Guid remitoId)
+    {
+        _devolucionRepository.GetTotalesDevueltosPorRemitoAsync(remitoId, Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<Guid, decimal>());
+        _devolucionRepository.GetTotalesDevueltosInsumosPorRemitoAsync(remitoId, Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<Guid, decimal>());
+    }
 
     [Fact]
     public async Task HandleAsync_DevolucionValida_IncrementaStockYRegistraMovimientoYCtaCteNegativa()
@@ -85,6 +119,7 @@ public class DevolucionCommandHandlerTests
         _productoTerminadoRepository.GetTrackedByIdsAsync(Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
             .Returns(new[] { producto });
         _devolucionRepository.GetTotalesDevueltosPorRemitoAsync(remito.Id, Arg.Any<CancellationToken>()).Returns(new Dictionary<Guid, decimal>());
+        _devolucionRepository.GetTotalesDevueltosInsumosPorRemitoAsync(remito.Id, Arg.Any<CancellationToken>()).Returns(new Dictionary<Guid, decimal>());
         _devolucionRepository.GetNextNumeroAsync(Arg.Any<CancellationToken>()).Returns(1);
         _currentUser.UsuarioId.Returns(usuarioId);
 
@@ -110,7 +145,7 @@ public class DevolucionCommandHandlerTests
         devolucion.RemitoId.ShouldBe(remito.Id);
         devolucion.CreadoPor.ShouldBe(usuarioId);
         devolucion.Lineas.Count.ShouldBe(1);
-        devolucion.Lineas.Single().ProductoTerminadoId.ShouldBe(producto.Id);
+        devolucion.Lineas.Single().ProductoTerminadoId.ShouldBe((Guid?)producto.Id);
         devolucion.Lineas.Single().Cantidad.ShouldBe(3m);
 
         var mov = movimientos.ShouldHaveSingleItem();
@@ -145,6 +180,8 @@ public class DevolucionCommandHandlerTests
             .Returns(new[] { producto });
         _devolucionRepository.GetTotalesDevueltosPorRemitoAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(new Dictionary<Guid, decimal>());
+        _devolucionRepository.GetTotalesDevueltosInsumosPorRemitoAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<Guid, decimal>());
 
         var result = await CreateHandler().HandleAsync(Command(remito.Id, Linea(producto.Id, 6m)));
 
@@ -169,6 +206,7 @@ public class DevolucionCommandHandlerTests
         _productoTerminadoRepository.GetTrackedByIdsAsync(Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
             .Returns(new[] { producto });
         _devolucionRepository.GetTotalesDevueltosPorRemitoAsync(remito.Id, Arg.Any<CancellationToken>()).Returns(new Dictionary<Guid, decimal> { [producto.Id] = 4m });
+        _devolucionRepository.GetTotalesDevueltosInsumosPorRemitoAsync(remito.Id, Arg.Any<CancellationToken>()).Returns(new Dictionary<Guid, decimal>());
 
         var result = await CreateHandler().HandleAsync(Command(remito.Id, Linea(producto.Id, 2m)));
 
@@ -221,6 +259,10 @@ public class DevolucionCommandHandlerTests
         _barRepository.GetByIdAsync(remito.BarId).Returns(CrearBar());
         _productoTerminadoRepository.GetTrackedByIdsAsync(Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
             .Returns(new[] { productoEnRemito, productoFuera });
+        _devolucionRepository.GetTotalesDevueltosPorRemitoAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<Guid, decimal>());
+        _devolucionRepository.GetTotalesDevueltosInsumosPorRemitoAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<Guid, decimal>());
 
         var result = await CreateHandler().HandleAsync(Command(remito.Id, Linea(productoFuera.Id, 1m)));
 
@@ -246,6 +288,8 @@ public class DevolucionCommandHandlerTests
         _productoTerminadoRepository.GetTrackedByIdsAsync(Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
             .Returns(new[] { productoFaltante, productoSuficiente });
         _devolucionRepository.GetTotalesDevueltosPorRemitoAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<Guid, decimal>());
+        _devolucionRepository.GetTotalesDevueltosInsumosPorRemitoAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(new Dictionary<Guid, decimal>());
 
         var result = await CreateHandler().HandleAsync(Command(remito.Id,
@@ -273,6 +317,7 @@ public class DevolucionCommandHandlerTests
         _productoTerminadoRepository.GetTrackedByIdsAsync(Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
             .Returns(new[] { producto });
         _devolucionRepository.GetTotalesDevueltosPorRemitoAsync(remito.Id, Arg.Any<CancellationToken>()).Returns(new Dictionary<Guid, decimal>());
+        _devolucionRepository.GetTotalesDevueltosInsumosPorRemitoAsync(remito.Id, Arg.Any<CancellationToken>()).Returns(new Dictionary<Guid, decimal>());
         _currentUser.UsuarioId.Returns(Guid.NewGuid());
         _unitOfWork.SaveChangesAsync(Arg.Any<CancellationToken>())
             .Returns(Task.FromException<int>(new ConcurrencyConflictException("conflicto", new Exception())));
@@ -282,5 +327,144 @@ public class DevolucionCommandHandlerTests
         result.IsFailure.ShouldBeTrue();
         result.Error.Type.ShouldBe(ErrorType.Concurrency);
         result.Error.Code.ShouldBe("CONCURRENCY_CONFLICT");
+    }
+
+    [Fact]
+    public async Task HandleAsync_LineaInsumoReingreso_IncrementaStockYRegistraMovimientoYCtaCte()
+    {
+        var insumo = CrearInsumo(stock: 20m);
+        var remito = CrearRemito(EstadoRemito.Enviado, LineaRemitoInsumo(insumo.Id, 8m, 50m)); // 8 × 50 = 400
+        _remitoRepository.GetByIdWithLineasAsync(remito.Id).Returns(remito);
+        _barRepository.GetByIdAsync(remito.BarId).Returns(CrearBar());
+        _insumoRepository.GetByIdsAsync(Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(new[] { insumo });
+        MockearDevueltosVacios(remito.Id);
+        _devolucionRepository.GetNextNumeroAsync(Arg.Any<CancellationToken>()).Returns(2);
+        _currentUser.UsuarioId.Returns(Guid.NewGuid());
+
+        var movimientos = new List<MovimientoStock>();
+        _movimientoStockRepository.When(r => r.AddAsync(Arg.Any<MovimientoStock>(), Arg.Any<CancellationToken>()))
+            .Do(ci => movimientos.Add(ci.Arg<MovimientoStock>()));
+        var ctaCtes = new List<CuentaCorrienteBar>();
+        _cuentaCorrienteBarRepository.When(r => r.AddAsync(Arg.Any<CuentaCorrienteBar>(), Arg.Any<CancellationToken>()))
+            .Do(ci => ctaCtes.Add(ci.Arg<CuentaCorrienteBar>()));
+        Devolucion? devolucion = null;
+        _devolucionRepository.When(r => r.AddAsync(Arg.Any<Devolucion>(), Arg.Any<CancellationToken>()))
+            .Do(ci => devolucion = ci.Arg<Devolucion>());
+
+        var result = await CreateHandler().HandleAsync(Command(remito.Id, LineaInsumo(insumo.Id, 3m)));
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.Total.ShouldBe(150m); // 3 × 50
+        insumo.StockActual.ShouldBe(23m); // 20 + 3
+
+        devolucion.ShouldNotBeNull();
+        devolucion!.Lineas.Single().InsumoId.ShouldBe((Guid?)insumo.Id);
+        devolucion.Lineas.Single().ProductoTerminadoId.ShouldBeNull();
+        devolucion.Lineas.Single().Destino.ShouldBe(DestinoDevolucion.ReingresoStock);
+
+        var mov = movimientos.ShouldHaveSingleItem();
+        mov.Tipo.ShouldBe(TipoMovimientoStock.DevolucionBar);
+        mov.InsumoId.ShouldBe((Guid?)insumo.Id);
+        mov.Cantidad.ShouldBe(3m);
+
+        ctaCtes.ShouldHaveSingleItem().Monto.ShouldBe(-150m);
+        await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task HandleAsync_LineaInsumoExcedeOriginal_ReturnsCantidadExcedeOriginal()
+    {
+        var insumo = CrearInsumo(stock: 20m);
+        var remito = CrearRemito(EstadoRemito.Enviado, LineaRemitoInsumo(insumo.Id, 8m, 50m));
+        _remitoRepository.GetByIdWithLineasAsync(remito.Id).Returns(remito);
+        _barRepository.GetByIdAsync(remito.BarId).Returns(CrearBar());
+        _insumoRepository.GetByIdsAsync(Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(new[] { insumo });
+        MockearDevueltosVacios(remito.Id);
+
+        var result = await CreateHandler().HandleAsync(Command(remito.Id, LineaInsumo(insumo.Id, 9m)));
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe("CANTIDAD_EXCEDE_ORIGINAL");
+        result.Error.Message.ShouldContain("requerido 9, disponible 8");
+        insumo.StockActual.ShouldBe(20m);
+        await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task HandleAsync_LineaInsumoNoEnRemito_ReturnsInsumoNoEnRemito()
+    {
+        var enRemito = CrearInsumo(stock: 20m);
+        var fuera = CrearInsumo(stock: 5m);
+        fuera.Nombre = "Azúcar";
+        var remito = CrearRemito(EstadoRemito.Enviado, LineaRemitoInsumo(enRemito.Id, 8m, 50m));
+        _remitoRepository.GetByIdWithLineasAsync(remito.Id).Returns(remito);
+        _barRepository.GetByIdAsync(remito.BarId).Returns(CrearBar());
+        _insumoRepository.GetByIdsAsync(Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(new[] { enRemito, fuera });
+        MockearDevueltosVacios(remito.Id);
+
+        var result = await CreateHandler().HandleAsync(Command(remito.Id, LineaInsumo(fuera.Id, 1m)));
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe("INSUMO_NO_EN_REMITO");
+        await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData(DestinoDevolucion.Cuarentena, TipoMovimientoStock.DevolucionCuarentena)]
+    [InlineData(DestinoDevolucion.MalEstado, TipoMovimientoStock.DevolucionMalEstado)]
+    public async Task HandleAsync_DestinoSinReingreso_NoTocaStockNiCreditoYSoloAudita(
+        DestinoDevolucion destino, TipoMovimientoStock tipoEsperado)
+    {
+        var insumo = CrearInsumo(stock: 20m);
+        var remito = CrearRemito(EstadoRemito.Enviado, LineaRemitoInsumo(insumo.Id, 8m, 50m));
+        _remitoRepository.GetByIdWithLineasAsync(remito.Id).Returns(remito);
+        _barRepository.GetByIdAsync(remito.BarId).Returns(CrearBar());
+        _insumoRepository.GetByIdsAsync(Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(new[] { insumo });
+        MockearDevueltosVacios(remito.Id);
+        _devolucionRepository.GetNextNumeroAsync(Arg.Any<CancellationToken>()).Returns(3);
+        _currentUser.UsuarioId.Returns(Guid.NewGuid());
+
+        var movimientos = new List<MovimientoStock>();
+        _movimientoStockRepository.When(r => r.AddAsync(Arg.Any<MovimientoStock>(), Arg.Any<CancellationToken>()))
+            .Do(ci => movimientos.Add(ci.Arg<MovimientoStock>()));
+
+        var result = await CreateHandler().HandleAsync(Command(remito.Id, LineaInsumo(insumo.Id, 4m, destino)));
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.Total.ShouldBe(0m); // sin crédito
+        insumo.StockActual.ShouldBe(20m); // sin reingreso
+
+        var mov = movimientos.ShouldHaveSingleItem();
+        mov.Tipo.ShouldBe(tipoEsperado);
+        mov.Cantidad.ShouldBe(0m);
+        mov.CantidadOriginal.ShouldBe(4m);
+        mov.InsumoId.ShouldBe((Guid?)insumo.Id);
+
+        await _cuentaCorrienteBarRepository.DidNotReceive().AddAsync(Arg.Any<CuentaCorrienteBar>(), Arg.Any<CancellationToken>());
+        await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData(true, true)]
+    [InlineData(false, false)]
+    public async Task HandleAsync_LineaSinExclusividad_ReturnsValidationError(bool conProducto, bool conInsumo)
+    {
+        var remito = CrearRemito(EstadoRemito.Enviado);
+        _remitoRepository.GetByIdWithLineasAsync(remito.Id).Returns(remito);
+        _barRepository.GetByIdAsync(remito.BarId).Returns(CrearBar());
+
+        var result = await CreateHandler().HandleAsync(Command(remito.Id,
+            new CreateDevolucionLineaCommand(
+                conProducto ? Guid.NewGuid() : null,
+                conInsumo ? Guid.NewGuid() : null,
+                1m, null)));
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Type.ShouldBe(ErrorType.Validation);
+        await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 }

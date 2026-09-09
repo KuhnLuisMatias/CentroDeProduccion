@@ -1,10 +1,17 @@
 namespace CentroDeProduccion.Application.Features.Devoluciones.Queries;
 
+using CentroDeProduccion.Domain.Enums;
+
 public sealed record DevolucionLineaResponse(
     Guid Id,
+    TipoLineaRemito TipoLinea,
+    Guid? ProductoTerminadoId,
     string ProductoTerminadoNombre,
+    Guid? InsumoId,
+    string InsumoNombre,
     decimal Cantidad,
     string? Lote,
+    DestinoDevolucion Destino,
     decimal PrecioUnitarioOriginal,
     decimal Subtotal);
 

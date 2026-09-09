@@ -3,7 +3,6 @@ import {
   BookOpen,
   Boxes,
   ChartColumn,
-  CreditCard,
   Factory,
   Folder,
   NotebookText,
@@ -78,9 +77,8 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Ventas",
     icon: Receipt,
     items: [
-      { href: "/remitos", label: "Pedidos y Remitos", icon: Receipt },
+      { href: "/remitos", label: "Pedidos", icon: Receipt },
       { href: "/devoluciones", label: "Devoluciones", icon: Undo2 },
-      { href: "/pagos-bar", label: "Pagos de Bares", icon: CreditCard },
     ],
   },
   {

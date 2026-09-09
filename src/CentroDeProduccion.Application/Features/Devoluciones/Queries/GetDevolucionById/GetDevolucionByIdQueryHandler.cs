@@ -35,15 +35,23 @@ public class GetDevolucionByIdQueryHandler
         devolucion.RecibidoPor,
         devolucion.Remito?.BarId ?? Guid.Empty,
         devolucion.Remito?.Bar?.Nombre ?? string.Empty,
-        devolucion.Lineas.Sum(l => l.Cantidad * PrecioUnitarioOriginal(devolucion, l.ProductoTerminadoId)),
+        // Total acreditado: solo las líneas que reingresaron a stock generan crédito.
+        devolucion.Lineas
+            .Where(l => l.Destino == DestinoDevolucion.ReingresoStock)
+            .Sum(l => l.Cantidad * PrecioUnitarioOriginal(devolucion, l)),
         devolucion.Lineas
             .Select(l => new DevolucionLineaResponse(
                 l.Id,
+                l.ProductoTerminadoId.HasValue ? TipoLineaRemito.ProductoTerminado : TipoLineaRemito.Insumo,
+                l.ProductoTerminadoId,
                 l.ProductoTerminado?.Nombre ?? string.Empty,
+                l.InsumoId,
+                l.Insumo?.Nombre ?? string.Empty,
                 l.Cantidad,
                 l.Lote,
-                PrecioUnitarioOriginal(devolucion, l.ProductoTerminadoId),
-                l.Cantidad * PrecioUnitarioOriginal(devolucion, l.ProductoTerminadoId)))
+                l.Destino,
+                PrecioUnitarioOriginal(devolucion, l),
+                l.Cantidad * PrecioUnitarioOriginal(devolucion, l)))
             .ToList());
 
     internal static DevolucionListItemResponse MapListItem(Domain.Entities.Devolucion devolucion) => new(
@@ -54,10 +62,15 @@ public class GetDevolucionByIdQueryHandler
         devolucion.Remito?.BarId ?? Guid.Empty,
         devolucion.Remito?.Bar?.Nombre ?? string.Empty,
         devolucion.Fecha,
-        devolucion.Lineas.Sum(l => l.Cantidad * PrecioUnitarioOriginal(devolucion, l.ProductoTerminadoId)));
+        devolucion.Lineas
+            .Where(l => l.Destino == DestinoDevolucion.ReingresoStock)
+            .Sum(l => l.Cantidad * PrecioUnitarioOriginal(devolucion, l)));
 
-    private static decimal PrecioUnitarioOriginal(Domain.Entities.Devolucion devolucion, Guid productoTerminadoId)
+    private static decimal PrecioUnitarioOriginal(Domain.Entities.Devolucion devolucion, Domain.Entities.DevolucionLinea linea)
         => devolucion.Remito?.Lineas
-            .FirstOrDefault(l => l.TipoLinea == TipoLineaRemito.ProductoTerminado && l.ProductoTerminadoId == productoTerminadoId)
+            .FirstOrDefault(l =>
+                linea.ProductoTerminadoId.HasValue
+                    ? l.TipoLinea == TipoLineaRemito.ProductoTerminado && l.ProductoTerminadoId == linea.ProductoTerminadoId
+                    : l.TipoLinea == TipoLineaRemito.Insumo && l.InsumoId == linea.InsumoId)
             ?.PrecioUnitario ?? 0m;
 }

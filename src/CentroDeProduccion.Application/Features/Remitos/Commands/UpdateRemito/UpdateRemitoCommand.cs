@@ -9,4 +9,5 @@ public sealed record UpdateRemitoCommand(
     string? EntregadoPor,
     string? RecibidoPor,
     IReadOnlyList<CreateRemitoLineaCommand> Lineas,
-    byte[] RowVersion);
+    byte[] RowVersion,
+    DateTime? Fecha = null);

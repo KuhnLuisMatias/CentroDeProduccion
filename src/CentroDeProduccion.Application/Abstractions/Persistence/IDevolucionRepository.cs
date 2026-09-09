@@ -15,5 +15,6 @@ public interface IDevolucionRepository
     Task<int> GetNextNumeroAsync(CancellationToken cancellationToken = default);
     Task<decimal> GetTotalDevueltoForLineAsync(Guid remitoId, Guid productoTerminadoId, CancellationToken cancellationToken = default);
     Task<Dictionary<Guid, decimal>> GetTotalesDevueltosPorRemitoAsync(Guid remitoId, CancellationToken cancellationToken = default);
+    Task<Dictionary<Guid, decimal>> GetTotalesDevueltosInsumosPorRemitoAsync(Guid remitoId, CancellationToken cancellationToken = default);
     Task AddAsync(Devolucion devolucion, CancellationToken cancellationToken = default);
 }
