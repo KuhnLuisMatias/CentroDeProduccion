@@ -351,21 +351,6 @@ export default function ProduccionPage() {
   });
   const editorTotal = editorLinesWithCost.reduce((acc, l) => acc + l.costo, 0);
 
-  // Informational-only stock warnings: production may proceed even when stock
-  // goes negative (backend allows it), so the Confirmar button stays enabled.
-  // Sub-recipe lines are excluded: their sub-PT stock is enforced server-side at
-  // confirm with a clear error ("Prodúzcala primero").
-  const stockWarnings = isBorrador
-    ? editorLinesWithCost.flatMap((l) => {
-        if (l.recetaOrigenId) return [];
-        const stock = l.insumoId ? getInsumoInfo(l.insumoId)?.stockActual : undefined;
-        const cantidad = parseCantidad(l.cantidad);
-        return stock !== undefined && cantidad > stock
-          ? [`${l.nombre} (requiere ${cantidad}, disponible ${stock})`]
-          : [];
-      })
-    : [];
-
   const saveLines = useCallback(async (): Promise<boolean> => {
     if (!detail) return false;
     if (lines.length === 0) {
@@ -691,7 +676,7 @@ export default function ProduccionPage() {
                   {detail.cantidadProducida > 0 && (
                     <div>
                       <span className="font-medium">Cantidad producida:</span>{" "}
-                      {detail.cantidadProducida}
+                      {detail.cantidadProducida} {detail.receta?.unidadMedidaSimbolo ?? ""}
                     </div>
                   )}
                   {detail.observaciones && (
@@ -701,12 +686,6 @@ export default function ProduccionPage() {
                   )}
                 </CardContent>
               </Card>
-
-              {isBorrador && stockWarnings.length > 0 && (
-                <div className="rounded-md border border-amber-600/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-400">
-                  ⚠ Stock insuficiente: {stockWarnings.join(" · ")}
-                </div>
-              )}
 
               <Card>
                 <CardHeader>
@@ -898,19 +877,29 @@ export default function ProduccionPage() {
           {resumenLoading ? (
             <p className="py-8 text-center text-sm text-muted-foreground">Cargando resumen…</p>
           ) : resumen ? (
-            <div className="grid grid-cols-1 gap-x-4 gap-y-2 text-sm sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <span className="font-medium">Receta:</span> {resumen.receta?.nombre ?? "—"}
+            <div className="flex flex-col gap-3">
+              {/* Receta resaltada */}
+              <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
+                <span className="inline-block rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-600">
+                  RECETA
+                </span>
+                <p className="mt-1.5 text-sm font-semibold text-blue-700">
+                  {resumen.receta?.nombre ?? "—"}
+                </p>
               </div>
-              <div>
-                <span className="font-medium">Cantidad producida:</span> {resumen.cantidadProducida}
-              </div>
-              <div>
-                <span className="font-medium">Lote:</span> {resumen.lote || "—"}
-              </div>
-              <div>
-                <span className="font-medium">Costo total de insumos:</span>{" "}
-                {MONEY.format(resumenCostoInsumos)}
+
+              <div className="flex flex-col gap-1.5 text-sm">
+                <div>
+                  <span className="font-medium">Lote:</span> {resumen.lote || "—"}
+                </div>
+                <div>
+                  <span className="font-medium">Cantidad producida:</span>{" "}
+                  {resumen.cantidadProducida} {resumen.receta?.unidadMedidaSimbolo ?? ""}
+                </div>
+                <div>
+                  <span className="font-medium">Costo total de insumos:</span>{" "}
+                  {MONEY.format(resumenCostoInsumos)}
+                </div>
               </div>
             </div>
           ) : null}

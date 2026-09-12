@@ -15,7 +15,7 @@ public class AppDbContextDesignTimeFactory : IDesignTimeDbContextFactory<AppDbCo
     public AppDbContext CreateDbContext(string[] args)
     {
         var connectionString = Environment.GetEnvironmentVariable("DOTNET_ConnectionString")
-            ?? "Server=localhost;Database=CentroDeProduccion;Trusted_Connection=true;TrustServerCertificate=true";
+            ?? "Server=localhost\\SQLEXPRESS;Database=CentroDeProduccion;Trusted_Connection=true;TrustServerCertificate=true";
 
         return new AppDbContext(new DbContextOptionsBuilder<AppDbContext>()
             .UseSqlServer(connectionString)

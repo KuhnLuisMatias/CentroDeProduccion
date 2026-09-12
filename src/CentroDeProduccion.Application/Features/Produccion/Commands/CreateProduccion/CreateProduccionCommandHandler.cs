@@ -75,7 +75,10 @@ public class CreateProduccionCommandHandler
             Fecha = RelojDeNegocio.Ahora,
             ResponsableId = _currentUser.UsuarioId!.Value,
             Estado = EstadoProduccion.Borrador,
-            Observaciones = command.Observaciones
+            Observaciones = command.Observaciones,
+            NombreProducto = receta.Nombre.Trim(),
+            CategoriaId = receta.CategoriaId,
+            UnidadMedidaId = receta.UnidadMedidaId
         };
 
         // One consumption line per recipe line. Sub-recipe quantities stay in the sub-recipe's

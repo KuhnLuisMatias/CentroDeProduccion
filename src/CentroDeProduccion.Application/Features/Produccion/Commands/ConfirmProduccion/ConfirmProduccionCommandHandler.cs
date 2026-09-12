@@ -91,6 +91,11 @@ public class ConfirmProduccionCommandHandler
             return Result.Failure<ConfirmProduccionResponse>(Error.NotFound("RECETA_NOT_FOUND", "Receta no encontrada"));
         }
 
+        // Legacy rows created before the snapshot columns existed: backfill from the recipe now.
+        produccion.NombreProducto ??= receta.Nombre.Trim();
+        produccion.CategoriaId ??= receta.CategoriaId;
+        produccion.UnidadMedidaId ??= receta.UnidadMedidaId;
+
         var lineas = produccion.InsumosConsumidos.ToList();
         var lineasInsumo = lineas.Where(l => l.InsumoId.HasValue).ToList();
         var lineasReceta = lineas.Where(l => l.RecetaOrigenId.HasValue).ToList();
@@ -161,12 +166,17 @@ public class ConfirmProduccionCommandHandler
             }, cancellationToken);
         }
 
-        // Finished product derived from the recipe: find-or-create by recipe name.
-        var producto = await _productoTerminadoRepository.GetByNombreAsync(receta.Nombre.Trim(), cancellationToken);
+        // Finished product derived from the production order: find-or-create by the
+        // order's snapshotted product name (one stock row per product).
+        var producto = await _productoTerminadoRepository.GetByNombreAsync(produccion.NombreProducto!.Trim(), cancellationToken);
         if (producto == null)
         {
-            // Default counting unit for finished goods created from production.
-            var unidad = await _unidadMedidaRepository.GetByNombreAsync("Unidad", cancellationToken);
+            // Unit from the order's snapshot; fall back to the default "Unidad" unit
+            // only if the order has no snapshot unit or that unit no longer exists.
+            var unidad = produccion.UnidadMedidaId is Guid produccionUnidadId
+                ? await _unidadMedidaRepository.GetByIdAsync(produccionUnidadId, cancellationToken)
+                : null;
+            unidad ??= await _unidadMedidaRepository.GetByNombreAsync("Unidad", cancellationToken);
             if (unidad == null)
             {
                 return Result.Failure<ConfirmProduccionResponse>(
@@ -176,9 +186,9 @@ public class ConfirmProduccionCommandHandler
             producto = new ProductoTerminado
             {
                 Id = Guid.NewGuid(),
-                Nombre = receta.Nombre.Trim(),
+                Nombre = produccion.NombreProducto.Trim(),
                 CodigoSku = await GenerarSkuUnicoAsync(receta.CodigoSku, cancellationToken),
-                CategoriaId = receta.CategoriaId,
+                CategoriaId = produccion.CategoriaId!.Value,
                 UnidadMedidaId = unidad.Id,
                 RecetaId = receta.Id,
                 StockActual = 0,
@@ -191,6 +201,14 @@ public class ConfirmProduccionCommandHandler
             };
             await _productoTerminadoRepository.AddAsync(producto, cancellationToken);
         }
+
+        // PT inherits its identity data from the production order, which snapshotted the recipe.
+        if (producto.Nombre != produccion.NombreProducto!.Trim())
+            producto.Nombre = produccion.NombreProducto.Trim();
+        if (producto.CategoriaId != produccion.CategoriaId!.Value)
+            producto.CategoriaId = produccion.CategoriaId.Value;
+        if (produccion.UnidadMedidaId is Guid unidadId && producto.UnidadMedidaId != unidadId)
+            producto.UnidadMedidaId = unidadId;
 
         var lote = $"{receta.CodigoSku}-{RelojDeNegocio.Ahora:yyyyMMddHHmmss}";
 

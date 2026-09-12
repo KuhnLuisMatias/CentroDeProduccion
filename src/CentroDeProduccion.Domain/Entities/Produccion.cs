@@ -22,6 +22,12 @@ public class Produccion
     public EstadoProduccion Estado { get; set; } = EstadoProduccion.Borrador;
     public string? Observaciones { get; set; }
 
+    /// <summary>Output identity snapshot taken from the recipe at order creation. PT stock
+    /// inherits from the production order, not directly from the recipe.</summary>
+    public string? NombreProducto { get; set; }
+    public Guid? CategoriaId { get; set; }
+    public Guid? UnidadMedidaId { get; set; }
+
     /// <summary>Total finished units produced across all salidas (set on confirmation).</summary>
     public decimal CantidadProducida { get; set; }
 
