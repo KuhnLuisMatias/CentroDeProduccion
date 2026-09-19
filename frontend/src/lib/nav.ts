@@ -43,7 +43,7 @@ export const NAV_GROUPS: NavGroup[] = [
     id: "produccion",
     label: "Producción",
     icon: Factory,
-    items: [{ href: "/produccion", label: "Órdenes de Producción", icon: Factory }],
+    items: [{ href: "/ordenes-produccion", label: "Órdenes de Producción", icon: Factory }],
   },
   {
     id: "stock",
@@ -69,7 +69,7 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Compras",
     icon: ShoppingCart,
     items: [
-      { href: "/pagos", label: "Facturas y Pagos", icon: Receipt },
+      { href: "/facturas-pagos", label: "Facturas y Pagos", icon: Receipt },
     ],
   },
   {
@@ -77,17 +77,17 @@ export const NAV_GROUPS: NavGroup[] = [
     label: "Ventas",
     icon: Receipt,
     items: [
-      { href: "/remitos", label: "Pedidos", icon: Receipt },
+      { href: "/pedidos", label: "Pedidos", icon: Receipt },
       { href: "/devoluciones", label: "Devoluciones", icon: Undo2 },
     ],
   },
   {
-    id: "cuenta-corriente",
+    id: "cuentas-corrientes",
     label: "Cuentas Corrientes",
     icon: NotebookText,
     items: [
       {
-        href: "/cuenta-corriente",
+        href: "/cuentas-corrientes",
         label: "Cuentas Corrientes",
         icon: NotebookText,
         roles: ["EncargadoCompras", "EncargadoVentas"],
@@ -114,7 +114,7 @@ export const NAV_GROUPS: NavGroup[] = [
         roles: ["EncargadoProduccion", "EncargadoCompras"],
       },
       {
-        href: "/unidades",
+        href: "/unidades-medida",
         label: "Unidades de Medida",
         icon: Ruler,
         roles: ["EncargadoProduccion", "EncargadoCompras"],

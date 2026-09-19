@@ -430,7 +430,7 @@ function SidebarGroupRail({
         <Link
           href={item.href}
           onClick={onNavigate}
-          title={group.label}
+          title={item.label}
           className={triggerClass}
         >
           <GroupIcon className="size-5 shrink-0" />
@@ -519,7 +519,7 @@ function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
   for (const group of NAV_GROUPS) {
     const item = group.items.find((navItem) => isActive(pathname, navItem.href));
     if (item) {
-      activeLabel = group.label;
+      activeLabel = item.label;
       break;
     }
   }
