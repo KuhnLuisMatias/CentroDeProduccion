@@ -18,7 +18,7 @@ import { TIPO_UNIDAD_MEDIDA_LABELS } from "@/lib/types";
 import { useAuth } from "@/context/AuthContext";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
-import { Badge } from "@/components/ui/badge";
+import EstadoBadge from "@/components/shared/EstadoBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -84,7 +84,7 @@ export default function UnidadesPage() {
 
   const load = useCallback(async () => {
     try {
-      const result = await apiClient<UnidadMedida[]>("/unidadesmedida");
+      const result = await apiClient<UnidadMedida[]>("/unidadesmedida?includeInactive=true");
       setRows(result);
       setError(null);
     } catch (err) {
@@ -155,16 +155,7 @@ export default function UnidadesPage() {
     {
       accessorKey: "activo",
       header: "Estado",
-      cell: ({ row }) =>
-        row.original.activo ? (
-          <Badge variant="outline" className="border-emerald-600/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
-            Activo
-          </Badge>
-        ) : (
-          <Badge variant="outline" className="border-red-600/30 bg-red-500/10 text-red-700 dark:text-red-400">
-            Inactivo
-          </Badge>
-        ),
+      cell: ({ row }) => <EstadoBadge activo={row.original.activo} />,
     },
   ];
 

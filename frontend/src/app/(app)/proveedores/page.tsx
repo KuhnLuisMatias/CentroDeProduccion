@@ -11,6 +11,7 @@ import { apiClient, ApiError } from "@/lib/api";
 import type { Proveedor, CreateProveedorCommand, UpdateProveedorCommand } from "@/lib/types";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
+import EstadoBadge from "@/components/shared/EstadoBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -96,7 +97,7 @@ export default function ProveedoresPage() {
 
   const load = useCallback(async () => {
     try {
-      const result = await apiClient<Proveedor[]>("/proveedores");
+      const result = await apiClient<Proveedor[]>("/proveedores?includeInactive=true");
       setRows(result);
       setError(null);
     } catch (err) {
@@ -203,7 +204,7 @@ export default function ProveedoresPage() {
     {
       accessorKey: "activo",
       header: "Estado",
-      cell: ({ row }) => (row.original.activo ? "Activo" : "Inactivo"),
+      cell: ({ row }) => <EstadoBadge activo={row.original.activo} />,
     },
   ];
 

@@ -32,16 +32,16 @@ public class CategoriasController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] AmbitoCategoria? ambito, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAll([FromQuery] AmbitoCategoria? ambito, [FromQuery] bool includeInactive = false, CancellationToken cancellationToken = default)
     {
         if (ambito.HasValue)
         {
-            var categorias = await _categoriaRepository.GetAllByAmbitoAsync(ambito.Value, cancellationToken);
+            var categorias = await _categoriaRepository.GetByAmbitoAsync(ambito.Value, includeInactive, cancellationToken);
             return Ok(categorias);
         }
 
-        var insumos = await _categoriaRepository.GetAllByAmbitoAsync(AmbitoCategoria.Insumo, cancellationToken);
-        var productos = await _categoriaRepository.GetAllByAmbitoAsync(AmbitoCategoria.ProductoTerminado, cancellationToken);
+        var insumos = await _categoriaRepository.GetByAmbitoAsync(AmbitoCategoria.Insumo, includeInactive, cancellationToken);
+        var productos = await _categoriaRepository.GetByAmbitoAsync(AmbitoCategoria.ProductoTerminado, includeInactive, cancellationToken);
         return Ok(new { Insumos = insumos, ProductosTerminados = productos });
     }
 

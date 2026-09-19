@@ -20,8 +20,8 @@ import type {
 } from "@/lib/types";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
+import EstadoBadge from "@/components/shared/EstadoBadge";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -293,16 +293,7 @@ export default function InsumosPage() {
     {
       accessorKey: "activo",
       header: "Estado",
-      cell: ({ row }) =>
-        row.original.activo ? (
-          <Badge variant="outline" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
-            Activo
-          </Badge>
-        ) : (
-          <Badge variant="outline" className="bg-red-100 text-red-700 hover:bg-red-100">
-            Inactivo
-          </Badge>
-        ),
+      cell: ({ row }) => <EstadoBadge activo={row.original.activo} />,
     },
   ];
 

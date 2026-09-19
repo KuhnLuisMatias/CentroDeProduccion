@@ -19,7 +19,7 @@ import type {
 import { CARGO_EMPLEADO_LABELS, CATEGORIA_EMPLEADO_LABELS } from "@/lib/types";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
-import { Badge } from "@/components/ui/badge";
+import EstadoBadge from "@/components/shared/EstadoBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -84,7 +84,7 @@ function FieldError({ message }: FieldErrorProps) {
 
 export default function EmpleadosPage() {
   const [rows, setRows] = useState<Empleado[]>([]);
-  const [activo, setActivo] = useState<ActivoFilter>("true");
+  const [activo, setActivo] = useState<ActivoFilter>("todos");
   const [cargo, setCargo] = useState<string>("todos");
   const [categoria, setCategoria] = useState<string>("todos");
   const [loading, setLoading] = useState(true);
@@ -196,16 +196,7 @@ export default function EmpleadosPage() {
     {
       accessorKey: "activo",
       header: "Estado",
-      cell: ({ row }) =>
-        row.original.activo ? (
-          <Badge variant="outline" className="border-emerald-600/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
-            Activo
-          </Badge>
-        ) : (
-          <Badge variant="outline" className="border-red-600/30 bg-red-500/10 text-red-700 dark:text-red-400">
-            Inactivo
-          </Badge>
-        ),
+      cell: ({ row }) => <EstadoBadge activo={row.original.activo} />,
     },
   ];
 

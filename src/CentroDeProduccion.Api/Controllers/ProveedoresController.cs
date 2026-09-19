@@ -59,9 +59,11 @@ public class ProveedoresController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAll([FromQuery] bool includeInactive = false, CancellationToken cancellationToken = default)
     {
-        var proveedores = await _proveedorRepository.GetAllActiveAsync(cancellationToken);
+        var proveedores = includeInactive
+            ? await _proveedorRepository.GetAllAsync(includeInactive: true, cancellationToken)
+            : await _proveedorRepository.GetAllActiveAsync(cancellationToken);
         return Ok(proveedores);
     }
 

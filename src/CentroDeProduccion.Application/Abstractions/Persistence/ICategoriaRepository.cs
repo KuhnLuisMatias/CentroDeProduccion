@@ -9,4 +9,5 @@ public interface ICategoriaRepository
     Task<bool> ExistsWithNameInAmbitoAsync(string nombre, AmbitoCategoria ambito, Guid? excludingId = null, CancellationToken cancellationToken = default);
     Task AddAsync(Categoria categoria, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<Categoria>> GetAllByAmbitoAsync(AmbitoCategoria ambito, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Categoria>> GetByAmbitoAsync(AmbitoCategoria ambito, bool includeInactive, CancellationToken cancellationToken = default);
 }

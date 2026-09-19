@@ -31,9 +31,11 @@ public class RecetasController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAll([FromQuery] bool includeInactive = false, CancellationToken cancellationToken = default)
     {
-        var recetas = await _recetaRepository.GetAllActiveAsync(cancellationToken);
+        var recetas = includeInactive
+            ? await _recetaRepository.GetAllAsync(includeInactive: true, cancellationToken)
+            : await _recetaRepository.GetAllActiveAsync(cancellationToken);
         return Ok(recetas);
     }
 

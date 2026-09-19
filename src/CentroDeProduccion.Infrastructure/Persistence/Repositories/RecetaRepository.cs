@@ -25,8 +25,11 @@ public class RecetaRepository : IRecetaRepository
             .FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
 
     public async Task<IReadOnlyList<Receta>> GetAllActiveAsync(CancellationToken cancellationToken = default)
+        => await GetAllAsync(includeInactive: false, cancellationToken);
+
+    public async Task<IReadOnlyList<Receta>> GetAllAsync(bool includeInactive, CancellationToken cancellationToken = default)
         => await _context.Recetas
-            .Where(r => r.Activo)
+            .Where(r => includeInactive || r.Activo)
             .Include(r => r.Categoria)
             .Include(r => r.UnidadMedida)
             .OrderBy(r => r.Nombre)

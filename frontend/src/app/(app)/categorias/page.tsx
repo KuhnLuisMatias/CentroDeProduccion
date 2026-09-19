@@ -19,6 +19,7 @@ import { AMBITO_CATEGORIA_LABELS } from "@/lib/types";
 import { useAuth } from "@/context/AuthContext";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
+import EstadoBadge from "@/components/shared/EstadoBadge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,7 +78,7 @@ export default function CategoriasPage() {
 
   const load = useCallback(async () => {
     try {
-      const result = await apiClient<CategoriasGrouped>("/categorias");
+      const result = await apiClient<CategoriasGrouped>("/categorias?includeInactive=true");
       setGrouped(result);
       setError(null);
     } catch (err) {
@@ -161,7 +162,7 @@ export default function CategoriasPage() {
     {
       accessorKey: "activo",
       header: "Estado",
-      cell: ({ row }) => (row.original.activo ? "Activo" : "Inactivo"),
+      cell: ({ row }) => <EstadoBadge activo={row.original.activo} />,
     },
   ];
 

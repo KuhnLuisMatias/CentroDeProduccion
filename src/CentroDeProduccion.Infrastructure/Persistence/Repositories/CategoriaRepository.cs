@@ -26,8 +26,11 @@ public class CategoriaRepository : ICategoriaRepository
         => await _context.Categorias.AddAsync(categoria, cancellationToken);
 
     public async Task<IReadOnlyList<Categoria>> GetAllByAmbitoAsync(AmbitoCategoria ambito, CancellationToken cancellationToken = default)
+        => await GetByAmbitoAsync(ambito, includeInactive: false, cancellationToken);
+
+    public async Task<IReadOnlyList<Categoria>> GetByAmbitoAsync(AmbitoCategoria ambito, bool includeInactive, CancellationToken cancellationToken = default)
         => await _context.Categorias
-            .Where(c => c.Ambito == ambito && c.Activo)
+            .Where(c => c.Ambito == ambito && (includeInactive || c.Activo))
             .OrderBy(c => c.Nombre)
             .AsNoTracking()
             .ToListAsync(cancellationToken);

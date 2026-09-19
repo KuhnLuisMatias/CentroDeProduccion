@@ -21,8 +21,11 @@ public class ProveedorRepository : IProveedorRepository
             cancellationToken);
 
     public async Task<IReadOnlyList<Proveedor>> GetAllActiveAsync(CancellationToken cancellationToken = default)
+        => await GetAllAsync(includeInactive: false, cancellationToken);
+
+    public async Task<IReadOnlyList<Proveedor>> GetAllAsync(bool includeInactive, CancellationToken cancellationToken = default)
         => await _context.Proveedores
-            .Where(p => p.Activo)
+            .Where(p => includeInactive || p.Activo)
             .OrderBy(p => p.NombreRazonSocial)
             .AsNoTracking()
             .ToListAsync(cancellationToken);

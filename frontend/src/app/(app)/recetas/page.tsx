@@ -23,7 +23,7 @@ import { ESTADO_RECETA_LABELS } from "@/lib/types";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
 import RecipeLinesEditor, { type RecipeLineDraft } from "@/components/shared/RecipeLinesEditor";
-import { Badge } from "@/components/ui/badge";
+import EstadoBadge from "@/components/shared/EstadoBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -130,7 +130,7 @@ export default function RecetasPage() {
 
   const load = useCallback(async () => {
     try {
-      const result = await apiClient<Receta[]>("/recetas");
+      const result = await apiClient<Receta[]>("/recetas?includeInactive=true");
       setRows(result);
       setError(null);
     } catch (err) {
@@ -145,7 +145,7 @@ export default function RecetasPage() {
     async function run() {
       try {
         const [recetas, cat, uni, ins] = await Promise.all([
-          apiClient<Receta[]>("/recetas"),
+          apiClient<Receta[]>("/recetas?includeInactive=true"),
           apiClient<Categoria[]>("/categorias?ambito=2"),
           apiClient<UnidadMedida[]>("/unidadesmedida"),
           fetchAllPages<Insumo>("/insumos?pageSize=100"),
@@ -286,16 +286,13 @@ export default function RecetasPage() {
     {
       id: "estado",
       header: "Estado",
-      cell: ({ row }) =>
-        row.original.estado === 1 ? (
-          <Badge variant="outline" className="border-emerald-600/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
-            {ESTADO_RECETA_LABELS[row.original.estado] ?? String(row.original.estado)}
-          </Badge>
-        ) : (
-          <Badge variant="outline">
-            {ESTADO_RECETA_LABELS[row.original.estado] ?? String(row.original.estado)}
-          </Badge>
-        ),
+      cell: ({ row }) => (
+        <EstadoBadge
+          activo={row.original.estado === 1}
+          activoLabel={ESTADO_RECETA_LABELS[row.original.estado] ?? String(row.original.estado)}
+          inactivoLabel={ESTADO_RECETA_LABELS[row.original.estado] ?? String(row.original.estado)}
+        />
+      ),
     },
   ];
 

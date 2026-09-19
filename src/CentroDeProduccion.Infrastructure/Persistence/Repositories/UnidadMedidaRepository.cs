@@ -18,8 +18,11 @@ public class UnidadMedidaRepository : IUnidadMedidaRepository
         => await _context.UnidadesMedida.FirstOrDefaultAsync(u => u.Nombre == nombre, cancellationToken);
 
     public async Task<IReadOnlyList<UnidadMedida>> GetAllActiveAsync(CancellationToken cancellationToken = default)
+        => await GetAllAsync(includeInactive: false, cancellationToken);
+
+    public async Task<IReadOnlyList<UnidadMedida>> GetAllAsync(bool includeInactive, CancellationToken cancellationToken = default)
         => await _context.UnidadesMedida
-            .Where(u => u.Activo)
+            .Where(u => includeInactive || u.Activo)
             .OrderBy(u => u.Nombre)
             .AsNoTracking()
             .ToListAsync(cancellationToken);

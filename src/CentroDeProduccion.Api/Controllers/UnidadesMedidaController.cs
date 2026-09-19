@@ -31,9 +31,11 @@ public class UnidadesMedidaController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAll([FromQuery] bool includeInactive = false, CancellationToken cancellationToken = default)
     {
-        var unidades = await _unidadMedidaRepository.GetAllActiveAsync(cancellationToken);
+        var unidades = includeInactive
+            ? await _unidadMedidaRepository.GetAllAsync(includeInactive: true, cancellationToken)
+            : await _unidadMedidaRepository.GetAllActiveAsync(cancellationToken);
         return Ok(unidades);
     }
 
