@@ -377,19 +377,22 @@ export default function PagosPage() {
       />
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <Select value={filtroProveedor} onValueChange={setFiltroProveedor}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Todos los proveedores" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los proveedores</SelectItem>
-            {proveedores.map((p) => (
-              <SelectItem key={p.id} value={p.id}>
-                {p.nombreRazonSocial}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex flex-col gap-1">
+          <Label className="text-xs text-muted-foreground">Proveedor</Label>
+          <Select value={filtroProveedor} onValueChange={setFiltroProveedor}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Todos los proveedores" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los proveedores</SelectItem>
+              {proveedores.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.nombreRazonSocial}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <div className="flex flex-col gap-1">
           <Label className="text-xs text-muted-foreground">Desde</Label>
           <Input

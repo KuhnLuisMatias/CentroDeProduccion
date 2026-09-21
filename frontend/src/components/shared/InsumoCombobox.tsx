@@ -23,7 +23,7 @@ interface InsumoComboboxProps {
   id?: string;
 }
 
-function formatPresentacion(i: InsumoComboboxOption) {
+export function formatPresentacion(i: InsumoComboboxOption) {
   if (!i.presentacion || i.presentacion === 1) return null;
   const simbolo = i.unidadConsumo?.simbolo ?? "";
   return `Pres.: ${i.presentacion}${simbolo ? ` ${simbolo}` : ""}`;
@@ -39,8 +39,9 @@ function matchesQuery(i: InsumoComboboxOption, q: string) {
 
 /**
  * Combobox con búsqueda por teclado + navegación ↑ ↓ + Enter.
- * Muestra nombre (que ya incluye la presentación, ej. "x2.75Kg")
- * junto a la unidad de compra.
+ * Muestra solo el nombre del insumo (con subtexto opcional de SKU);
+ * la presentación y unidad de compra se exponen vía formatPresentacion
+ * para que el consumidor las muestre donde corresponda.
  */
 export default function InsumoCombobox({
   insumos,
@@ -75,12 +76,7 @@ export default function InsumoCombobox({
   }, []);
 
   const selected = insumos.find((i) => i.id === value) ?? null;
-  const selectedPres = selected ? formatPresentacion(selected) : null;
-  const selectedLabel = selected
-    ? selectedPres
-      ? `${selected.nombre} (${selectedPres.replace("Pres.: ", "x ")})`
-      : selected.nombre
-    : "";
+  const selectedLabel = selected ? selected.nombre : "";
 
   const commit = (insumoId: string) => {
     onChange(insumoId);
@@ -171,22 +167,11 @@ export default function InsumoCombobox({
                 >
                   <span className="min-w-0">
                     <span className="block truncate">{i.nombre}</span>
-                    {(() => {
-                      const pres = formatPresentacion(i);
-                      if (!i.codigoSku && !pres) return null;
-                      return (
-                        <span className="block truncate text-xs text-muted-foreground">
-                          {i.codigoSku ? `SKU: ${i.codigoSku}` : null}
-                          {i.codigoSku && pres ? " · " : null}
-                          {pres}
-                        </span>
-                      );
-                    })()}
-                  </span>
-                  <span className="shrink-0 text-xs text-muted-foreground">
-                    {i.unidadCompra
-                      ? `${i.unidadCompra.nombre} (${i.unidadCompra.simbolo})`
-                      : ""}
+                    {i.codigoSku ? (
+                      <span className="block truncate text-xs text-muted-foreground">
+                        SKU: {i.codigoSku}
+                      </span>
+                    ) : null}
                   </span>
                 </button>
               );

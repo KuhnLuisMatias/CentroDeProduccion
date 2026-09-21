@@ -6,7 +6,7 @@ import { CurrencyInput } from "@/components/ui/currency-input";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MONEY } from "@/lib/utils";
-import InsumoCombobox, { type InsumoComboboxOption } from "@/components/shared/InsumoCombobox";
+import InsumoCombobox, { formatPresentacion, type InsumoComboboxOption } from "@/components/shared/InsumoCombobox";
 
 export interface LineaInsumoDraft {
   key: string;
@@ -62,13 +62,20 @@ export default function LineasInsumosEditor({
     0,
   );
 
+  const infoFor = (insumoId: string) => {
+    const selected = insumos.find((i) => i.id === insumoId);
+    if (!selected) return "—";
+    const pres = formatPresentacion(selected);
+    return pres ? pres.replace("Pres.: ", "x") : "—";
+  };
+
   return (
     <div className="flex flex-col gap-2">
       {lines.map((line, index) => {
         return (
         <div
           key={line.key}
-          className="grid grid-cols-[1.6fr_0.8fr_0.9fr_auto] items-end gap-2"
+          className="grid grid-cols-[2.2fr_0.55fr_0.6fr_0.65fr_auto] items-end gap-2"
         >
           <div className="flex flex-col gap-1">
             <Label className="text-xs text-muted-foreground">Insumo</Label>
@@ -78,6 +85,12 @@ export default function LineasInsumosEditor({
               onChange={(id) => onInsumoChange(index, id)}
             />
             <FieldError message={fieldErrors?.[index]?.insumoId} />
+          </div>
+          <div className="flex flex-col gap-1">
+            <Label className="text-xs text-muted-foreground">Presentación</Label>
+            <div className="flex h-9 items-center overflow-hidden rounded-md border bg-muted/30 px-3">
+              <span className="truncate text-sm text-muted-foreground">{infoFor(line.insumoId)}</span>
+            </div>
           </div>
           <div className="flex flex-col gap-1">
             <Label className="text-xs text-muted-foreground">Cantidad</Label>
