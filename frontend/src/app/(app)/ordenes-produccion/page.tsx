@@ -5,14 +5,13 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Check, Info, PackageCheck, Plus, RefreshCw, Search, X } from "lucide-react";
+import { Check, Loader2, Plus, RefreshCw, Search } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient, ApiError, fetchAllPages } from "@/lib/api";
 import { MONEY } from "@/lib/utils";
 import type {
   Insumo,
   Produccion,
-  ProduccionInsumoConsumido,
   Receta,
   CreateProduccionCommand,
   UpdateProduccionInsumosCommand,
@@ -31,7 +30,6 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -79,24 +77,6 @@ function getInsumoInfo(insumoId: string): Insumo | undefined {
 function parseCantidad(cantidad: string): number {
   const parsed = Number(cantidad);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
-}
-
-function lineCosto(
-  line: ProduccionInsumoConsumido | { insumoId: string | null; recetaOrigenId: string | null; cantidad: number; costoUnitario?: number },
-): number {
-  // Sub-recipe lines cost at the sub-PT's live unit cost returned by the API; insumo
-  // lines at the cached last purchase price (API costoUnitario as fallback).
-  if (line.recetaOrigenId) {
-    return line.cantidad * (line.costoUnitario ?? 0);
-  }
-  const price = line.insumoId
-    ? (getInsumoInfo(line.insumoId)?.precioUltimaCompra ?? line.costoUnitario ?? 0)
-    : (line.costoUnitario ?? 0);
-  return line.cantidad * price;
-}
-
-function totalCosto(lines: ProduccionInsumoConsumido[]): number {
-  return lines.reduce((acc, l) => acc + lineCosto(l), 0);
 }
 
 interface FieldErrorProps {
@@ -157,13 +137,12 @@ export default function ProduccionPage() {
   const [closing, setClosing] = useState<Produccion | null>(null);
   const [cantidadProducida, setCantidadProducida] = useState("");
   const [confirmBusy, setConfirmBusy] = useState(false);
-  // Unit symbol of the receta's "unidad de medida resultante" (fetched from the detail response).
-  const [closingUnidadSimbolo, setClosingUnidadSimbolo] = useState("Uni");
 
-  // Resumen modal — shown after a successful confirm, with fresh confirmed values.
+  // Resumen modal (post-confirm)
   const [resumenOpen, setResumenOpen] = useState(false);
   const [resumen, setResumen] = useState<Produccion | null>(null);
-  const [resumenLoading, setResumenLoading] = useState(false);
+  // Unit symbol of the receta's "unidad de medida resultante" (fetched from the detail response).
+  const [closingUnidadSimbolo, setClosingUnidadSimbolo] = useState("Uni");
 
   // Cancel flow (unchanged)
   const [cancelling, setCancelling] = useState<Produccion | null>(null);
@@ -277,20 +256,15 @@ export default function ProduccionPage() {
     setCantidadProducida("");
   }, []);
 
-  // Resumen modal opener — fetches the FRESH production detail so the resumen
-  // shows the CONFIRMED values (costos recalculados server-side + lote final).
+  // Resumen modal opener — fetches the FRESH production detail BEFORE opening,
+  // so the modal never renders in an empty/loading state.
   const openResumen = useCallback(async (id: string, loteFallback: string) => {
-    setResumenOpen(true);
-    setResumen(null);
-    setResumenLoading(true);
     try {
       const det = await apiClient<Produccion>(`/produccion/${id}`);
       setResumen({ ...det, lote: det.lote || loteFallback });
+      setResumenOpen(true);
     } catch (err) {
-      setResumenOpen(false);
       toast.error(err instanceof ApiError ? err.message : "No se pudo cargar el resumen.");
-    } finally {
-      setResumenLoading(false);
     }
   }, []);
 
@@ -427,13 +401,6 @@ export default function ProduccionPage() {
       setConfirmBusy(false);
     }
   };
-
-  // Resumen modal values — from the CONFIRMED detail fetched fresh after the POST.
-  const resumenCostoInsumos = resumen
-    ? resumen.costoTotalInsumos > 0
-      ? resumen.costoTotalInsumos
-      : totalCosto(resumen.insumosConsumidos)
-    : 0;
 
   // Default counting unit fallback ("Uni") — overridden by openClosing's detail fetch.
   const handleCancel = async () => {
@@ -651,7 +618,9 @@ export default function ProduccionPage() {
           </DialogHeader>
 
           {detailLoading ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">Cargando detalle…</p>
+            <div className="flex justify-center py-8">
+              <Loader2 className="size-6 animate-spin text-muted-foreground" aria-hidden="true" />
+            </div>
           ) : detail ? (
             <div className="flex flex-col gap-4">
               <Card>
@@ -754,18 +723,18 @@ export default function ProduccionPage() {
           ) : null}
 
           <DialogFooter>
+            <Button type="button" variant="ghost" onClick={closeEditor}>
+              Cerrar
+            </Button>
             {isBorrador && (
               <Button
                 type="button"
                 onClick={() => void handleConfirmFromEditor()}
                 disabled={savingLines || detailLoading}
               >
-                {savingLines ? "Guardando…" : "Guardar"}
+                {savingLines ? "Aceptando…" : "Aceptar"}
               </Button>
             )}
-            <Button type="button" variant="ghost" onClick={closeEditor}>
-              Cerrar
-            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -778,43 +747,18 @@ export default function ProduccionPage() {
           if (!open) closeClosing();
         }}
       >
-        <DialogContent className="sm:max-w-md" showCloseButton={false}>
-          {/* Header row: icon + close */}
-          <div className="flex items-start justify-between">
-            <div className="flex size-12 items-center justify-center rounded-full bg-blue-50">
-              <PackageCheck className="size-6 text-blue-500" />
-            </div>
-            <DialogClose asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="rounded-full"
-                aria-label="Cerrar"
-              >
-                <X className="size-4" />
-              </Button>
-            </DialogClose>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirmar producción</DialogTitle>
+            <DialogDescription>
+              Al confirmar se descontarán los insumos de la receta y se incrementará el stock del
+              producto terminado.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="text-sm">
+            <span className="font-medium">Receta:</span> {closing?.receta?.nombre ?? "—"}
           </div>
-
-          <DialogTitle>Confirmar producción</DialogTitle>
-
-          {/* Recipe highlight */}
-          <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
-            <span className="inline-block rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-600">
-              RECETA
-            </span>
-            <p className="mt-1.5 text-sm font-semibold text-blue-700">
-              {closing?.receta?.nombre ?? "—"}
-            </p>
-          </div>
-
-          <DialogDescription>
-            Al confirmar se descontarán los insumos de la receta y se incrementará el stock del
-            producto terminado.
-          </DialogDescription>
-
-          <div className="my-4 border-t border-gray-100" />
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="produccion-cantidad-producida">Cantidad producida</Label>
@@ -836,14 +780,6 @@ export default function ProduccionPage() {
             </div>
           </div>
 
-          {/* Info alert */}
-          <div className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3">
-            <Info className="mt-0.5 size-4 shrink-0 text-blue-500" />
-            <p className="text-sm text-blue-700">
-              Esta acción no se puede deshacer. Verifique la cantidad antes de confirmar.
-            </p>
-          </div>
-
           <DialogFooter>
             <Button type="button" variant="outline" onClick={closeClosing} disabled={confirmBusy}>
               Cancelar
@@ -853,7 +789,7 @@ export default function ProduccionPage() {
               onClick={() => void handleConfirmTerminacion()}
               disabled={confirmBusy}
             >
-              {confirmBusy ? "Confirmando…" : "Confirmar"}
+              {confirmBusy ? "Aceptando…" : "Aceptar"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -874,32 +810,21 @@ export default function ProduccionPage() {
             </DialogDescription>
           </DialogHeader>
 
-          {resumenLoading ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">Cargando resumen…</p>
-          ) : resumen ? (
-            <div className="flex flex-col gap-3">
-              {/* Receta resaltada */}
-              <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
-                <span className="inline-block rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-semibold text-blue-600">
-                  RECETA
-                </span>
-                <p className="mt-1.5 text-sm font-semibold text-blue-700">
-                  {resumen.receta?.nombre ?? "—"}
-                </p>
+          {resumen ? (
+            <div className="flex flex-col gap-1.5 text-sm">
+              <div>
+                <span className="font-medium">Receta:</span> {resumen.receta?.nombre ?? "—"}
               </div>
-
-              <div className="flex flex-col gap-1.5 text-sm">
-                <div>
-                  <span className="font-medium">Lote:</span> {resumen.lote || "—"}
-                </div>
-                <div>
-                  <span className="font-medium">Cantidad producida:</span>{" "}
-                  {resumen.cantidadProducida} {resumen.receta?.unidadMedidaSimbolo ?? ""}
-                </div>
-                <div>
-                  <span className="font-medium">Costo total de insumos:</span>{" "}
-                  {MONEY.format(resumenCostoInsumos)}
-                </div>
+              <div>
+                <span className="font-medium">Lote:</span> {resumen.lote || "—"}
+              </div>
+              <div>
+                <span className="font-medium">Cantidad producida:</span>{" "}
+                {resumen.cantidadProducida} {resumen.receta?.unidadMedidaSimbolo ?? ""}
+              </div>
+              <div>
+                <span className="font-medium">Costo total de insumos:</span>{" "}
+                {MONEY.format(resumen.costoTotalInsumos)}
               </div>
             </div>
           ) : null}
