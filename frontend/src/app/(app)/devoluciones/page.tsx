@@ -16,6 +16,7 @@ import type {
   RemitoListItem,
   BarListItem,
   Insumo,
+  ProductoTerminado,
   CreateDevolucionCommand,
   DestinoDevolucion,
 } from "@/lib/types";
@@ -61,7 +62,6 @@ const lineaSchema = z.object({
   cantidad: z.coerce
     .number({ message: "Ingresá un número válido." })
     .positive("Debe ser mayor a 0."),
-  lote: z.string().max(50, "Máximo 50 caracteres."),
   destino: z.string(),
   maximo: z.string(),
 });
@@ -99,9 +99,11 @@ export default function DevolucionesPage() {
 
   const [remitos, setRemitos] = useState<RemitoListItem[]>([]);
   const [bares, setBares] = useState<BarListItem[]>([]);
+  // Solo lectura para unidad/presentación/stock en las líneas (estética Pedidos).
+  const [insumos, setInsumos] = useState<Insumo[]>([]);
+  const [productos, setProductos] = useState<ProductoTerminado[]>([]);
 
   // Filters
-  const [filtroRemito, setFiltroRemito] = useState("all");
   const [filtroBar, setFiltroBar] = useState("all");
   const [filtroDesde, setFiltroDesde] = useState("");
   const [filtroHasta, setFiltroHasta] = useState("");
@@ -113,13 +115,12 @@ export default function DevolucionesPage() {
 
   const buildQuery = useCallback(() => {
     const params = new URLSearchParams();
-    if (filtroRemito && filtroRemito !== "all") params.set("remitoId", filtroRemito);
     if (filtroBar && filtroBar !== "all") params.set("barId", filtroBar);
     if (filtroDesde) params.set("fechaDesde", filtroDesde);
     if (filtroHasta) params.set("fechaHasta", filtroHasta);
     const qs = params.toString();
     return `/devoluciones${qs ? `?${qs}` : ""}`;
-  }, [filtroRemito, filtroBar, filtroDesde, filtroHasta]);
+  }, [filtroBar, filtroDesde, filtroHasta]);
 
   const load = useCallback(async () => {
     try {
@@ -137,15 +138,17 @@ export default function DevolucionesPage() {
     let cancelled = false;
     async function run() {
       try {
-        const [devoluciones, remitoList, barList] = await Promise.all([
+        const [devoluciones, remitoList, barList, prodList] = await Promise.all([
           apiClient<DevolucionListItem[]>(buildQuery()),
           apiClient<RemitoListItem[]>("/remitos"),
           apiClient<BarListItem[]>("/bares"),
+          apiClient<ProductoTerminado[]>("/productoterminado"),
         ]);
         if (cancelled) return;
         setRows(devoluciones);
         setRemitos(remitoList);
         setBares(barList);
+        setProductos(prodList);
         setError(null);
       } catch (err) {
         if (cancelled) return;
@@ -159,6 +162,22 @@ export default function DevolucionesPage() {
       cancelled = true;
     };
   }, [buildQuery]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadInsumos() {
+      try {
+        const result = await fetchAllPages<Insumo>("/insumos");
+        if (!cancelled) setInsumos(result);
+      } catch {
+        // ignore selector load errors
+      }
+    }
+    loadInsumos();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const remitosEnviados = remitos.filter((r) => r.estado === 3);
 
@@ -194,7 +213,6 @@ export default function DevolucionesPage() {
           nombre:
             Number(l.tipoLinea) === 1 ? l.productoTerminadoNombre : l.insumoNombre,
           cantidad: String(l.cantidad),
-          lote: l.lote ?? "",
           destino: "1",
           maximo: String(l.cantidad),
         })),
@@ -223,7 +241,7 @@ export default function DevolucionesPage() {
         productoTerminadoId: Number(l.tipoLinea) === 1 ? l.productoTerminadoId : null,
         insumoId: Number(l.tipoLinea) === 2 ? l.insumoId : null,
         cantidad: l.cantidad,
-        lote: l.lote.trim() || null,
+        lote: null,
         destino: Number(l.destino) as DestinoDevolucion,
       })),
     };
@@ -258,14 +276,14 @@ export default function DevolucionesPage() {
       cell: ({ row }) => `N° ${row.original.remitoNumeroRemito}`,
     },
     {
-      id: "bar",
-      header: "Bar",
-      cell: ({ row }) => row.original.barNombre || "—",
-    },
-    {
       id: "fecha",
       header: "Fecha",
       cell: ({ row }) => new Date(row.original.fecha).toLocaleDateString("es-AR"),
+    },
+    {
+      id: "bar",
+      header: "Bar",
+      cell: ({ row }) => row.original.barNombre || "—",
     },
     {
       accessorKey: "total",
@@ -283,6 +301,93 @@ export default function DevolucionesPage() {
   const watchedLineas = useWatch({ control, name: "lineas" });
   const watchedRemitoId = useWatch({ control, name: "remitoId" });
 
+  // Estética del modal Nuevo remito: secciones por tipo con header gris,
+  // nombre con sufijo gris (Pres./Stock) y cantidad con unidad guía.
+  const LINEA_COLS_DEV = "minmax(0,1fr) 7rem 10rem 2.5rem";
+
+  const lineaMeta = (index: number) => {
+    const tipoLinea = Number(watchedLineas?.[index]?.tipoLinea);
+    if (tipoLinea === 1) {
+      const pt = productos.find(
+        (p) => p.id === (watchedLineas?.[index]?.productoTerminadoId ?? ""),
+      );
+      return {
+        sufijo: null,
+        unidad: pt?.unidadMedida?.simbolo ?? "—",
+      };
+    }
+    const ins = insumos.find((i) => i.id === (watchedLineas?.[index]?.insumoId ?? ""));
+    return {
+      sufijo: ins
+        ? `Pres. ${ins.presentacion} ${ins.unidadConsumo?.simbolo ?? ""}`.trim()
+        : null,
+      unidad: ins?.unidadConsumo?.simbolo ?? "—",
+    };
+  };
+
+  const renderLineaDev = (field: (typeof fields)[number], index: number) => {
+    const meta = lineaMeta(index);
+    return (
+      <div
+        key={field.id}
+        className="grid items-center gap-2 border-t border-border px-4 py-2"
+        style={{ gridTemplateColumns: LINEA_COLS_DEV }}
+      >
+        <div className="flex min-w-0 items-center justify-start gap-2">
+          <p className="min-w-0 truncate text-sm">{watchedLineas?.[index]?.nombre || "—"}</p>
+          {meta.sufijo && (
+            <span className="shrink-0 text-xs text-muted-foreground">{meta.sufijo}</span>
+          )}
+        </div>
+        <div className="flex min-w-0 flex-col gap-1">
+          <div className="flex min-w-0 items-center gap-1.5">
+            <Input
+              type="number"
+              step="any"
+              min="0"
+              placeholder="0"
+              className="min-w-0 flex-1"
+              {...register(`lineas.${index}.cantidad`)}
+            />
+            <span className="shrink-0 text-sm text-muted-foreground">{meta.unidad}</span>
+          </div>
+          <FieldError message={errors.lineas?.[index]?.cantidad?.message} />
+        </div>
+        <div className="flex min-w-0 flex-col gap-1">
+          <Controller
+            control={control}
+            name={`lineas.${index}.destino`}
+            render={({ field: f }) => (
+              <Select value={f.value || "1"} onValueChange={f.onChange}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(DESTINO_DEVOLUCION_LABELS) as unknown as string[]).map((v) => (
+                    <SelectItem key={v} value={v}>
+                      {DESTINO_DEVOLUCION_LABELS[Number(v) as DestinoDevolucion]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+        </div>
+        <div className="flex justify-center">
+          <Button
+            type="button"
+            variant="destructive"
+            size="icon"
+            onClick={() => remove(index)}
+            aria-label="Eliminar línea"
+          >
+            <Trash2 className="size-4" />
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div>
       <PageHeader
@@ -298,22 +403,9 @@ export default function DevolucionesPage() {
         }
       />
 
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <Select value={filtroRemito} onValueChange={setFiltroRemito}>
-          <SelectTrigger className="w-[220px]">
-            <SelectValue placeholder="Todos los remitos" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los remitos</SelectItem>
-            {remitosEnviados.map((r) => (
-              <SelectItem key={r.id} value={r.id}>
-                N° {r.numeroRemito} — {r.barNombre}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="mb-4 flex flex-wrap items-end gap-3">
         <Select value={filtroBar} onValueChange={setFiltroBar}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="h-9 w-[180px]">
             <SelectValue placeholder="Todos los bares" />
           </SelectTrigger>
           <SelectContent>
@@ -329,7 +421,7 @@ export default function DevolucionesPage() {
           <Label className="text-xs text-muted-foreground">Desde</Label>
           <Input
             type="date"
-            className="w-[150px]"
+            className="h-9 w-[150px]"
             value={filtroDesde}
             onChange={(e) => setFiltroDesde(e.target.value)}
             aria-label="Fecha desde"
@@ -339,7 +431,7 @@ export default function DevolucionesPage() {
           <Label className="text-xs text-muted-foreground">Hasta</Label>
           <Input
             type="date"
-            className="w-[150px]"
+            className="h-9 w-[150px]"
             value={filtroHasta}
             onChange={(e) => setFiltroHasta(e.target.value)}
             aria-label="Fecha hasta"
@@ -361,7 +453,7 @@ export default function DevolucionesPage() {
       />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
+        <DialogContent className="max-h-[90vh] overflow-x-hidden overflow-y-auto [scrollbar-gutter:stable] sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle>Nueva devolución</DialogTitle>
             <DialogDescription>
@@ -394,72 +486,55 @@ export default function DevolucionesPage() {
               <FieldError message={errors.recibidoPor?.message} />
             </div>
 
-            <div className="flex flex-col gap-2 sm:col-span-2">
-              <Label>Líneas del remito</Label>
-              {fields.length === 0 && (
+            <div className="flex flex-col gap-4 sm:col-span-2">
+              {fields.length === 0 ? (
                 <p className="text-xs text-muted-foreground">
                   Elegí un remito para cargar sus productos e insumos.
                 </p>
-              )}
-              {fields.map((field, index) => {
-                const tipoLinea = Number(watchedLineas?.[index]?.tipoLinea);
-                const maximo = watchedLineas?.[index]?.maximo;
-                return (
-                  <div key={field.id} className="grid grid-cols-[1.5fr_0.7fr_1fr_0.8fr_auto] items-end gap-2">
-                    <div className="flex min-w-0 flex-col gap-1">
-                      <Label className="text-xs text-muted-foreground">
-                        {tipoLinea === 2 ? "Insumo" : "Producto terminado"}
-                      </Label>
-                      <p className="truncate text-sm">
-                        {watchedLineas?.[index]?.nombre || "—"}
-                      </p>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <Label className="text-xs text-muted-foreground">Cantidad</Label>
-                      <Input type="number" step="any" min="0" {...register(`lineas.${index}.cantidad`)} />
-                      <FieldError message={errors.lineas?.[index]?.cantidad?.message} />
-                      {maximo ? (
-                        <span className="text-[11px] text-muted-foreground">máx {maximo}</span>
-                      ) : null}
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <Label className="text-xs text-muted-foreground">Destino</Label>
-                      <Controller
-                        control={control}
-                        name={`lineas.${index}.destino`}
-                        render={({ field: f }) => (
-                          <Select value={f.value || "1"} onValueChange={f.onChange}>
-                            <SelectTrigger className="w-full">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {(Object.keys(DESTINO_DEVOLUCION_LABELS) as unknown as string[]).map((v) => (
-                                <SelectItem key={v} value={v}>
-                                  {DESTINO_DEVOLUCION_LABELS[Number(v) as DestinoDevolucion]}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+              ) : (
+                <>
+                  {fields.some((_, i) => Number(watchedLineas?.[i]?.tipoLinea) === 2) && (
+                    <section className="flex flex-col gap-2" aria-label="Insumos">
+                      <div className="rounded-xl border border-border bg-card shadow-sm">
+                        <div
+                          className="grid items-center gap-2 rounded-t-xl bg-muted/60 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.04em] text-foreground/80"
+                          style={{ gridTemplateColumns: LINEA_COLS_DEV }}
+                        >
+                          <span>Insumo</span>
+                          <span>Cantidad</span>
+                          <span>Tipo</span>
+                          <span />
+                        </div>
+                        {fields.map((field, index) =>
+                          Number(watchedLineas?.[index]?.tipoLinea) === 2
+                            ? renderLineaDev(field, index)
+                            : null,
                         )}
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <Label className="text-xs text-muted-foreground">Lote</Label>
-                      <Input placeholder="Opcional" {...register(`lineas.${index}.lote`)} />
-                      <FieldError message={errors.lineas?.[index]?.lote?.message} />
-                    </div>
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      onClick={() => remove(index)}
-                      aria-label="Eliminar línea"
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </div>
-                );
-              })}
+                      </div>
+                    </section>
+                  )}
+                  {fields.some((_, i) => Number(watchedLineas?.[i]?.tipoLinea) === 1) && (
+                    <section className="flex flex-col gap-2" aria-label="Productos terminados">
+                      <div className="rounded-xl border border-border bg-card shadow-sm">
+                        <div
+                          className="grid items-center gap-2 rounded-t-xl bg-muted/60 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.04em] text-foreground/80"
+                          style={{ gridTemplateColumns: LINEA_COLS_DEV }}
+                        >
+                          <span>Producto terminado</span>
+                          <span>Cantidad</span>
+                          <span>Tipo</span>
+                          <span />
+                        </div>
+                        {fields.map((field, index) =>
+                          Number(watchedLineas?.[index]?.tipoLinea) === 1
+                            ? renderLineaDev(field, index)
+                            : null,
+                        )}
+                      </div>
+                    </section>
+                  )}
+                </>
+              )}
               <FieldError message={errors.lineas?.root?.message ?? errors.lineas?.message} />
             </div>
 
@@ -503,9 +578,6 @@ export default function DevolucionesPage() {
                   <span className="font-medium">Fecha:</span>{" "}
                   {new Date(detail.fecha).toLocaleDateString("es-AR")}
                 </div>
-                <div>
-                  <span className="font-medium">Total:</span> {MONEY.format(detail.totalDevolucion)}
-                </div>
                 {detail.observaciones && (
                   <div className="sm:col-span-2">
                     <span className="font-medium">Observaciones:</span> {detail.observaciones}
@@ -521,11 +593,11 @@ export default function DevolucionesPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Tipo</TableHead>
+                    <TableHead>Clase</TableHead>
                     <TableHead>Detalle</TableHead>
-                    <TableHead>Destino</TableHead>
+                    <TableHead>Tipo</TableHead>
                     <TableHead className="text-right">Cantidad</TableHead>
-                    <TableHead className="text-left">P. unitario original</TableHead>
+                    <TableHead className="text-left">P. unitario</TableHead>
                     <TableHead className="text-left">Subtotal</TableHead>
                   </TableRow>
                 </TableHeader>

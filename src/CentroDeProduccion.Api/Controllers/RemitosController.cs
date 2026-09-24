@@ -61,7 +61,7 @@ public class RemitosController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetList(
         [FromQuery] Guid? barId,
-        [FromQuery] EstadoRemito? estado,
+        [FromQuery] List<EstadoRemito>? estado,
         [FromQuery] DateTime? fechaDesde,
         [FromQuery] DateTime? fechaHasta,
         CancellationToken cancellationToken)

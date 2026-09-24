@@ -12,7 +12,8 @@ public interface IRemitoRepository
         EstadoRemito? estado,
         DateTime? fechaDesde,
         DateTime? fechaHasta,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        IReadOnlyList<EstadoRemito>? estados = null);
     Task<int> GetNextNumeroAsync(CancellationToken cancellationToken = default);
     Task AddAsync(Remito remito, CancellationToken cancellationToken = default);
 }

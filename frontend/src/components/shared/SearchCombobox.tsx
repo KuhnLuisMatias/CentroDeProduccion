@@ -26,6 +26,11 @@ interface SearchComboboxProps {
   id?: string;
   emptyText?: string;
   /**
+   * Opcional: texto gris a la derecha dentro del input (ej. presentación del
+   * insumo). Solo visible con la lista cerrada; se oculta al filtrar.
+   */
+  suffix?: string | null;
+  /**
    * Opcional: si se escribe texto libre y se sale sin elegir opción (blur/Tab),
    * se llama con el texto para conservarlo (ej. lote manual). No cambia el id.
    */
@@ -49,6 +54,7 @@ export default function SearchCombobox({
   ariaLabel = "Buscar",
   id,
   emptyText = "Sin resultados.",
+  suffix = null,
   onFreeText,
 }: SearchComboboxProps) {
   const [query, setQuery] = useState("");
@@ -58,7 +64,9 @@ export default function SearchCombobox({
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const queryRef = useRef("");
   const freeTextRef = useRef(onFreeText);
-  freeTextRef.current = onFreeText;
+  useEffect(() => {
+    freeTextRef.current = onFreeText;
+  }, [onFreeText]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -87,12 +95,14 @@ export default function SearchCombobox({
     queryRef.current = "";
   };
 
+  const showSuffix = Boolean(suffix) && !open;
+
   return (
-    <div className="relative">
+    <div className="relative min-w-0">
       <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
       <Input
         id={id}
-        className="pl-8"
+        className={cn("pl-8", showSuffix && "pr-24")}
         placeholder={placeholder}
         value={open ? query : (selected?.label ?? "")}
         onFocus={() => {
@@ -146,6 +156,14 @@ export default function SearchCombobox({
         aria-autocomplete="list"
         aria-label={ariaLabel}
       />
+      {showSuffix && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute right-2.5 top-1/2 max-w-[45%] -translate-y-1/2 truncate text-xs text-muted-foreground"
+        >
+          {suffix}
+        </span>
+      )}
       {open && (
         <div
           ref={listRef}
