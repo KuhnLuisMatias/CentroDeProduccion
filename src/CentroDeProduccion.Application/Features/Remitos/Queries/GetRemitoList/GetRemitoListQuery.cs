@@ -4,6 +4,6 @@ namespace CentroDeProduccion.Application.Features.Remitos.Queries.GetRemitoList;
 
 public sealed record GetRemitoListQuery(
     Guid? BarId,
-    EstadoRemito? Estado,
+    IReadOnlyList<EstadoRemito>? Estados,
     DateTime? FechaDesde,
     DateTime? FechaHasta);

@@ -891,7 +891,7 @@ export type DestinoDevolucion = 1 | 2 | 3; // ReingresoStock=1, Cuarentena=2, Ma
 export const DESTINO_DEVOLUCION_LABELS: Record<DestinoDevolucion, string> = {
   1: "Vuelve a stock",
   2: "Cuarentena",
-  3: "Devolución en mal estado",
+  3: "Mal estado",
 };
 
 export interface DevolucionLinea {

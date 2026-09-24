@@ -29,13 +29,15 @@ public class RemitoRepository : IRemitoRepository
         EstadoRemito? estado,
         DateTime? fechaDesde,
         DateTime? fechaHasta,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        IReadOnlyList<EstadoRemito>? estados = null)
         => await _context.Set<Remito>()
             .Include(r => r.Bar)
             .Include(r => r.Lineas)
             .Where(r =>
                 (!barId.HasValue || r.BarId == barId.Value) &&
                 (!estado.HasValue || r.Estado == estado.Value) &&
+                (estados == null || estados.Count == 0 || estados.Contains(r.Estado)) &&
                 (!fechaDesde.HasValue || r.Fecha >= fechaDesde.Value) &&
                 (!fechaHasta.HasValue || r.Fecha < fechaHasta.Value.Date.AddDays(1)))
             // El último creado va arriba: se ordena por número secuencial de

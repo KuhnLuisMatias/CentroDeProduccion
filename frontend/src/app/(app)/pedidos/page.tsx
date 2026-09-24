@@ -22,12 +22,12 @@ import type {
     TipoLineaRemito,
     EstadoRemito,
   } from "@/lib/types";
-import { ESTADO_REMITO_LABELS, TIPO_LINEA_REMITO_LABELS } from "@/lib/types";
 import { openHtmlInNewTab } from "@/lib/print";
 import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
 import ConfirmDialog from "@/components/shared/ConfirmDialog";
 import SearchCombobox from "@/components/shared/SearchCombobox";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -117,12 +117,6 @@ function todayISO(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-function fechaCorta(iso: string | null | undefined): string {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString("es-AR");
-}
-
 const EMPTY_FORM: RemitoFormInput = {
   barId: "",
   fecha: "",
@@ -145,6 +139,37 @@ type EstadoAction = "cancelar";
 
 const CONCURRENCY_MESSAGE =
   "El registro fue modificado por otro usuario. Recargá la lista para ver la versión más reciente y volvé a intentar.";
+
+// Estado visible del pedido: los estados editables (Pendiente y En proceso)
+// se muestran como "En proceso"; Enviado como "Confirmado".
+function estadoRemitoDisplay(estado: EstadoRemito): { label: string; className: string } {
+  switch (estado) {
+    case 3:
+      return {
+        label: "Confirmado",
+        className: "border-emerald-600/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+      };
+    case 4:
+      return {
+        label: "Cancelado",
+        className: "border-red-600/30 bg-red-500/10 text-red-700 dark:text-red-400",
+      };
+    default:
+      return {
+        label: "En proceso",
+        className: "border-amber-600/30 bg-amber-500/10 text-amber-700 dark:text-amber-400",
+      };
+  }
+}
+
+// Opciones del filtro de estado. "En proceso" agrupa Pendiente (1) y
+// En proceso (2); el backend recibe los valores separados por coma.
+const FILTRO_ESTADO_OPTIONS: { value: string; label: string }[] = [
+  { value: "all", label: "Todos los estados" },
+  { value: "1,2", label: "En proceso" },
+  { value: "3", label: "Confirmado" },
+  { value: "4", label: "Cancelado" },
+];
 
 export default function RemitosPage() {
   const [rows, setRows] = useState<RemitoListItem[]>([]);
@@ -183,7 +208,12 @@ export default function RemitosPage() {
   const buildQuery = useCallback(() => {
     const params = new URLSearchParams();
     if (filtroBar && filtroBar !== "all") params.set("barId", filtroBar);
-    if (filtroEstado && filtroEstado !== "all") params.set("estado", filtroEstado);
+    if (filtroEstado && filtroEstado !== "all") {
+      for (const v of filtroEstado.split(",")) {
+        const n = Number(v);
+        if (Number.isInteger(n)) params.append("estado", String(n));
+      }
+    }
     if (filtroDesde) params.set("fechaDesde", filtroDesde);
     if (filtroHasta) params.set("fechaHasta", filtroHasta);
     const qs = params.toString();
@@ -441,14 +471,27 @@ export default function RemitosPage() {
   const columns: ColumnDef<RemitoListItem, unknown>[] = [
     { accessorKey: "numeroRemito", header: "N°" },
     {
+      id: "fecha",
+      header: "Fecha",
+      cell: ({ row }) => new Date(row.original.fecha).toLocaleDateString("es-AR"),
+    },
+    {
       id: "bar",
       header: "Bar",
       cell: ({ row }) => row.original.barNombre || "—",
     },
     {
-      id: "fecha",
-      header: "Fecha",
-      cell: ({ row }) => new Date(row.original.fecha).toLocaleDateString("es-AR"),
+      id: "estado",
+      header: "Estado",
+      accessorFn: (row) => estadoRemitoDisplay(row.estado).label,
+      cell: ({ row }) => {
+        const display = estadoRemitoDisplay(row.original.estado);
+        return (
+          <Badge variant="outline" className={display.className}>
+            {display.label}
+          </Badge>
+        );
+      },
     },
     {
       accessorKey: "total",
@@ -489,8 +532,11 @@ export default function RemitosPage() {
   // Display fijo: una sola definición de columnas por sección, compartida entre
   // encabezado y filas. Piso minmax(0,…) para que el contenido nunca ensanche la
   // pista, y columna de acciones fija (botón 36px + aire) con celda vacía.
-  const INSUMO_COLS = "minmax(0,1.6fr) minmax(0,0.7fr) minmax(0,0.5fr) 2.5rem";
-  const PT_COLS = "minmax(0,1.4fr) minmax(0,1.2fr) minmax(0,0.6fr) minmax(0,0.5fr) 2.5rem";
+  // Distribución única para las líneas de ambas secciones (insumos y
+  // productos): nombre flexible con la mayoría del ancho, cantidad con lugar
+  // para el sufijo de unidad, acciones fija. La unidad no lleva título: se
+  // muestra preestablecida como guía de la cantidad.
+  const LINEA_COLS = "minmax(0,1fr) 8rem 2.5rem";
 
   const insumoOptions = useMemo(
     () =>
@@ -498,13 +544,13 @@ export default function RemitosPage() {
         const simbolo = i.unidadConsumo?.simbolo ?? "";
         const pres =
           i.presentacion != null
-            ? `Pres.: ${i.presentacion}${simbolo ? ` ${simbolo}` : ""}`
+            ? `Pres. ${i.presentacion}${simbolo ? ` ${simbolo}` : ""}`
             : null;
         return {
           id: i.id,
           label: i.nombre,
-          sublabel: pres ?? (i.codigoSku ? `SKU: ${i.codigoSku}` : null),
-          meta: null as string | null,
+          sublabel: null,
+          meta: pres as string | null,
           keywords: i.codigoSku ?? null,
         };
       }),
@@ -516,94 +562,128 @@ export default function RemitosPage() {
     { value: "ticket", label: "Ticket" },
   ];
 
-  // Cuerpo compartido de Ver y Confirmar: cabecera + sectores PT/Insumos + total.
+  // Cuerpo compartido de Ver y Confirmar: cabecera + tablas Insumos/PT + total.
   // Solo difieren el título del diálogo y el footer.
-  const renderResumenContenido = (remito: Remito) => (
-    <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-1 gap-x-4 gap-y-2 text-sm sm:grid-cols-2">
-        <div>
-          <span className="font-medium">Bar:</span> {remito.barNombre || "—"}
-        </div>
-        <div>
-          <span className="font-medium">Fecha:</span>{" "}
-          {new Date(remito.fecha).toLocaleString("es-AR")}
-        </div>
-        {remito.entregadoPor && (
+  const renderResumenContenido = (remito: Remito) => {
+    // Datos vigentes para acompañar cada línea (solo informativos).
+    const insumoDe = (insumoId: string | null) =>
+      insumoId ? insumos.find((i) => i.id === insumoId) : undefined;
+    const productoDe = (productoTerminadoId: string | null) =>
+      productoTerminadoId ? productos.find((p) => p.id === productoTerminadoId) : undefined;
+    const presentacionDe = (insumoId: string | null) => {
+      const ins = insumoDe(insumoId);
+      if (!ins) return "—";
+      return `Pres. ${ins.presentacion} ${ins.unidadConsumo?.simbolo ?? ""}`.trim() || "—";
+    };
+    const unidadInsumoDe = (insumoId: string | null) =>
+      insumoDe(insumoId)?.unidadConsumo?.simbolo ?? "—";
+    const unidadProductoDe = (productoTerminadoId: string | null) =>
+      productoDe(productoTerminadoId)?.unidadMedida?.simbolo ?? "—";
+    const headClass =
+      "h-9 text-[11px] font-semibold uppercase tracking-[0.04em] text-muted-foreground";
+    const headRightClass = `${headClass} text-right`;
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 gap-x-4 gap-y-2 text-sm sm:grid-cols-2">
           <div>
-            <span className="font-medium">Entregado por:</span> {remito.entregadoPor}
+            <span className="font-medium">Bar:</span> {remito.barNombre || "—"}
           </div>
-        )}
-        {remito.recibidoPor && (
           <div>
-            <span className="font-medium">Recibido por:</span> {remito.recibidoPor}
+            <span className="font-medium">Fecha:</span>{" "}
+            {new Date(remito.fecha).toLocaleString("es-AR")}
           </div>
-        )}
-        {remito.observaciones && (
-          <div className="sm:col-span-2">
-            <span className="font-medium">Observaciones:</span> {remito.observaciones}
-          </div>
-        )}
-      </div>
+          {remito.entregadoPor && (
+            <div>
+              <span className="font-medium">Entregado por:</span> {remito.entregadoPor}
+            </div>
+          )}
+          {remito.recibidoPor && (
+            <div>
+              <span className="font-medium">Recibido por:</span> {remito.recibidoPor}
+            </div>
+          )}
+          {remito.observaciones && (
+            <div className="sm:col-span-2">
+              <span className="font-medium">Observaciones:</span> {remito.observaciones}
+            </div>
+          )}
+        </div>
 
-      {remito.lineas.some((l) => l.tipoLinea === 1) && (
-        <div className="flex flex-col gap-2">
-          <h3 className="rounded-lg bg-muted px-3 py-1.5 text-sm font-semibold tracking-tight">Productos terminados</h3>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Producto</TableHead>
-                <TableHead>Lote</TableHead>
-                <TableHead className="text-right">Cantidad</TableHead>
-                <TableHead className="text-right">P. unitario</TableHead>
-                <TableHead className="text-right">Subtotal</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {remito.lineas
-                .filter((l) => l.tipoLinea === 1)
-                .map((l) => (
-                  <TableRow key={l.id}>
-                    <TableCell>{l.productoTerminadoNombre}</TableCell>
-                    <TableCell>{l.lote ?? "—"}</TableCell>
-                    <TableCell className="text-right">{l.cantidad}</TableCell>
-                    <TableCell className="text-right">{MONEY.format(l.precioUnitario)}</TableCell>
-                    <TableCell className="text-right">{MONEY.format(l.subtotal)}</TableCell>
-                  </TableRow>
-                ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-      {remito.lineas.some((l) => l.tipoLinea === 2) && (
-        <div className="flex flex-col gap-2">
-          <h3 className="rounded-lg bg-muted px-3 py-1.5 text-sm font-semibold tracking-tight">Insumos</h3>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Insumo</TableHead>
-                <TableHead className="text-right">Cantidad</TableHead>
-                <TableHead className="text-right">P. unitario</TableHead>
-                <TableHead className="text-right">Subtotal</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {remito.lineas
-                .filter((l) => l.tipoLinea === 2)
-                .map((l) => (
-                  <TableRow key={l.id}>
-                    <TableCell>{l.insumoNombre}</TableCell>
-                    <TableCell className="text-right">{l.cantidad}</TableCell>
-                    <TableCell className="text-right">{MONEY.format(l.precioUnitario)}</TableCell>
-                    <TableCell className="text-right">{MONEY.format(l.subtotal)}</TableCell>
-                  </TableRow>
-                ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-      <p className="text-right text-sm font-medium">Total: {MONEY.format(remito.total)}</p>
-    </div>
-  );
+        {remito.lineas.some((l) => l.tipoLinea === 2) && (
+          <div className="flex flex-col gap-2">
+            <Table aria-label="Insumos" className="table-fixed">
+              <TableHeader>
+                <TableRow className="bg-muted/60 hover:bg-muted/60">
+                  <TableHead className={headClass}>Insumo</TableHead>
+                  <TableHead className={`${headRightClass} w-[5rem]`}>Cantidad</TableHead>
+                  <TableHead className={`${headRightClass} w-[6.5rem]`}>P. unitario</TableHead>
+                  <TableHead className={`${headRightClass} w-[6.5rem]`}>Subtotal</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {remito.lineas
+                  .filter((l) => l.tipoLinea === 2)
+                  .map((l) => (
+                    <TableRow key={l.id}>
+                      <TableCell>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="min-w-0 truncate">{l.insumoNombre}</span>
+                          <span className="shrink-0 text-xs text-muted-foreground">
+                            {presentacionDe(l.insumoId)}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {l.cantidad}{" "}
+                        <span className="text-xs text-muted-foreground">
+                          {unidadInsumoDe(l.insumoId)}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">{MONEY.format(l.precioUnitario)}</TableCell>
+                      <TableCell className="text-right tabular-nums">{MONEY.format(l.subtotal)}</TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+        {remito.lineas.some((l) => l.tipoLinea === 1) && (
+          <div className="flex flex-col gap-2">
+            <Table aria-label="Productos terminados" className="table-fixed">
+              <TableHeader>
+                <TableRow className="bg-muted/60 hover:bg-muted/60">
+                  <TableHead className={headClass}>Productos terminados</TableHead>
+                  <TableHead className={`${headRightClass} w-[5rem]`}>Cantidad</TableHead>
+                  <TableHead className={`${headRightClass} w-[6.5rem]`}>P. unitario</TableHead>
+                  <TableHead className={`${headRightClass} w-[6.5rem]`}>Subtotal</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {remito.lineas
+                  .filter((l) => l.tipoLinea === 1)
+                  .map((l) => (
+                    <TableRow key={l.id}>
+                      <TableCell>
+                        <span className="block truncate">{l.productoTerminadoNombre}</span>
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {l.cantidad}{" "}
+                        <span className="text-xs text-muted-foreground">
+                          {unidadProductoDe(l.productoTerminadoId)}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">{MONEY.format(l.precioUnitario)}</TableCell>
+                      <TableCell className="text-right tabular-nums">{MONEY.format(l.subtotal)}</TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+        <p className="text-right text-sm font-medium">Total: {MONEY.format(remito.total)}</p>
+      </div>
+    );
+  };
 
 
 
@@ -615,17 +695,30 @@ export default function RemitosPage() {
     const insumoValue = watchedLineas?.[index]?.insumoId ?? "";
     const ptValue = watchedLineas?.[index]?.productoTerminadoId ?? "";
     const grupo = tipoLinea === 1 ? grupoDeFila(ptValue || undefined) : undefined;
-    const loteRow = grupo?.filas.find((f) => f.id === ptValue);
+    const ptFila = grupo?.filas.find((f) => f.id === ptValue) ?? grupo?.filas[0];
     const insumoSel = tipoLinea === 2 ? insumos.find((i) => i.id === insumoValue) : undefined;
-    const unidadSimbolo =
+    // Presentación del insumo elegido (mismo formato que el desplegable).
+    const presentacionSel =
+      tipoLinea === 2 && insumoSel
+        ? `Pres. ${insumoSel.presentacion} ${insumoSel.unidadConsumo?.simbolo ?? ""}`.trim()
+        : null;
+    // Stock del producto elegido (mismo modelo que insumos: sufijo en el input).
+    const stockGrupo =
+      tipoLinea === 1 && grupo
+        ? grupo.filas.reduce((acc, f) => acc + (f.stockActual ?? 0), 0)
+        : null;
+    const stockSel = stockGrupo !== null ? `Stock ${stockGrupo}` : null;
+    // Unidad preestablecida como guía de la cantidad (sin título propio).
+    const unidadGuia =
       tipoLinea === 1
-        ? (loteRow?.unidadMedida?.simbolo ?? "—")
+        ? (ptFila?.unidadMedida?.simbolo ?? "—")
         : (insumoSel?.unidadConsumo?.simbolo ?? "—");
+
     return (
       <div
         key={field.id}
         className="grid items-center gap-2 border-t border-border px-4 py-2"
-        style={{ gridTemplateColumns: tipoLinea === 1 ? PT_COLS : INSUMO_COLS }}
+        style={{ gridTemplateColumns: LINEA_COLS }}
       >
                     {tipoLinea === 1 ? (
                       <div className="flex min-w-0 flex-col gap-1">
@@ -634,15 +727,24 @@ export default function RemitosPage() {
                 id: g.key,
                 label: g.nombre,
                 sublabel: null,
-                meta: null,
+                meta: `Stock ${g.filas.reduce((acc, f) => acc + (f.stockActual ?? 0), 0)}`,
                 keywords: null,
               }))}
               value={grupo?.key ?? ""}
               onChange={(groupKey) => {
                 const g = gruposProducto.find((x) => x.key === groupKey);
-                if (g && g.filas.length === 1 && g.filas[0]) {
-                  form.setValue(`lineas.${index}.productoTerminadoId`, g.filas[0].id);
-                  form.setValue(`lineas.${index}.lote`, g.filas[0].lote ?? "");
+                if (!g || g.filas.length === 0) {
+                  form.setValue(`lineas.${index}.productoTerminadoId`, "");
+                  form.setValue(`lineas.${index}.lote`, "");
+                  return;
+                }
+                // Sin control de lote: se imputa a la fila con mayor stock.
+                const mejor = [...g.filas].sort(
+                  (a, b) => (b.stockActual ?? 0) - (a.stockActual ?? 0),
+                )[0];
+                if (mejor) {
+                  form.setValue(`lineas.${index}.productoTerminadoId`, mejor.id);
+                  form.setValue(`lineas.${index}.lote`, mejor.lote ?? "");
                 } else {
                   form.setValue(`lineas.${index}.productoTerminadoId`, "");
                   form.setValue(`lineas.${index}.lote`, "");
@@ -650,6 +752,7 @@ export default function RemitosPage() {
               }}
               placeholder="Buscar producto…"
               ariaLabel="Buscar producto terminado"
+              suffix={stockSel}
             />
             <FieldError
               message={errors.lineas?.[index]?.productoTerminadoId?.message}
@@ -663,45 +766,24 @@ export default function RemitosPage() {
               onChange={(id) => form.setValue(`lineas.${index}.insumoId`, id)}
               placeholder="Buscar insumo…"
               ariaLabel="Buscar insumo"
+              suffix={presentacionSel}
             />
             <FieldError message={errors.lineas?.[index]?.insumoId?.message} />
           </div>
         )}
-                    {tipoLinea === 1 ? (
-                      <div className="flex min-w-0 flex-col gap-1">
-                        {!grupo ? (
-              <Input disabled placeholder="Elegí un producto" />
-            ) : ptValue && !loteRow ? (
-              <Input placeholder="Opcional" {...register(`lineas.${index}.lote`)} />
-            ) : (
-              <SearchCombobox
-                options={(grupo?.filas ?? []).map((r) => ({
-                  id: r.id,
-                  label: r.lote || "(sin lote)",
-                  sublabel: `Elab. ${fechaCorta(r.fechaProduccion)}`,
-                  meta: `Stock ${r.stockActual}`,
-                  keywords: r.lote,
-                }))}
-                value={ptValue}
-                onChange={(rowId) => {
-                  const row = grupo?.filas.find((f) => f.id === rowId);
-                  form.setValue(`lineas.${index}.productoTerminadoId`, rowId);
-                  form.setValue(`lineas.${index}.lote`, row?.lote ?? "");
-                }}
-                onFreeText={(text) => form.setValue(`lineas.${index}.lote`, text)}
-                placeholder="Lote…"
-                ariaLabel="Buscar lote"
-              />
-            )}
-            <FieldError message={errors.lineas?.[index]?.lote?.message} />
+                    <div className="flex min-w-0 flex-col gap-1">
+          <div className="flex min-w-0 items-center gap-1.5">
+            <Input
+              type="number"
+              step="any"
+              min="0"
+              placeholder="0"
+              className="min-w-0 flex-1"
+              {...register(`lineas.${index}.cantidad`)}
+            />
+            <span className="shrink-0 text-sm text-muted-foreground">{unidadGuia}</span>
           </div>
-        ) : null}
-        <div className="flex min-w-0 flex-col gap-1">
-          <Input type="number" step="any" min="0" placeholder="0" {...register(`lineas.${index}.cantidad`)} />
           <FieldError message={errors.lineas?.[index]?.cantidad?.message} />
-        </div>
-        <div className="min-w-0">
-          <p className="truncate text-sm text-muted-foreground">{unidadSimbolo}</p>
         </div>
         <div className="flex justify-center">
           <Button
@@ -733,9 +815,9 @@ export default function RemitosPage() {
         }
       />
 
-      <div className="mb-4 flex flex-wrap items-center gap-2">
+      <div className="mb-4 flex flex-wrap items-end gap-3">
         <Select value={filtroBar} onValueChange={setFiltroBar}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="h-9 w-[180px]">
             <SelectValue placeholder="Todos los bares" />
           </SelectTrigger>
           <SelectContent>
@@ -748,14 +830,13 @@ export default function RemitosPage() {
           </SelectContent>
         </Select>
         <Select value={filtroEstado} onValueChange={setFiltroEstado}>
-          <SelectTrigger className="w-[150px]">
+          <SelectTrigger className="h-9 w-[150px]">
             <SelectValue placeholder="Todos los estados" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos los estados</SelectItem>
-            {(Object.keys(ESTADO_REMITO_LABELS) as unknown as string[]).map((v) => (
-              <SelectItem key={v} value={v}>
-                {ESTADO_REMITO_LABELS[Number(v) as EstadoRemito]}
+            {FILTRO_ESTADO_OPTIONS.map((o) => (
+              <SelectItem key={o.value} value={o.value}>
+                {o.label}
               </SelectItem>
             ))}
           </SelectContent>
@@ -764,7 +845,7 @@ export default function RemitosPage() {
           <Label className="text-xs text-muted-foreground">Desde</Label>
           <Input
             type="date"
-            className="w-[150px]"
+            className="h-9 w-[150px]"
             value={filtroDesde}
             onChange={(e) => setFiltroDesde(e.target.value)}
             aria-label="Fecha desde"
@@ -774,7 +855,7 @@ export default function RemitosPage() {
           <Label className="text-xs text-muted-foreground">Hasta</Label>
           <Input
             type="date"
-            className="w-[150px]"
+            className="h-9 w-[150px]"
             value={filtroHasta}
             onChange={(e) => setFiltroHasta(e.target.value)}
             aria-label="Fecha hasta"
@@ -860,7 +941,7 @@ export default function RemitosPage() {
           if (!open) setEditing(null);
         }}
       >
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
+        <DialogContent className="max-h-[90vh] overflow-x-hidden overflow-y-auto [scrollbar-gutter:stable] sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle>{editing ? `Editar remito N° ${editing.row.numeroRemito}` : "Nuevo remito"}</DialogTitle>
             <DialogDescription>
@@ -870,7 +951,7 @@ export default function RemitosPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSave} className="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2" noValidate>
+          <form onSubmit={handleSave} className="grid min-w-0 grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2" noValidate>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="remito-bar">Bar</Label>
               <Controller
@@ -913,16 +994,14 @@ export default function RemitosPage() {
             </div>
 
             <div className="flex flex-col gap-4 sm:col-span-2">
-              <section className="flex flex-col gap-2">
-                <h3 className="text-sm font-semibold tracking-tight">Insumo</h3>
+              <section className="flex flex-col gap-2" aria-label="Insumos">
                 <div className="rounded-xl border border-border bg-card shadow-sm">
                   <div
-                    className="grid items-center gap-2 rounded-t-xl bg-muted/60 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.04em] text-muted-foreground"
-                    style={{ gridTemplateColumns: INSUMO_COLS }}
+                    className="grid items-center gap-2 rounded-t-xl bg-muted/60 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.04em] text-foreground/80"
+                    style={{ gridTemplateColumns: LINEA_COLS }}
                   >
                     <span className="pl-8">Insumo</span>
-                    <span className="pl-3">Cantidad</span>
-                    <span>Unidad</span>
+                    <span>Cantidad</span>
                     <span />
                   </div>
                   {fields.every((_, i) => Number(watchedLineas?.[i]?.tipoLinea) !== 2) && (
@@ -939,24 +1018,22 @@ export default function RemitosPage() {
                     type="button"
                     variant="outline"
                     size="sm"
+                    aria-label="Agregar insumo"
                     onClick={() => append({ ...EMPTY_LINE, id: `line-${Date.now()}`, tipoLinea: "2" })}
                   >
                     <Plus className="size-4" />
-                    Agregar Insumo
+                    Insumo
                   </Button>
                 </div>
               </section>
-              <section className="flex flex-col gap-2">
-                <h3 className="text-sm font-semibold tracking-tight">Producto Terminado</h3>
+              <section className="flex flex-col gap-2" aria-label="Productos terminados">
                 <div className="rounded-xl border border-border bg-card shadow-sm">
                   <div
-                    className="grid items-center gap-2 rounded-t-xl bg-muted/60 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.04em] text-muted-foreground"
-                    style={{ gridTemplateColumns: PT_COLS }}
+                    className="grid items-center gap-2 rounded-t-xl bg-muted/60 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.04em] text-foreground/80"
+                    style={{ gridTemplateColumns: LINEA_COLS }}
                   >
                     <span className="pl-8">Producto terminado</span>
-                    <span className="pl-8">Lote</span>
-                    <span className="pl-3">Cantidad</span>
-                    <span>Unidad</span>
+                    <span>Cantidad</span>
                     <span />
                   </div>
                   {fields.every((_, i) => Number(watchedLineas?.[i]?.tipoLinea) !== 1) && (
@@ -973,10 +1050,11 @@ export default function RemitosPage() {
                     type="button"
                     variant="outline"
                     size="sm"
+                    aria-label="Agregar producto terminado"
                     onClick={() => append({ ...EMPTY_LINE, id: `line-${Date.now()}`, tipoLinea: "1" })}
                   >
                     <Plus className="size-4" />
-                    Agregar Producto Terminado
+                    Producto Terminado
                   </Button>
                 </div>
               </section>

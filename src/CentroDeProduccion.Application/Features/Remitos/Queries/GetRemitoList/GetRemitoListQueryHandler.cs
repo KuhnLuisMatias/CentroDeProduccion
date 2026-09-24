@@ -17,7 +17,7 @@ public class GetRemitoListQueryHandler
         GetRemitoListQuery query, CancellationToken cancellationToken = default)
     {
         var remitos = await _remitoRepository.GetByFiltersAsync(
-            query.BarId, query.Estado, query.FechaDesde, query.FechaHasta, cancellationToken);
+            query.BarId, null, query.FechaDesde, query.FechaHasta, cancellationToken, query.Estados);
 
         var response = remitos
             .Select(r => new RemitoListItemResponse(
