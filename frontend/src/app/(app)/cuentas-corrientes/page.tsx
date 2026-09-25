@@ -1,11 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import type { ColumnDef } from "@tanstack/react-table";
-import { toast } from "sonner";
 import { RefreshCw } from "lucide-react";
 import { apiClient, ApiError } from "@/lib/api";
 import { MONEY } from "@/lib/utils";
@@ -15,31 +11,17 @@ import type {
   CuentaCorrienteMovimiento,
   CuentaCorrienteBarMovimiento,
   TipoMovimientoCtaCteBar,
-  RegisterNotaDebitoProveedorCommand,
-  RegisterNotaCreditoProveedorCommand,
-  RegisterNotaDebitoBarCommand,
-  RegisterNotaCreditoBarCommand,
-  RegisterCompensacionBarCommand,
 } from "@/lib/types";
 import {
   TIPO_MOVIMIENTO_CTA_CTE_LABELS,
   TIPO_MOVIMIENTO_CTA_CTE_BAR_LABELS,
 } from "@/lib/types";
-import PageHeader from "@/components/shared/PageHeader";
 import DataTable from "@/components/shared/DataTable";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -49,27 +31,6 @@ import {
 } from "@/components/ui/select";
 
 type Tab = "proveedores" | "bares";
-type NotaTipo = "debito" | "credito" | "compensacion";
-
-const notaSchema = z.object({
-  monto: z.coerce.number({ message: "Ingresá un número válido." }),
-  referencia: z.string().max(500, "Máximo 500 caracteres."),
-  fecha: z.string(),
-});
-
-type NotaFormInput = z.input<typeof notaSchema>;
-type NotaFormValues = z.output<typeof notaSchema>;
-
-const EMPTY_NOTA: NotaFormInput = { monto: "", referencia: "", fecha: "" };
-
-interface FieldErrorProps {
-  message?: string;
-}
-
-function FieldError({ message }: FieldErrorProps) {
-  if (!message) return null;
-  return <p className="text-xs font-medium text-destructive">{message}</p>;
-}
 
 export default function CuentaCorrientePage() {
   const [proveedores, setProveedores] = useState<Proveedor[]>([]);
@@ -101,8 +62,6 @@ export default function CuentaCorrientePage() {
     setTimeout(() => setLoading(false), 500);
   }, []);
 
-  // nota dialog
-  const [notaModal, setNotaModal] = useState<NotaTipo | null>(null);
   const [tab, setTab] = useState<Tab>("proveedores");
 
   useEffect(() => {
@@ -126,16 +85,6 @@ export default function CuentaCorrientePage() {
     };
   }, []);
 
-  const notaForm = useForm<NotaFormInput, unknown, NotaFormValues>({
-    resolver: zodResolver(notaSchema),
-    defaultValues: EMPTY_NOTA,
-  });
-
-  const openNota = (tipo: NotaTipo) => {
-    notaForm.reset({ ...EMPTY_NOTA, fecha: new Date().toISOString().slice(0, 10) });
-    setNotaModal(tipo);
-  };
-
   useEffect(() => {
     let cancelled = false;
     async function run() {
@@ -150,7 +99,7 @@ export default function CuentaCorrientePage() {
           apiClient<number>(`/proveedores/${provId}/cuenta-corriente/saldo`),
         ]);
         if (cancelled) return;
-        setProvMovs(movs);
+        setProvMovs([...movs].sort((a, b) => +new Date(b.fecha) - +new Date(a.fecha)));
         setProvSaldo(saldo);
         setError(null);
       } catch (err) {
@@ -178,7 +127,7 @@ export default function CuentaCorrientePage() {
           apiClient<number>(`/bares/${barId}/cuenta-corriente/saldo`),
         ]);
         if (cancelled) return;
-        setBarMovs(movs);
+        setBarMovs([...movs].sort((a, b) => +new Date(b.fecha) - +new Date(a.fecha)));
         setBarSaldo(saldo);
         setError(null);
       } catch (err) {
@@ -190,62 +139,6 @@ export default function CuentaCorrientePage() {
       cancelled = true;
     };
   }, [barId, barTipo, barDesde, barHasta, refreshTick]);
-
-  const saveNota = notaForm.handleSubmit(async (values) => {
-    const monto = values.monto;
-    if (tab === "proveedores") {
-      if (!provId) return;
-      if (monto <= 0) {
-        notaForm.setError("monto", { message: "El monto debe ser mayor a cero." });
-        return;
-      }
-      try {
-        const referencia = values.referencia.trim() || null;
-        if (notaModal === "debito") {
-          const body: RegisterNotaDebitoProveedorCommand = { proveedorId: provId, monto, referencia };
-          await apiClient<unknown>(`/proveedores/${provId}/cuenta-corriente/nota-debito`, { method: "POST", body });
-        } else if (notaModal === "credito") {
-          const body: RegisterNotaCreditoProveedorCommand = { proveedorId: provId, monto, referencia };
-          await apiClient<unknown>(`/proveedores/${provId}/cuenta-corriente/nota-credito`, { method: "POST", body });
-        } else {
-          return;
-        }
-        toast.success(notaModal === "debito" ? "Nota de débito registrada." : "Nota de crédito registrada.");
-        setNotaModal(null);
-        setRefreshTick((t) => t + 1);
-      } catch (err) {
-        toast.error(err instanceof ApiError ? err.message : "No se pudo registrar la nota.");
-      }
-    } else {
-      if (!barId) return;
-      if (monto === 0) {
-        notaForm.setError("monto", { message: "El monto no puede ser cero." });
-        return;
-      }
-      try {
-        const referencia = values.referencia.trim() || null;
-        const fecha = values.fecha || null;
-        const urlBase = `/bares/${barId}/cuenta-corriente`;
-        if (notaModal === "debito") {
-          const body: RegisterNotaDebitoBarCommand = { barId, monto, referencia, fecha };
-          await apiClient<unknown>(`${urlBase}/nota-debito`, { method: "POST", body });
-          toast.success("Nota de débito registrada.");
-        } else if (notaModal === "credito") {
-          const body: RegisterNotaCreditoBarCommand = { barId, monto, referencia, fecha };
-          await apiClient<unknown>(`${urlBase}/nota-credito`, { method: "POST", body });
-          toast.success("Nota de crédito registrada.");
-        } else {
-          const body: RegisterCompensacionBarCommand = { barId, monto, referencia, fecha };
-          await apiClient<unknown>(`${urlBase}/compensacion`, { method: "POST", body });
-          toast.success("Compensación registrada.");
-        }
-        setNotaModal(null);
-        setRefreshTick((t) => t + 1);
-      } catch (err) {
-        toast.error(err instanceof ApiError ? err.message : "No se pudo registrar la nota.");
-      }
-    }
-  });
 
   const provColumns: ColumnDef<CuentaCorrienteMovimiento, unknown>[] = [
     {
@@ -305,13 +198,6 @@ export default function CuentaCorrientePage() {
     },
   ];
 
-  const notaTitle =
-    tab === "bares" && notaModal === "compensacion"
-      ? "Registrar compensación"
-      : notaModal === "debito"
-        ? "Registrar nota de débito"
-        : "Registrar nota de crédito";
-
   // Monthly totals computed from the movements already fetched for the
   // selected account (Σ positive Compra / Remito movements in the current month).
   const provEgresosMes = useMemo(() => {
@@ -344,42 +230,37 @@ export default function CuentaCorrientePage() {
       .reduce((sum, m) => sum + m.monto, 0);
   }, [barMovs]);
 
-  const {
-    register,
-    formState: { errors, isSubmitting },
-  } = notaForm;
-
   return (
     <div>
-      <PageHeader
-        actions={
+      <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
+        <div className="mb-4 flex items-center gap-2">
+          <TabsList>
+            <TabsTrigger value="proveedores">Proveedores</TabsTrigger>
+            <TabsTrigger value="bares">Bares</TabsTrigger>
+          </TabsList>
           <Button variant="outline" size="sm" onClick={load} disabled={loading}>
             <RefreshCw className={`size-5 ${loading ? "animate-spin" : ""}`} />
             Actualizar
           </Button>
-        }
-      />
-
-      <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="proveedores">Proveedores</TabsTrigger>
-          <TabsTrigger value="bares">Bares</TabsTrigger>
-        </TabsList>
+        </div>
 
         <TabsContent value="proveedores">
-          <div className="mb-4 flex flex-wrap items-center gap-2">
-            <Select value={provId || undefined} onValueChange={setProvId}>
-              <SelectTrigger className="w-[220px]">
-                <SelectValue placeholder="Seleccionar proveedor…" />
-              </SelectTrigger>
-              <SelectContent>
-                {proveedores.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.nombreRazonSocial}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="mb-4 flex flex-wrap items-end gap-2">
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs text-muted-foreground">Proveedor</Label>
+              <Select value={provId || undefined} onValueChange={setProvId}>
+                <SelectTrigger className="w-[220px]">
+                  <SelectValue placeholder="Seleccionar proveedor…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {proveedores.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.nombreRazonSocial}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="flex flex-col gap-1">
               <Label className="text-xs text-muted-foreground">Desde</Label>
               <Input
@@ -400,16 +281,6 @@ export default function CuentaCorrientePage() {
                 aria-label="Fecha hasta"
               />
             </div>
-            {provId && (
-              <>
-                <Button variant="outline" size="sm" onClick={() => openNota("debito")}>
-                  Nota débito
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => openNota("credito")}>
-                  Nota crédito
-                </Button>
-              </>
-            )}
           </div>
 
           {provId && (
@@ -446,32 +317,38 @@ export default function CuentaCorrientePage() {
         </TabsContent>
 
         <TabsContent value="bares">
-          <div className="mb-4 flex flex-wrap items-center gap-2">
-            <Select value={barId || undefined} onValueChange={setBarId}>
-              <SelectTrigger className="w-[220px]">
-                <SelectValue placeholder="Seleccionar bar…" />
-              </SelectTrigger>
-              <SelectContent>
-                {bares.map((b) => (
-                  <SelectItem key={b.id} value={b.id}>
-                    {b.nombre}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={barTipo} onValueChange={setBarTipo}>
-              <SelectTrigger className="w-[170px]">
-                <SelectValue placeholder="Todos los tipos" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los tipos</SelectItem>
-                {(Object.keys(TIPO_MOVIMIENTO_CTA_CTE_BAR_LABELS) as unknown as string[]).map((v) => (
-                  <SelectItem key={v} value={v}>
-                    {TIPO_MOVIMIENTO_CTA_CTE_BAR_LABELS[Number(v) as TipoMovimientoCtaCteBar]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="mb-4 flex flex-wrap items-end gap-2">
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs text-muted-foreground">Bar</Label>
+              <Select value={barId || undefined} onValueChange={setBarId}>
+                <SelectTrigger className="w-[220px]">
+                  <SelectValue placeholder="Seleccionar bar…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {bares.map((b) => (
+                    <SelectItem key={b.id} value={b.id}>
+                      {b.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs text-muted-foreground">Tipo</Label>
+              <Select value={barTipo} onValueChange={setBarTipo}>
+                <SelectTrigger className="w-[170px]">
+                  <SelectValue placeholder="Todos los tipos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los tipos</SelectItem>
+                  {(Object.keys(TIPO_MOVIMIENTO_CTA_CTE_BAR_LABELS) as unknown as string[]).map((v) => (
+                    <SelectItem key={v} value={v}>
+                      {TIPO_MOVIMIENTO_CTA_CTE_BAR_LABELS[Number(v) as TipoMovimientoCtaCteBar]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="flex flex-col gap-1">
               <Label className="text-xs text-muted-foreground">Desde</Label>
               <Input
@@ -492,19 +369,6 @@ export default function CuentaCorrientePage() {
                 aria-label="Fecha hasta"
               />
             </div>
-            {barId && (
-              <>
-                <Button variant="outline" size="sm" onClick={() => openNota("debito")}>
-                  Nota débito
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => openNota("credito")}>
-                  Nota crédito
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => openNota("compensacion")}>
-                  Compensación
-                </Button>
-              </>
-            )}
           </div>
 
           {barId && (
@@ -541,57 +405,6 @@ export default function CuentaCorrientePage() {
         </TabsContent>
       </Tabs>
 
-      <Dialog
-        open={notaModal !== null}
-        onOpenChange={(open) => {
-          if (!open) setNotaModal(null);
-        }}
-      >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{notaTitle}</DialogTitle>
-            <DialogDescription>
-              {tab === "bares" && notaModal !== null
-                ? "El monto puede ser positivo o negativo según el impacto en la cuenta."
-                : "Ingresá el monto de la nota."}
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={saveNota} className="flex flex-col gap-3" noValidate>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="nota-monto">Monto</Label>
-              <Input id="nota-monto" type="number" step="any" {...register("monto")} />
-              <FieldError message={errors.monto?.message} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="nota-referencia">Referencia</Label>
-              <Input id="nota-referencia" placeholder="Opcional" {...register("referencia")} />
-              <FieldError message={errors.referencia?.message} />
-            </div>
-            {tab === "bares" && (
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="nota-fecha">Fecha</Label>
-                <Input id="nota-fecha" type="date" {...register("fecha")} />
-                <FieldError message={errors.fecha?.message} />
-              </div>
-            )}
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setNotaModal(null)}
-                disabled={isSubmitting}
-              >
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Guardando…" : "Guardar"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
