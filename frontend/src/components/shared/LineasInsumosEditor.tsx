@@ -32,6 +32,8 @@ interface LineasInsumosEditorProps {
   fieldErrors?: (LineaInsumoErrors | undefined)[];
   rootError?: string;
   addLabel?: string;
+  /** "tabla" renderiza contenedor con encabezado fijo; default mantiene filas libres. */
+  variant?: "libre" | "tabla";
 }
 
 function FieldError({ message }: { message?: string }) {
@@ -55,6 +57,7 @@ export default function LineasInsumosEditor({
   fieldErrors,
   rootError,
   addLabel = "Agregar insumo",
+  variant = "libre",
 }: LineasInsumosEditorProps) {
   const total = lines.reduce(
     (s, l) =>
@@ -68,6 +71,95 @@ export default function LineasInsumosEditor({
     const pres = formatPresentacion(selected);
     return pres ? pres.replace("Pres.: ", "x") : "—";
   };
+
+  if (variant === "tabla") {
+    return (
+      <div className="flex flex-col gap-2">
+        <div className="overflow-hidden rounded-xl border">
+          <div className="grid grid-cols-[2.2fr_0.55fr_0.6fr_0.65fr_auto] gap-2 border-b bg-muted/60 px-3 py-2">
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Insumo
+            </span>
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Presentación
+            </span>
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Cantidad
+            </span>
+            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Precio
+            </span>
+            <span />
+          </div>
+          <div className="max-h-64 overflow-y-auto">
+            {lines.length === 0 ? (
+              <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+                Sin insumos. Usá &ldquo;{addLabel}&rdquo; para agregar líneas.
+              </p>
+            ) : (
+              lines.map((line, index) => (
+                <div
+                  key={line.key}
+                  className="grid grid-cols-[2.2fr_0.55fr_0.6fr_0.65fr_auto] items-start gap-2 border-b px-3 py-2 last:border-b-0"
+                >
+                  <div className="flex min-w-0 flex-col gap-1">
+                    <InsumoCombobox
+                      insumos={insumos}
+                      value={line.insumoId}
+                      onChange={(id) => onInsumoChange(index, id)}
+                    />
+                    <FieldError message={fieldErrors?.[index]?.insumoId} />
+                  </div>
+                  <div className="flex h-9 items-center overflow-hidden rounded-md border bg-muted/30 px-3">
+                    <span className="truncate text-sm text-muted-foreground">
+                      {infoFor(line.insumoId)}
+                    </span>
+                  </div>
+                  <div className="flex min-w-0 flex-col gap-1">
+                    <Input
+                      type="number"
+                      step="any"
+                      min="0"
+                      value={line.cantidad}
+                      onChange={(e) => onCantidadChange(index, e.target.value)}
+                    />
+                    <FieldError message={fieldErrors?.[index]?.cantidad} />
+                  </div>
+                  <div className="flex min-w-0 flex-col gap-1">
+                    <CurrencyInput
+                      value={line.precioUnitario}
+                      onChange={(v) => onPrecioChange(index, v)}
+                    />
+                    <FieldError message={fieldErrors?.[index]?.precioUnitario} />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => onRemove(index)}
+                    aria-label="Eliminar insumo"
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+        <div>
+          <Button type="button" variant="outline" size="sm" onClick={onAdd}>
+            <Plus className="size-4" />
+            {addLabel}
+          </Button>
+        </div>
+        <div className="flex items-center justify-between rounded-md border bg-muted/50 px-3 py-2">
+          <span className="text-sm font-medium">Total de la factura</span>
+          <span className="text-sm font-semibold">{MONEY.format(total)}</span>
+        </div>
+        <FieldError message={rootError} />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-2">

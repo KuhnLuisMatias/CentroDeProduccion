@@ -10,13 +10,16 @@ public class GetPagoByIdQueryHandler
 {
     private readonly IPagoProveedorRepository _pagoProveedorRepository;
     private readonly ICuentaCorrienteProveedorRepository _cuentaCorrienteRepository;
+    private readonly IPagoAProveedorRepository _pagoAProveedorRepository;
 
     public GetPagoByIdQueryHandler(
         IPagoProveedorRepository pagoProveedorRepository,
-        ICuentaCorrienteProveedorRepository cuentaCorrienteRepository)
+        ICuentaCorrienteProveedorRepository cuentaCorrienteRepository,
+        IPagoAProveedorRepository pagoAProveedorRepository)
     {
         _pagoProveedorRepository = pagoProveedorRepository;
         _cuentaCorrienteRepository = cuentaCorrienteRepository;
+        _pagoAProveedorRepository = pagoAProveedorRepository;
     }
 
     public async Task<Result<PagoProveedorResponse>> HandleAsync(GetPagoByIdQuery query, CancellationToken cancellationToken = default)
@@ -30,10 +33,15 @@ public class GetPagoByIdQueryHandler
         var pagadosPorFactura = await _cuentaCorrienteRepository.GetPagosAplicadosPorFacturaAsync(
             [pago.Id], cancellationToken);
 
-        return Result.Success(Map(pago, pagadosPorFactura.GetValueOrDefault(pago.Id)));
+        var pagosRealizados = await _pagoAProveedorRepository.GetByFacturaIdAsync(pago.Id, cancellationToken);
+
+        return Result.Success(Map(pago, pagadosPorFactura.GetValueOrDefault(pago.Id), pagosRealizados));
     }
 
-    public static PagoProveedorResponse Map(Domain.Entities.PagoProveedor pago, decimal montoPagado)
+    public static PagoProveedorResponse Map(
+        Domain.Entities.PagoProveedor pago,
+        decimal montoPagado,
+        IReadOnlyList<Domain.Entities.PagoAProveedor>? pagosRealizados = null)
     {
         var montoPendiente = Math.Max(0m, pago.MontoTotal - montoPagado);
         var estadoPago =
@@ -54,6 +62,14 @@ public class GetPagoByIdQueryHandler
                 i.Cantidad * i.PrecioUnitario)).ToList(),
             montoPagado,
             montoPendiente,
-            estadoPago);
+            estadoPago,
+            pagosRealizados?.Select(p => new PagoRealizadoResponse(
+                p.Id,
+                p.Fecha,
+                p.MontoTotal,
+                p.Observaciones,
+                p.Medios.Select(m => new PagoRealizadoMedioResponse(
+                    m.Tipo, m.Monto, m.Referencia,
+                    m.ChequeNumero, m.ChequeBanco, m.ChequeFechaPago)).ToList())).ToList());
     }
 }

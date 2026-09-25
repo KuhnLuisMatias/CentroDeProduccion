@@ -20,6 +20,16 @@ public class PagoAProveedorRepository : IPagoAProveedorRepository
             .Include(pa => pa.Medios)
             .FirstOrDefaultAsync(pa => pa.Id == id, cancellationToken);
 
+    public async Task<IReadOnlyList<PagoAProveedor>> GetByFacturaIdAsync(
+        Guid facturaId, CancellationToken cancellationToken = default)
+        => await _context.PagosAProveedores
+            .Include(pa => pa.Medios)
+            .Where(pa => pa.FacturaId == facturaId)
+            .OrderByDescending(pa => pa.Fecha)
+            .ThenByDescending(pa => pa.FechaCreacion)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
     public async Task<IReadOnlyList<PagoAProveedor>> GetByFiltersAsync(
         Guid? proveedorId,
         DateTime? fechaDesde,

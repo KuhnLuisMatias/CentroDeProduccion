@@ -109,7 +109,10 @@ public class RegistrarPagoProveedorCommandHandler
                 Id = Guid.NewGuid(),
                 Tipo = (MetodoPago)m.Tipo,
                 Monto = m.Monto,
-                Referencia = m.Referencia
+                Referencia = m.Referencia,
+                ChequeNumero = m.ChequeNumero,
+                ChequeBanco = m.ChequeBanco,
+                ChequeFechaPago = m.ChequeFechaPago
             }).ToList()
         };
 

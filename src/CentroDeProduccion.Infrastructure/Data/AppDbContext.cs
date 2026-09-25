@@ -401,6 +401,8 @@ public class AppDbContext : DbContext
                 metodo.Property(m => m.Tipo).HasConversion<int>();
                 metodo.Property(m => m.Monto).HasPrecision(18, 4);
                 metodo.Property(m => m.Referencia).HasMaxLength(100);
+                metodo.Property(m => m.ChequeNumero).HasMaxLength(50);
+                metodo.Property(m => m.ChequeBanco).HasMaxLength(100);
             });
         });
 

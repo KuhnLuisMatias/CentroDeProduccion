@@ -737,6 +737,7 @@ export interface PagoProveedor {
   montoPagado: number;
   montoPendiente: number;
   estadoPago: EstadoPago;
+  pagos?: PagoRealizado[];
 }
 
 // Pago a proveedor: settles factura debt or pays on account (ledger append).
@@ -744,6 +745,27 @@ export interface PagoAProveedorMetodo {
   tipo: MetodoPago;
   monto: number;
   referencia: string | null;
+  chequeNumero: string | null;
+  chequeBanco: string | null;
+  chequeFechaPago: string | null;
+}
+
+// Pagos realizados contra una factura (detalle "Ver").
+export interface PagoRealizadoMedio {
+  tipo: MetodoPago;
+  monto: number;
+  referencia: string | null;
+  chequeNumero: string | null;
+  chequeBanco: string | null;
+  chequeFechaPago: string | null;
+}
+
+export interface PagoRealizado {
+  id: string;
+  fecha: string;
+  montoTotal: number;
+  observaciones: string | null;
+  medios: PagoRealizadoMedio[];
 }
 
 export interface PagoAProveedor {
@@ -761,6 +783,9 @@ export interface RegistrarPagoMetodoCommand {
   tipo: MetodoPago;
   monto: number;
   referencia: string | null;
+  chequeNumero?: string | null;
+  chequeBanco?: string | null;
+  chequeFechaPago?: string | null;
 }
 
 export interface RegistrarPagoProveedorCommand {
