@@ -2,7 +2,13 @@ using CentroDeProduccion.Domain.Enums;
 
 namespace CentroDeProduccion.Application.Features.CuentaCorriente.Commands.RegistrarPagoProveedor;
 
-public sealed record RegistrarPagoMetodoDto(int Tipo, decimal Monto, string? Referencia);
+public sealed record RegistrarPagoMetodoDto(
+    int Tipo,
+    decimal Monto,
+    string? Referencia,
+    string? ChequeNumero = null,
+    string? ChequeBanco = null,
+    DateTime? ChequeFechaPago = null);
 
 public sealed record RegistrarPagoProveedorCommand(
     Guid ProveedorId,

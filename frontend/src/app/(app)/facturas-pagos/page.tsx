@@ -78,24 +78,52 @@ const emptyInsumo = () => ({
   precioUnitario: "",
 });
 
-const pagoSchema = z.object({
-  fecha: z.string().min(1, "La fecha del pago es obligatoria."),
-  observaciones: z.string().max(500, "Máximo 500 caracteres."),
-  medios: z
-    .array(
-      z.object({
-        id: z.string(),
-        tipo: z.coerce
-          .number({ message: "Seleccioná un medio de pago." })
-          .refine((v) => [1, 2, 3, 4, 5].includes(v), "Seleccioná un medio de pago."),
-        monto: z.coerce
-          .number({ message: "Ingresá un número válido." })
-          .positive("Debe ser mayor a 0."),
-        referencia: z.string().max(100, "Máximo 100 caracteres."),
-      }),
-    )
-    .min(1, "Agregá al menos un medio de pago."),
+const pagoMedioSchema = z.object({
+  id: z.string(),
+  tipo: z.coerce
+    .number({ message: "Seleccioná un medio de pago." })
+    .refine((v) => [1, 2, 3, 4, 5].includes(v), "Seleccioná un medio de pago."),
+  monto: z.coerce
+    .number({ message: "Ingresá un número válido." })
+    .positive("Debe ser mayor a 0."),
+  referencia: z.string().max(100, "Máximo 100 caracteres."),
+  chequeNumero: z.string().max(50, "Máximo 50 caracteres."),
+  chequeBanco: z.string().max(100, "Máximo 100 caracteres."),
+  chequeFechaPago: z.string(),
 });
+
+const pagoSchema = z
+  .object({
+    fecha: z.string().min(1, "La fecha del pago es obligatoria."),
+    observaciones: z.string().max(500, "Máximo 500 caracteres."),
+    medios: z.array(pagoMedioSchema).min(1, "Agregá al menos un medio de pago."),
+  })
+  .superRefine((values, ctx) => {
+    values.medios.forEach((m, idx) => {
+      if (m.tipo !== 5) return;
+      if (!m.chequeNumero.trim()) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["medios", idx, "chequeNumero"],
+          message: "El número de cheque es obligatorio.",
+        });
+      }
+      if (!m.chequeBanco.trim()) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["medios", idx, "chequeBanco"],
+          message: "El banco del cheque es obligatorio.",
+        });
+      }
+      if (!m.chequeFechaPago) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["medios", idx, "chequeFechaPago"],
+          message: "La fecha de pago del cheque es obligatoria.",
+        });
+      }
+    });
+  });
 
 type PagoFormInput = z.input<typeof pagoSchema>;
 type PagoFormValues = z.output<typeof pagoSchema>;
@@ -105,6 +133,9 @@ const emptyMedio = () => ({
   tipo: "",
   monto: "",
   referencia: "",
+  chequeNumero: "",
+  chequeBanco: "",
+  chequeFechaPago: "",
 });
 
 const METODO_PAGO_OPTIONS: { value: string; label: string }[] = (
@@ -189,6 +220,10 @@ export default function PagosPage() {
         tipo: m.tipo as MetodoPago,
         monto: m.monto,
         referencia: m.referencia.trim() || null,
+        chequeNumero:
+          m.tipo === 5 ? m.chequeNumero.trim() || null : null,
+        chequeBanco: m.tipo === 5 ? m.chequeBanco.trim() || null : null,
+        chequeFechaPago: m.tipo === 5 ? m.chequeFechaPago || null : null,
       })),
     };
     try {
@@ -436,7 +471,7 @@ export default function PagosPage() {
       />
 
       <Dialog open={dialogPagoOpen} onOpenChange={setDialogPagoOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Registrar pago — Factura N° {pagoTarget?.numero}</DialogTitle>
             <DialogDescription>
@@ -465,11 +500,16 @@ export default function PagosPage() {
             <div className="flex flex-col gap-2">
               <Label>Medios de pago</Label>
               {mediosArray.fields.length > 0 && (
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-3 rounded-xl border p-4">
                   {mediosArray.fields.map((field, idx) => {
                     const medioError = pagoForm.formState.errors.medios?.[idx];
+                    const esCheque = Number(watchedMedios[idx]?.tipo) === 5;
                     return (
-                      <div key={field.id} className="grid grid-cols-[130px_1fr_1fr_36px] items-start gap-2">
+                      <div
+                        key={field.id}
+                        className="flex flex-col gap-3 border-b border-border pb-3 last:border-b-0 last:pb-0"
+                      >
+                      <div className="grid grid-cols-[220px_1fr_1fr_36px] items-start gap-3">
                         <div className="flex flex-col gap-1">
                           <Controller
                             control={pagoForm.control}
@@ -513,7 +553,7 @@ export default function PagosPage() {
                         </div>
                         <Button
                           type="button"
-                          variant="outline"
+                          variant="destructive"
                           size="sm"
                           onClick={() => mediosArray.remove(idx)}
                           disabled={mediosArray.fields.length <= 1}
@@ -521,6 +561,35 @@ export default function PagosPage() {
                         >
                           <Trash2 className="size-4" />
                         </Button>
+                      </div>
+                      {esCheque && (
+                        <div className="grid grid-cols-1 gap-3 rounded-md bg-muted/40 p-3 sm:grid-cols-3">
+                          <div className="flex flex-col gap-1">
+                            <Label>Número de cheque</Label>
+                            <Input
+                              placeholder="00012345"
+                              {...pagoForm.register(`medios.${idx}.chequeNumero`)}
+                            />
+                            <FieldError message={medioError?.chequeNumero?.message} />
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <Label>Banco</Label>
+                            <Input
+                              placeholder="Banco emisor"
+                              {...pagoForm.register(`medios.${idx}.chequeBanco`)}
+                            />
+                            <FieldError message={medioError?.chequeBanco?.message} />
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <Label>Fecha de pago</Label>
+                            <Input
+                              type="date"
+                              {...pagoForm.register(`medios.${idx}.chequeFechaPago`)}
+                            />
+                            <FieldError message={medioError?.chequeFechaPago?.message} />
+                          </div>
+                        </div>
+                      )}
                       </div>
                     );
                   })}
@@ -544,15 +613,15 @@ export default function PagosPage() {
               </Button>
             </div>
 
+            <p className="text-right text-sm font-medium">
+              Total del pago: {MONEY.format(mediosTotal)}
+            </p>
+
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="pago-observaciones">Observaciones</Label>
               <Input id="pago-observaciones" {...pagoForm.register("observaciones")} />
               <FieldError message={pagoForm.formState.errors.observaciones?.message} />
             </div>
-
-            <p className="text-sm font-medium">
-              Total del pago: {MONEY.format(mediosTotal)}
-            </p>
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setDialogPagoOpen(false)}>
@@ -608,6 +677,7 @@ export default function PagosPage() {
 
             <div className="flex flex-col gap-2 sm:col-span-2">
               <LineasInsumosEditor
+                variant="tabla"
                 insumos={insumos}
                 lines={insumosArray.fields.map((field, idx) => ({
                   key: field.id,
@@ -709,6 +779,51 @@ export default function PagosPage() {
                 <p className="mt-2 text-right text-base font-semibold">
                   Total: {MONEY.format(detail.montoTotal)}
                 </p>
+              </div>
+
+              <div>
+                <h3 className="mb-2 text-sm font-semibold">Pagos realizados</h3>
+                {!detail.pagos || detail.pagos.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Sin pagos registrados.</p>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {detail.pagos.map((p) => (
+                      <div key={p.id} className="rounded-xl border px-3 py-2">
+                        <div className="flex items-center justify-between gap-2 text-sm">
+                          <span className="font-medium">
+                            {new Date(p.fecha).toLocaleDateString("es-AR")}
+                          </span>
+                          <span className="font-semibold">{MONEY.format(p.montoTotal)}</span>
+                        </div>
+                        <ul className="mt-1 flex flex-col gap-1">
+                          {p.medios.map((m, mi) => (
+                            <li
+                              key={mi}
+                              className="text-sm text-muted-foreground"
+                            >
+                              {METODO_PAGO_LABELS[m.tipo] ?? m.tipo} —{" "}
+                              {MONEY.format(m.monto)}
+                              {m.referencia ? ` · ${m.referencia}` : ""}
+                              {m.tipo === 5 &&
+                              (m.chequeNumero || m.chequeBanco || m.chequeFechaPago)
+                                ? ` · Cheque ${m.chequeNumero ?? "—"} / ${m.chequeBanco ?? "—"} / ${
+                                    m.chequeFechaPago
+                                      ? new Date(m.chequeFechaPago).toLocaleDateString("es-AR")
+                                      : "—"
+                                  }`
+                                : ""}
+                            </li>
+                          ))}
+                        </ul>
+                        {p.observaciones && (
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Obs.: {p.observaciones}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           ) : null}

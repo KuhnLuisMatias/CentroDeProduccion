@@ -31,6 +31,19 @@ public class RegistrarPagoProveedorCommandValidator : AbstractValidator<Registra
             metodo.RuleFor(m => m.Referencia)
                 .MaximumLength(100).When(m => m.Referencia is not null)
                 .WithMessage("La referencia no puede superar los 100 caracteres");
+            metodo.RuleFor(m => m.ChequeNumero)
+                .NotEmpty().When(m => m.Tipo == (int)MetodoPago.Cheque)
+                .WithMessage("El número de cheque es obligatorio")
+                .MaximumLength(50).When(m => m.ChequeNumero is not null)
+                .WithMessage("El número de cheque no puede superar los 50 caracteres");
+            metodo.RuleFor(m => m.ChequeBanco)
+                .NotEmpty().When(m => m.Tipo == (int)MetodoPago.Cheque)
+                .WithMessage("El banco del cheque es obligatorio")
+                .MaximumLength(100).When(m => m.ChequeBanco is not null)
+                .WithMessage("El banco del cheque no puede superar los 100 caracteres");
+            metodo.RuleFor(m => m.ChequeFechaPago)
+                .NotNull().When(m => m.Tipo == (int)MetodoPago.Cheque)
+                .WithMessage("La fecha de pago del cheque es obligatoria");
         });
         RuleFor(x => x.Medios)
             .Must(medios => medios.Sum(m => m.Monto) > 0)

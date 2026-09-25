@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -54,8 +55,12 @@ export default function InsumoCombobox({
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number; width: number } | null>(
+    null,
+  );
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -75,6 +80,38 @@ export default function InsumoCombobox({
     };
   }, []);
 
+  const updatePos = useCallback(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    setMenuPos({ top: r.bottom + 4, left: r.left, width: r.width });
+  }, []);
+
+  // La lista va por portal a document.body: ningún overflow ancestro
+  // (filas con scroll, Dialog) puede recortarla.
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (e: Event) => {
+      const t = e.target as Node | null;
+      if (
+        t &&
+        !inputRef.current?.contains(t) &&
+        !listRef.current?.contains(t)
+      ) {
+        setOpen(false);
+        setQuery("");
+      }
+    };
+    window.addEventListener("scroll", updatePos, true);
+    window.addEventListener("resize", updatePos);
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => {
+      window.removeEventListener("scroll", updatePos, true);
+      window.removeEventListener("resize", updatePos);
+      document.removeEventListener("pointerdown", onPointerDown);
+    };
+  }, [open, updatePos]);
+
   const selected = insumos.find((i) => i.id === value) ?? null;
   const selectedLabel = selected ? selected.nombre : "";
 
@@ -89,16 +126,19 @@ export default function InsumoCombobox({
       <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
       <Input
         id={id}
+        ref={inputRef}
         className="pl-8"
         placeholder={placeholder}
         value={open ? query : selectedLabel}
         onFocus={() => {
           if (closeTimer.current) clearTimeout(closeTimer.current);
+          updatePos();
           setOpen(true);
           setQuery("");
           setActiveIndex(0);
         }}
         onChange={(e) => {
+          updatePos();
           setOpen(true);
           setQuery(e.target.value);
           setActiveIndex(0);
@@ -107,6 +147,7 @@ export default function InsumoCombobox({
           if (e.key === "ArrowDown" || e.key === "ArrowUp") {
             e.preventDefault();
             if (!open) {
+              updatePos();
               setOpen(true);
               return;
             }
@@ -137,12 +178,15 @@ export default function InsumoCombobox({
         aria-autocomplete="list"
         aria-label={ariaLabel}
       />
-      {open && (
-        <div
-          ref={listRef}
-          role="listbox"
-          className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-md border border-border bg-popover shadow-md"
-        >
+      {open &&
+        menuPos &&
+        createPortal(
+          <div
+            ref={listRef}
+            role="listbox"
+            className="fixed z-50 max-h-48 overflow-y-auto rounded-md border border-border bg-popover shadow-md"
+            style={{ top: menuPos.top, left: menuPos.left, width: menuPos.width }}
+          >
           {filtered.length === 0 ? (
             <p className="px-3 py-4 text-center text-sm text-muted-foreground">Sin resultados.</p>
           ) : (
@@ -177,8 +221,9 @@ export default function InsumoCombobox({
               );
             })
           )}
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

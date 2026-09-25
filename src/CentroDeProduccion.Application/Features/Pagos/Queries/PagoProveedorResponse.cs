@@ -11,6 +11,21 @@ public sealed record PagoInsumoResponse(
     decimal PrecioUnitario,
     decimal Subtotal);
 
+public sealed record PagoRealizadoMedioResponse(
+    MetodoPago Tipo,
+    decimal Monto,
+    string? Referencia,
+    string? ChequeNumero,
+    string? ChequeBanco,
+    DateTime? ChequeFechaPago);
+
+public sealed record PagoRealizadoResponse(
+    Guid Id,
+    DateTime Fecha,
+    decimal MontoTotal,
+    string? Observaciones,
+    IReadOnlyList<PagoRealizadoMedioResponse> Medios);
+
 public sealed record PagoProveedorResponse(
     Guid Id,
     int Numero,
@@ -23,4 +38,5 @@ public sealed record PagoProveedorResponse(
     IReadOnlyList<PagoInsumoResponse> Insumos,
     decimal MontoPagado = 0m,
     decimal MontoPendiente = 0m,
-    string EstadoPago = "Pendiente");
+    string EstadoPago = "Pendiente",
+    IReadOnlyList<PagoRealizadoResponse>? Pagos = null);

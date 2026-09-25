@@ -8,6 +8,9 @@ public interface IPagoAProveedorRepository
 
     Task<PagoAProveedor?> GetByIdWithDetailsAsync(Guid id, CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<PagoAProveedor>> GetByFacturaIdAsync(
+        Guid facturaId, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<PagoAProveedor>> GetByFiltersAsync(
         Guid? proveedorId,
         DateTime? fechaDesde,

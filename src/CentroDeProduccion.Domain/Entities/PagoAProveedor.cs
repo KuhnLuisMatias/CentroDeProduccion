@@ -41,4 +41,13 @@ public class PagoAProveedorMetodo
     public MetodoPago Tipo { get; set; }
     public decimal Monto { get; set; }
     public string? Referencia { get; set; }
+
+    /// <summary>Cheque number. Only set when Tipo is Cheque.</summary>
+    public string? ChequeNumero { get; set; }
+
+    /// <summary>Cheque bank. Only set when Tipo is Cheque.</summary>
+    public string? ChequeBanco { get; set; }
+
+    /// <summary>Cheque payment/clearing date. Only set when Tipo is Cheque.</summary>
+    public DateTime? ChequeFechaPago { get; set; }
 }
